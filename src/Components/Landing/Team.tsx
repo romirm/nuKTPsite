@@ -91,7 +91,7 @@ function Team() {
               <li key={person.name}>
                 <div className="space-y-4">
                   <img
-                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24 object-cover"
+                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24 object-cover object-[50%_20%]"
                     src={person.imageUrl}
                     alt=""
                   />
@@ -108,13 +108,13 @@ function Team() {
           {/* Laptop/tablet team layout */}
           <ul
             role="list"
-            className="hidden sm:grid mx-auto gap-x-4 gap-y-8 grid-cols-2 sm:grid-cols-5 md:grid-cols-5 lg:grid-cols-5 md:gap-x-15 sm:max-w-2xl lg:max-w-3xl lg:gap-y-12"
+            className="hidden sm:grid mx-auto grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-12 place-items-center sm:max-w-3xl lg:max-w-5xl"
           >
             {people.map((person) => (
               <li key={person.name}>
                 <div className="space-y-4">
                   <img
-                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24 object-cover"
+                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24 object-cover object-[50%_20%]"
                     src={person.imageUrl}
                     alt=""
                   />
