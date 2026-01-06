@@ -1,4 +1,4 @@
-import JuliePic from "@images/Exec/julie.jpeg";
+import RohanPic from "@images/Exec/rohan2026.jpeg";
 
 const stats = [
   { label: "National Chapters", value: "9" },
@@ -58,7 +58,7 @@ function Greeting() {
             <div className="mb-6 sm:mb-0 relative overflow-hidden rounded-2xl pt-64 pb-10 shadow-xl">
               <img
                 className="absolute inset-0 h-full w-full object-cover"
-                src={JuliePic}
+                src={RohanPic}
                 alt=""
               />
               <div className="absolute inset-0 bg-indigo-500 mix-blend-multiply opacity-70" />
@@ -84,7 +84,7 @@ function Greeting() {
 
                   <footer className="mt-4">
                     <p className="text-base font-semibold text-indigo-200">
-                      Julie Park, KTP Member
+                      Rohan Badani, KTP Member
                     </p>
                   </footer>
                 </blockquote>

@@ -1,89 +1,71 @@
-import ZacariaPic from "@images/Exec/zacaria.jpeg";
-import NicolePic from "@images/Exec/nicole.jpeg";
-import RohanPic from "@images/Exec/rohan.jpeg";
-import NaavyaPic from "@images/Exec/naavya.jpeg";
-import CarolinePic from "@images/Exec/caroline.jpeg";
-import JohnPic from "@images/Exec/john.jpeg";
-import DrewPic from "@images/Exec/drew.jpeg";
-import GavinPic from "@images/Exec/gavin.jpeg";
-import JordanPic from "@images/Exec/jordan.jpeg";
-import NicoPic from "@images/Exec/nico.jpeg";
-import MoPic from "@images/Exec/mo.jpeg";
-import SujeePic from "@images/Exec/sujee.jpeg";
-import JaimiePic from "@images/Exec/jaimie.jpeg";
-import AiliPic from "@images/Exec/aili.jpeg";
+import AnjanaPic from "@images/Exec/anjana2026.jpeg"
+import ChloePic from "@images/Exec/chloe2026.jpeg"
+import KatiaPic from "@images/Exec/katia2026.jpeg"
+import MoPic from "@images/Exec/mo2026.jpeg"
+import OliviaPic from "@images/Exec/olivia2026.jpeg"
+import RachelPic from "@images/Exec/rachel2026.jpeg"
+import RohanPic from "@images/Exec/rohan2026.jpeg"
+import RomirPic from "@images/Exec/romir2026.jpeg"
+import ShervinPic from "@images/Exec/shervin2026.jpeg"
+import SophiaPic from "@images/Exec/sophia2026.jpeg"
+import SujeePic from "@images/Exec/sujee2026.jpeg";
 
 const people: { name: string; role: string; imageUrl: any }[] = [
   {
-    name: "Zacaria Nouri",
+    name: "Mohammed Alamin",
     role: "President",
-    imageUrl: ZacariaPic,
-  },
-  {
-    name: "Nicole Liu",
-    role: "VP of Programming",
-    imageUrl: NicolePic,
-  },
-  {
-    name: "Rohan Badani",
-    role: "VP of External Affairs",
-    imageUrl: RohanPic,
-  },
-  {
-    name: "Naavya Sheth",
-    role: "VP of Internal Affairs",
-    imageUrl: NaavyaPic,
-  },
-  {
-    name: "Caroline Guerra",
-    role: "VP of Technology",
-    imageUrl: CarolinePic,
-  },
-  {
-    name: "John Hileman",
-    role: "VP of Technology",
-    imageUrl: JohnPic,
-  },
-  {
-    name: "Drew Guardiola",
-    role: "VP of Marketing",
-    imageUrl: DrewPic,
-  },
-  {
-    name: "Gavin Chung",
-    role: "VP of Recruitment",
-    imageUrl: GavinPic,
-  },
-  {
-    name: "Jordan Chu",
-    role: "VP of Recruitment",
-    imageUrl: JordanPic,
-  },
-  {
-    name: "Nico Biabani",
-    role: "VP of Finance",
-    imageUrl: NicoPic,
-  },
-  {
-    name: "Mo Alamin",
-    role: "VP of Member Experience",
     imageUrl: MoPic,
   },
   {
+    name: "Anjana Radha",
+    role: "VP of Programming",
+    imageUrl: AnjanaPic,
+  },
+  {
+    name: "Rohan Badani",
+    role: "VP of External Affairs & Alumni Relations",
+    imageUrl: RohanPic,
+  },
+  {
+    name: "Olivia Paik",
+    role: "VP of Internal Experience",
+    imageUrl: OliviaPic,
+  },
+  {
+    name: "Romir Mohan",
+    role: "VP of Technology",
+    imageUrl: RomirPic,
+  },
+  {
+    name: "Katia Ohmacht",
+    role: "VP of Technology",
+    imageUrl: KatiaPic,
+  },
+  {
+    name: "Chloe Lu",
+    role: "VP of Marketing",
+    imageUrl: ChloePic,
+  },
+  {
+    name: "Sophia Myint",
+    role: "VP of Recruitment",
+    imageUrl: SophiaPic,
+  },
+  {
+    name: "Shervin Naini",
+    role: "VP of Finance",
+    imageUrl: ShervinPic,
+  },
+  {
     name: "Sujee Rubio",
-    role: "VP of DEI",
+    role: "VP of Diversity, Equity, and Inclusion",
     imageUrl: SujeePic,
   },
   {
-    name: "Jaimie Hong",
+    name: "Rachel Li",
     role: "VP of Pledge Experience",
-    imageUrl: JaimiePic,
+    imageUrl: RachelPic,
   },
-  {
-    name: "Ai-li Baird",
-    role: "VP of Community",
-    imageUrl: AiliPic,
-  }
 ];
 
 function Team() {
@@ -109,7 +91,7 @@ function Team() {
               <li key={person.name}>
                 <div className="space-y-4">
                   <img
-                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24"
+                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24 object-cover"
                     src={person.imageUrl}
                     alt=""
                   />
@@ -132,7 +114,7 @@ function Team() {
               <li key={person.name}>
                 <div className="space-y-4">
                   <img
-                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24"
+                    className="mx-auto h-20 w-20 rounded-full lg:h-24 lg:w-24 object-cover"
                     src={person.imageUrl}
                     alt=""
                   />
