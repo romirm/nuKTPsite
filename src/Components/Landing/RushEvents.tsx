@@ -38,7 +38,7 @@ const events: {
   // },
   networkingNight: {
     title: "Networking Night",
-    date: new Date("March 7, 2025 19:00:00"),
+    date: new Date("January 12, 2026 19:00:00"),
     time: "7:00pm",
     location: "Tech L211",
     gcalLink: "",
@@ -47,7 +47,7 @@ const events: {
   },
   coffeeChats: {
     title: "Coffee Chats",
-    date: new Date("March 8, 2025"),
+    date: new Date("January 13, 2026"),
     time: "N/A",
     location: "LOC TBA",
     gcalLink: "",
@@ -56,7 +56,7 @@ const events: {
   },
   groupInterviews: {
     title: "Group Interviews",
-    date: new Date("March 10, 2025"),
+    date: new Date("January 15, 2026"),
     time: "7:00pm",
     location: "Tech M345",
     gcalLink: "",
@@ -65,7 +65,7 @@ const events: {
   },
   interviews: {
     title: "Individual Interviews",
-    date: new Date("March 11, 2025"),
+    date: new Date("January 16, 2026"),
     time: "N/A",
     location: "The Garage & Mudd",
     gcalLink: "",
