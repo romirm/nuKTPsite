@@ -40,7 +40,7 @@ const events: {
     title: "Networking Night",
     date: new Date("January 12, 2026 19:00:00"),
     time: "7:00pm",
-    location: "Tech L211",
+    location: "Tech LR2",
     gcalLink: "",
     imgSrc: NetworkingNightImg,
     inviteOnly: false,
