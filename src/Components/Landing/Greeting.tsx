@@ -1,11 +1,67 @@
+import { useState, useEffect, useRef } from "react";
+// @ts-ignore
 import RohanPic from "@images/Exec/rohan2026.jpeg";
+
+interface AnimatedNumberProps {
+  value: string;
+  duration?: number;
+  start: boolean; // New prop to control when to start
+}
+
+const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, duration = 2000, start }) => {
+  const numericValue = parseInt(value.replace(/\D/g, ""), 10);
+  const suffix = value.replace(/[0-9]/g, "");
+  const [count, setCount] = useState<number>(0);
+
+  useEffect(() => {
+    if (!start) return; // Don't start if not visible
+
+    let startTimestamp: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const easeOutQuad = (t: number): number => t * (2 - t);
+      
+      setCount(Math.floor(easeOutQuad(progress) * numericValue));
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+    window.requestAnimationFrame(step);
+  }, [numericValue, duration, start]);
+
+  return <>{count}{suffix}</>;
+};
 
 const stats = [
   { label: "National Chapters", value: "9" },
   { label: "Chapter Alumni", value: "100+" },
+  { label: "Active Members", value: "120+" },
 ];
 
 function Greeting() {
+  const [isVisible, setIsVisible] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); // Stop observing once it's triggered
+        }
+      },
+      { threshold: 0.1 } // Trigger when 10% of the element is visible
+    );
+
+    if (statsRef.current) {
+      observer.observe(statsRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <div
       id="greeting"
@@ -62,7 +118,7 @@ function Greeting() {
                 alt=""
               />
               <div className="absolute inset-0 bg-indigo-500 mix-blend-multiply opacity-70" />
-              <div className="absolute inset-0 bg-gradient-to-t from-indigo-600 via-t opacity-90" />
+              <div className="absolute inset-0 bg-gradient-to-t from-indigo-600 via-transparent opacity-90" />
               <div className="relative px-8">
                 <blockquote className="mt-8">
                   <div className="relative text-lg font-medium text-white md:flex-grow">
@@ -123,8 +179,8 @@ function Greeting() {
           </div>
 
           {/* Stats section */}
-          <div className="mt-10">
-            <dl className="grid sm:grid-cols-2 gap-x-1 sm:gap-x-4 gap-y-8">
+          <div className="mt-10" ref={statsRef}>
+            <dl className="grid sm:grid-cols-3 gap-x-1 sm:gap-x-4 gap-y-8">
               {stats.map((stat) => (
                 <div
                   key={stat.label}
@@ -134,7 +190,7 @@ function Greeting() {
                     {stat.label}
                   </dt>
                   <dd className="text-3xl font-bold tracking-tight text-gray-900">
-                    {stat.value}
+                    <AnimatedNumber value={stat.value} start={isVisible} />
                   </dd>
                 </div>
               ))}
