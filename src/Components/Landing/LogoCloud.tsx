@@ -1,138 +1,113 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-interface Logo {
-  src: string;
-  alt: string;
-}
-
-declare const require: {
-  context(path: string, deep?: boolean, filter?: RegExp): {
-    keys(): string[];
-    <T>(id: string): T;
-  };
-};
-
-const logos: Logo[] = (() => {
-  const context = require.context("@/Assets/Vectors", false, /\.svg$/);
-  return context.keys().map((key) => {
+const allLogos: Record<string, string> = (() => {
+  const context = (require as any).context("@/Assets/Vectors", false, /\.svg$/);
+  const map: Record<string, string> = {};
+  context.keys().forEach((key: string) => {
     const fileName = key.replace("./", "").replace(".svg", "");
-    const prettyName = fileName
-      .replace(/_logo/i, "")
-      .replace(/[_-]/g, " ")
-      .replace(/\b\w/g, (c) => c.toUpperCase());
-    const mod = context<string>(key);
-    
-    // Robust path extraction to fix the "path string" glitch
-    let srcPath = "";
-    if (typeof mod === 'string') {
-      srcPath = mod;
-    } else if (mod && typeof mod === 'object' && 'default' in mod) {
-      srcPath = (mod as any).default;
-    }
-
-    return {
-      src: srcPath,
-      alt: prettyName,
-    };
-  }).filter(l => l.src !== "");
+    const mod = context(key);
+    map[fileName] = typeof mod === 'string' ? mod : mod.default;
+  });
+  return map;
 })();
 
-const GRID_COLS = 5;
-const GRID_ROWS = 3;
-const SLOT_COUNT = GRID_COLS * GRID_ROWS; 
-const FLIP_DURATION_MS = 700;
-const INTERVAL_MS = 3000;
-
-function LogoSlot({ current, next, flipping }: { current: Logo; next: Logo; flipping: boolean }) {
-  return (
-    <div className="relative h-24 w-full [perspective:1000px]">
-      <div
-        className={`relative h-full w-full [transform-style:preserve-3d] ${
-          flipping 
-            ? "transition-transform duration-700 [transform:rotateX(90deg)]" 
-            : "[transform:rotateX(0deg)]" 
-        }`}
-      >
-        <div className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [transform:translateZ(3rem)]">
-          <img src={current.src} alt={current.alt} className="h-12 max-w-[140px] object-contain" />
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center [backface-visibility:hidden] [transform:rotateX(-90deg)_translateZ(3rem)]">
-          <img src={next.src} alt={next.alt} className="h-12 max-w-[140px] object-contain" />
-        </div>
-      </div>
-    </div>
-  );
-}
+const groups = [
+  {
+    id: "faang, faang+",
+    rows: [
+      ["meta", "apple", "amazon", "netflix", "google"],
+      ["microsoft", "palantir", "roblox", "uber", "datadog"]
+    ]
+  },
+  {
+    id: "quant",
+    rows: [
+      ["hrt", "janestreet", "citadel", "optiver", "imc"],
+      ["ctc", "bam", "virtu", "jpmorganchase", "goldmansachs"]
+    ]
+  },
+  {
+    id: "fintech",
+    rows: [
+      ["ramp", "c1", "bloomberg", "robinhood", "paypal"],
+      ["mckinsey", "bcg", "bain", "deloitte", "accenture"]
+    ]
+  }
+];
 
 export default function LogoCloud() {
-  const initialIndices = useMemo(() => {
-    const indices = Array.from({ length: logos.length }, (_, i) => i);
-    return indices.sort(() => 0.5 - Math.random()).slice(0, SLOT_COUNT);
-  }, []);
-
-  const [displayed, setDisplayed] = useState<number[]>(initialIndices);
-  const [next, setNext] = useState<number[]>(initialIndices);
-  const [flippingSlot, setFlippingSlot] = useState<number | null>(null);
+  const [stageIndex, setStageIndex] = useState(0);
 
   useEffect(() => {
-    const tick = () => {
-      // Don't start a new flip if one is active or if we don't have enough logos to swap
-      if (logos.length <= SLOT_COUNT || flippingSlot !== null) return;
-
-      const slot = Math.floor(Math.random() * SLOT_COUNT);
-      
-      let newIndex: number;
-      let attempts = 0;
-      
-      do {
-        newIndex = Math.floor(Math.random() * logos.length);
-        attempts++;
-        // ANTI-DUPLICATE LOGIC:
-        // 1. Is it already visible on any front face?
-        // 2. Is it already assigned to any back face (pending flip)?
-      } while (
-        (displayed.includes(newIndex) || next.includes(newIndex)) && 
-        attempts < 50
-      );
-
-      // Prepare the back face
-      setNext((prev) => {
-        const copy = [...prev];
-        copy[slot] = newIndex;
-        return copy;
-      });
-
-      // Trigger animation
-      setFlippingSlot(slot);
-
-      // Clean up after animation
-      setTimeout(() => {
-        setDisplayed((prev) => {
-          const copy = [...prev];
-          copy[slot] = newIndex;
-          return copy;
-        });
-        setFlippingSlot(null); 
-      }, FLIP_DURATION_MS);
-    };
-
-    const interval = setInterval(tick, INTERVAL_MS);
+    const interval = setInterval(() => {
+      setStageIndex((prev) => (prev + 1) % groups.length);
+    }, 4000); // Slightly longer interval for readability
     return () => clearInterval(interval);
-  }, [displayed, next, flippingSlot]);
+  }, []);
+
+  const currentStage = groups[stageIndex];
 
   return (
-    <section id="logocloud" className="bg-white py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <h2 className="text-center text-lg font-semibold text-gray-900 mb-16">
+    <section id="logocloud" className="relative bg-slate-50 pt-24 pb-16 sm:pt-32 sm:pb-20 overflow-hidden">
+      <div className="mx-auto max-w-screen-2xl px-6 lg:px-8">
+        <h2 className="text-center text-lg font-semibold leading-8 text-slate-900 mb-20">
           Our members work at many of the largest technology, quant, and financial services companies
         </h2>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-12 sm:grid-cols-3 lg:grid-cols-5 items-center">
-          {displayed.map((idx, slot) => (
-            <LogoSlot
-              key={slot}
-              current={logos[idx]}
-              next={logos[next[slot]]}
-              flipping={flippingSlot === slot}
+
+        <div className="relative min-h-[400px] flex flex-col justify-center">
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={stageIndex}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ 
+                duration: 0.7, 
+                ease: [0.4, 0, 0.2, 1] // Custom cubic-bezier for a "smoother" feel than linear
+              }}
+              className="space-y-16 lg:space-y-24 w-full" 
+            >
+              {currentStage.rows.map((row, rowIdx) => (
+                <div 
+                  key={rowIdx} 
+                  className="grid grid-cols-2 gap-x-12 gap-y-16 sm:grid-cols-3 lg:grid-cols-5 items-center justify-items-center"
+                >
+                  {row.map((companyKey) => {
+                    const fullKey = `${companyKey}_logo`;
+                    const src = allLogos[fullKey];
+                    
+                    return (
+                      <div key={companyKey} className="w-full flex justify-center px-4">
+                        {src ? (
+                          <img
+                            className="h-14 w-full lg:h-16 object-contain"
+                            src={src}
+                            alt={`${companyKey} logo`}
+                          />
+                        ) : (
+                          <span className="text-sm text-gray-400 font-medium uppercase tracking-wider">{companyKey}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        <div className="mt-20 flex justify-center gap-x-3">
+          {groups.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setStageIndex(idx)}
+              className={`h-2.5 w-2.5 rounded-full transition-all duration-500 ${
+                stageIndex === idx 
+                ? "bg-blue-600 w-10" 
+                : "bg-slate-300 hover:bg-slate-400"
+              }`}
+              aria-label={`Go to stage ${idx + 1}`}
             />
           ))}
         </div>

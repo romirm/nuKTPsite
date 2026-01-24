@@ -21,10 +21,16 @@ const navigation = [
 export default function Hero(props: { maintenance: boolean }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const naturalSpring = {
+    type: "spring",
+    stiffness: 150,
+    damping: 20,
+    mass: 0.8,
+  };
+
   return (
     <div className="relative isolate bg-slate-50">
-      {/* Modern Sticky Glassmorphism Header */}
-      <header className="fixed inset-x-0 top-0 z-50 transition-all duration-300 bg-white/70 backdrop-blur-md border-b border-white/20">
+      <header className="fixed inset-x-0 top-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-200/50 transition-all duration-300">
         <nav className="mx-auto flex max-w-7xl items-center justify-between p-4 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">
             <a href="#" className="-m-1.5 p-1.5 transition-transform hover:scale-105">
@@ -55,7 +61,7 @@ export default function Hero(props: { maintenance: boolean }) {
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
             <a
               href={props.maintenance ? "/maintenance" : "/signup"}
-              className="rounded-full bg-black px-5 py-2 text-sm font-bold text-white shadow-lg hover:bg-gray-800 transition-all hover:ring-4 hover:ring-gray-100"
+              className="rounded-full bg-black px-5 py-2 text-sm font-bold text-white shadow-lg hover:bg-gray-800 transition-all hover:ring-4 hover:ring-slate-200"
             >
               Member Portal
             </a>
@@ -65,14 +71,6 @@ export default function Hero(props: { maintenance: boolean }) {
 
       <main className="pt-24">
         <div className="relative isolate overflow-hidden">
-          {/* Animated Background Mesh */}
-          <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
-            <div 
-              className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#80b9ff] to-[#3b82f6] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-              style={{ clipPath: 'polygon(74.1% 44.1%, 100% 61.6%, 97.5% 26.9%, 85.5% 0.1%, 80.7% 2%, 72.5% 32.5%, 60.2% 62.4%, 52.4% 68.1%, 47.5% 58.3%, 45.2% 34.5%, 27.5% 76.7%, 0.1% 64.9%, 17.9% 100%, 27.6% 76.8%, 76.1% 97.7%, 74.1% 44.1%)' }}
-            />
-          </div>
-
           <div className="mx-auto max-w-7xl px-6 pb-32 pt-20 sm:pt-32 lg:flex lg:px-8 lg:pt-24">
             <motion.div 
               initial={{ opacity: 0, x: -30 }}
@@ -80,11 +78,11 @@ export default function Hero(props: { maintenance: boolean }) {
               transition={{ duration: 0.8 }}
               className="mx-auto max-w-2xl flex-shrink-0 lg:mx-0 lg:max-w-xl lg:pt-8"
             >
-              <h1 className="mt-24 text-4xl font-extrabold tracking-tight text-slate-900 sm:mt-32 sm:text-6xl lg:mt-16">
-                We are a <span className="text-blue-700">tech fraternity</span> that connects, educates, and empowers.
+              <h1 className="mt-24 text-4xl font-extrabold tracking-tight text-slate-900 sm:mt-32 sm:text-6xl lg:mt-16 leading-tight">
+                We are a <span className="bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">tech fraternity</span> that connects, educates, and empowers.
               </h1>
               <p className="relative mt-6 text-lg leading-8 text-slate-600">
-                KTP Northwestern is co-ed organization dedicated to providing a community for students interested in technology. 
+                KTP Northwestern is a co-ed organization dedicated to providing a community for students interested in technology. 
                 We host events, workshops, and socials to help students learn and grow in their tech careers.
               </p>
               <div className="mt-10 flex items-center gap-x-6">
@@ -101,7 +99,6 @@ export default function Hero(props: { maintenance: boolean }) {
               </div>
             </motion.div>
 
-            {/* Rearranged Image Grid to Fill Space Better */}
             <motion.div 
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -110,31 +107,45 @@ export default function Hero(props: { maintenance: boolean }) {
             >
               <div className="flex-none sm:max-w-5xl lg:max-w-none">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
-                  {/* Three-Column Staggered Layout */}
                   <div className="space-y-4 pt-12">
-                    <motion.div whileHover={{ y: -10 }} className="relative overflow-hidden rounded-2xl shadow-2xl">
+                    <motion.div 
+                      whileHover={{ y: -10, scale: 1.02 }}
+                      transition={naturalSpring}
+                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
+                    >
                       <img src={AnnikaPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl" />
                     </motion.div>
-                    <motion.div whileHover={{ y: -10 }} className="relative overflow-hidden rounded-2xl shadow-2xl">
+                    <motion.div 
+                      whileHover={{ y: -10, scale: 1.02 }}
+                      transition={naturalSpring}
+                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
+                    >
                       <img src={SpeakerPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl" />
                     </motion.div>
                   </div>
                   <div className="space-y-4">
-                    <motion.div whileHover={{ y: -10 }} className="relative overflow-hidden rounded-2xl shadow-2xl">
+                    <motion.div 
+                      whileHover={{ y: -10, scale: 1.02 }}
+                      transition={naturalSpring}
+                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
+                    >
                       <img src={LandingPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl" />
                     </motion.div>
-                    <motion.div whileHover={{ y: -10 }} className="relative overflow-hidden rounded-2xl shadow-2xl">
+                    <motion.div 
+                      whileHover={{ y: -10, scale: 1.02 }}
+                      transition={naturalSpring}
+                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
+                    >
                       <img src={PcPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl" />
                     </motion.div>
                   </div>
                   <div className="space-y-4 pt-20">
-                    <motion.div whileHover={{ y: -10 }} className="relative overflow-hidden rounded-2xl shadow-2xl">
+                    <motion.div 
+                      whileHover={{ y: -10, scale: 1.02 }}
+                      transition={naturalSpring}
+                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
+                    >
                       <img src={SpringPC} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                      <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-black/10 rounded-2xl" />
                     </motion.div>
                   </div>
                 </div>
@@ -144,7 +155,6 @@ export default function Hero(props: { maintenance: boolean }) {
         </div>
       </main>
 
-      {/* Mobile Menu */}
       <Dialog as="div" className="lg:hidden" open={mobileMenuOpen} onClose={setMobileMenuOpen}>
         <div className="fixed inset-0 z-50 bg-slate-900/20 backdrop-blur-sm" />
         <Dialog.Panel className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm">

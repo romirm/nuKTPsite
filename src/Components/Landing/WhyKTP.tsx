@@ -36,7 +36,7 @@ export default function WhyKTP() {
             <p className="mt-6 text-lg leading-8 text-slate-600">
               Through focused professional development opportunities and
               collaborative events, members are empowered to navigate the tech
-              landscape with <span className="text-blue-700 font-semibold">confidence and expertise</span>.
+              landscape with confidence and expertise.
             </p>
           </motion.div>
 
