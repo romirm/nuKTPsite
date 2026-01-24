@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import PortalPic from '@images/Misc/Portal.jpeg';
+import PortalPic from "@images/Misc/Portal.jpeg";
 
 function PortalAdvertisement() {
   const naturalSpring = {
@@ -13,7 +13,7 @@ function PortalAdvertisement() {
     <div className="relative overflow-hidden bg-slate-50 pt-24 sm:pt-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <motion.h2 
+          <motion.h2
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -24,15 +24,17 @@ function PortalAdvertisement() {
               No problem.
             </span>
           </motion.h2>
-          <motion.p 
+
+          <motion.p
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
             className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-600"
           >
-            Networking with industry professionals is difficult, time-consuming, and daunting. 
-            With KTP's alumni network and member portal, we make it easy.
+            Networking with industry professionals is difficult, time-consuming,
+            and daunting. With KTP's alumni network and member portal, we make it
+            easy.
           </motion.p>
         </div>
 
@@ -42,21 +44,16 @@ function PortalAdvertisement() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ ...naturalSpring, delay: 0.2 }}
-            whileHover={{ 
-              y: -15, 
-              scale: 1.01,
-              transition: { type: "spring", stiffness: 300, damping: 25 } 
-            }}
-            className="relative group cursor-default"
+            className="relative"
           >
-            <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-slate-200 transition-all duration-300 group-hover:ring-4 group-hover:ring-blue-500/30">
+            <div className="overflow-hidden rounded-3xl shadow-2xl">
               <img
-                className="w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
+                className="w-full object-cover"
                 src={PortalPic}
                 alt="KTP Member Portal Interface"
               />
             </div>
-            
+
             <div className="absolute -inset-x-20 -bottom-20 -z-10 h-full w-full bg-gradient-to-t from-blue-100/50 to-transparent blur-3xl" />
           </motion.div>
         </div>
