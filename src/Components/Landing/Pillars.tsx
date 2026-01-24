@@ -1,3 +1,4 @@
+import { motion } from "framer-motion";
 import {
   AcademicCapIcon,
   ArrowTrendingUpIcon,
@@ -47,42 +48,63 @@ const features: { name: string; description: string; icon: any }[] = [
 ];
 
 function Pillars() {
+  const naturalSpring = {
+    type: "spring",
+    stiffness: 150,
+    damping: 20,
+    mass: 0.8,
+  };
+
   return (
-    <div className="relative bg-gray-50 py-8 sm:py-16">
-      <div className="mx-auto max-w-md px-6 text-center sm:max-w-3xl lg:max-w-7xl lg:px-8">
-        <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          Pillars of Kappa Theta Pi
-        </p>
-        <p className="mx-auto mt-2 max-w-prose text-xl text-gray-500">
-          What We Stand For
-        </p>
-        <div className="mt-20">
-          <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, _) => (
-              <div
+    <div className="relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
+      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+        <div className="mx-auto max-w-2xl text-center">
+          <motion.h2 
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl"
+          >
+            Pillars of <span className="bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">Kappa Theta Pi</span>
+          </motion.h2>
+          <p className="mt-4 text-xl font-medium text-slate-600">
+            What We Stand For
+          </p>
+        </div>
+
+        <div className="mx-auto mt-20 max-w-2xl sm:mt-24 lg:max-w-none">
+          <div className="grid grid-cols-1 gap-x-8 gap-y-16 lg:grid-cols-3">
+            {features.map((feature, idx) => (
+              <motion.div
                 key={feature.name}
-                /*viewport={{ once: true }}*/
-                className="pt-6"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ ...naturalSpring, delay: idx * 0.1 }}
+                whileHover={{ 
+                  y: -12, 
+                  scale: 1.01,
+                  transition: { type: "spring", stiffness: 300, damping: 25 } 
+                }}
+                className="group relative flex flex-col rounded-3xl bg-white p-8 shadow-sm ring-1 ring-slate-200 transition-shadow duration-500 hover:shadow-2xl hover:ring-blue-200"
               >
-                <div className="h-[20rem] sm:h-[10rem] lg:h-[18rem] h-fill flow-root rounded-2xl shadow-lg transition-shadow border transition bg-gray-100 px-6 pb-8 sm:transition-all sm:duration-300 sm:ease-in-out sm:transform">
-                  <div className="-mt-6">
-                    <div>
-                      <span className="inline-flex items-center justify-center rounded-xl bg-indigo-500 p-2 shadow-lg">
-                        <feature.icon
-                          className="h-8 w-8 text-white"
-                          aria-hidden="true"
-                        />
-                      </span>
-                    </div>
-                    <h3 className="mt-8 text-2xl font-bold tracking-tight leading-8 tracking-tight text-gray-900">
-                      {feature.name}
-                    </h3>
-                    <p className="mt-5 text-base leading-7 text-gray-600">
-                      {feature.description}
-                    </p>
+                <div className="-mt-12">
+                  <div className="inline-flex items-center justify-center rounded-2xl bg-blue-600 p-3 shadow-xl transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3">
+                    <feature.icon className="h-8 w-8 text-white" aria-hidden="true" />
                   </div>
                 </div>
-              </div>
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold tracking-tight text-slate-900 transition-colors group-hover:text-blue-700">
+                    {feature.name}
+                  </h3>
+                  <p className="mt-4 text-base leading-7 text-slate-600">
+                    {feature.description}
+                  </p>
+                </div>
+                <div className="mt-auto pt-6">
+                  <div className="h-1.5 w-8 rounded-full bg-slate-100 group-hover:bg-blue-100 transition-colors" />
+                </div>
+              </motion.div>
             ))}
           </div>
         </div>
