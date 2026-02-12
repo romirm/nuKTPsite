@@ -959,46 +959,51 @@ class NewUser extends React.Component {
         if (!this.props.newuser) {
           const dbRef = ref(this.props.database);
           get(child(dbRef, "users/" + user.uid)).then((snapshot) => {
-            const prof = snapshot.val();
-            //todo: abstract (easy, too lazy tho)
-            document.getElementById("last-name").value = prof["name"]
-              ? prof["name"]
-              : "";
-            document.getElementById("email-address").value = prof["email"]
-              ? prof["email"]
-              : "";
-            const elem = prof["profile_pic_link"]
-              ? prof["profile_pic_link"]
-              : "";
-            document.getElementById("profPicImg").src = prof["pfp_thumb_link"]
-              ? prof["pfp_thumb_link"]
-              : elem;
-            document.getElementById("phone-number").value = prof["phone"] || "";
-            document.getElementById("year").value = prof["year"] || "";
-            document.getElementById("major").value = prof["major"] || "";
-            document.getElementById("internships").value = prof["internships"] || "";
-            document.getElementById("instagram").value = prof["instagram"] || "";
-            document.getElementById("linkedin").value = prof["linkedin"] || "";
-            document.getElementById("about").value = prof["about"] || "";
-            document.getElementById("leetcode").value = prof["leetcode"]?.username || "";
-            if(prof["leetcode"]) {
-              this.setState({existingLC:true});
+            if (snapshot.exists()) {
+              const prof = snapshot.val();
+              //todo: abstract (easy, too lazy tho)
+              document.getElementById("last-name").value = prof["name"]
+                ? prof["name"]
+                : "";
+              document.getElementById("email-address").value = prof["email"]
+                ? prof["email"]
+                : "";
+              const elem = prof["profile_pic_link"]
+                ? prof["profile_pic_link"]
+                : "";
+              document.getElementById("profPicImg").src = prof["pfp_thumb_link"]
+                ? prof["pfp_thumb_link"]
+                : elem;
+              document.getElementById("phone-number").value = prof["phone"] || "";
+              document.getElementById("year").value = prof["year"] || "";
+              document.getElementById("major").value = prof["major"] || "";
+              document.getElementById("internships").value =
+                prof["internships"] || "";
+              document.getElementById("instagram").value =
+                prof["instagram"] || "";
+              document.getElementById("linkedin").value = prof["linkedin"] || "";
+              document.getElementById("about").value = prof["about"] || "";
+              document.getElementById("leetcode").value =
+                prof["leetcode"]?.username || "";
+              if (prof["leetcode"]) {
+                this.setState({ existingLC: true });
+              }
+              // document.getElementById("push-everything").checked =
+              //   prof["announcement_level"] === 3;
+              // document.getElementById("push-email").checked =
+              //   prof["announcement_level"] === 2;
+              // document.getElementById("push-nothing").checked =
+              //   prof["announcement_level"] === 1;
+              // if (prof["announcement_level"]) {
+              //   this.announcementLevel = prof["announcement_level"];
+              // }
+              document.getElementById("email-visible").checked =
+                prof["email_viewable"];
+              document.getElementById("standing-visible").checked =
+                prof["standing_viewable"];
+              document.getElementById("internships-visible").checked =
+                prof["internships_viewable"];
             }
-            // document.getElementById("push-everything").checked =
-            //   prof["announcement_level"] === 3;
-            // document.getElementById("push-email").checked =
-            //   prof["announcement_level"] === 2;
-            // document.getElementById("push-nothing").checked =
-            //   prof["announcement_level"] === 1;
-            // if (prof["announcement_level"]) {
-            //   this.announcementLevel = prof["announcement_level"];
-            // }
-            document.getElementById("email-visible").checked =
-              prof["email_viewable"];
-            document.getElementById("standing-visible").checked =
-              prof["standing_viewable"];
-            document.getElementById("internships-visible").checked =
-              prof["internships_viewable"];
           });
         }
       } else {

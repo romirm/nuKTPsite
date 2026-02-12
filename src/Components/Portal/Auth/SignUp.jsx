@@ -13,11 +13,14 @@ class SignUp extends React.Component {
       if(user) {
         const dbRef = ref(this.props.database);
         get(child(dbRef, "users/" + user.uid)).then((snapshot) => {
-          if(snapshot.val()["allowed"] === true && snapshot.val()["signed_up"]) {
-            window.location.href = "/member";
-          } else if(snapshot.val()["allowed"] === false) {
-            alert("Incorrect sign out");
-            this.props.firebase.auth().signOut();
+          if (snapshot.exists()) {
+            const val = snapshot.val();
+            if (val["allowed"] === true && val["signed_up"]) {
+              window.location.href = "/member";
+            } else if (val["allowed"] === false) {
+              alert("Incorrect sign out");
+              this.props.firebase.auth().signOut();
+            }
           }
         })
       }
@@ -26,7 +29,7 @@ class SignUp extends React.Component {
 
   completeSignin(result) {
     var user = result.user;
-    if (!user.email.includes("northwestern.edu")) {
+    if (!user.email.includes("northwestern.edu") && window.location.hostname !== "localhost") {
       this.props.firebase.auth().signOut();
       Swal.fire({
         icon: "error",
@@ -54,6 +57,21 @@ class SignUp extends React.Component {
     get(child(dbRef, "users/" + user.uid))
       .then((user_snapshot) => {
         if (!user_snapshot.exists()) {
+          if (window.location.hostname === "localhost") {
+            Swal.fire({
+              title: "Welcome Developer",
+              icon: "success",
+              text: "Redirecting to account creation (Dev Mode)",
+              timer: 2000,
+              timerProgressBar: true,
+              willClose: () => {
+                clearInterval(timerInterval);
+              },
+            }).then(() => {
+              window.location.href = "/newuser";
+            });
+            return;
+          }
           Swal.fire({
             icon: "error",
             title: "UID not in database",
