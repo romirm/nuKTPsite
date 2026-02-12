@@ -159,7 +159,7 @@ class PledgeCalendar extends React.Component {
     this.fetchNotionContent(this.NOTION_ID)
       .then((res) => {
         this.setState({ notionPageData: res.data }, () => {
-          if (this.state.notionPageData) {
+          if (this.state.notionPageData && this.state.notionPageData.length > 0) {
             // Set the keys of the data to the notionCols, except the "id" column
             this.setState(
               {

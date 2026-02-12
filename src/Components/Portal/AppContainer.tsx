@@ -109,8 +109,14 @@ export default function AppContainer(props: { firebase: any, database: any, stor
         setCurrUserUid(user.uid);
         get(child(dbRef, "public_users"))
           .then((snapshot) => {
+            if (!snapshot.exists()) {
+              throw new Error("public_users data not found");
+            }
             dir = snapshot.val();
             const currProfile = dir[user.uid];
+            if (!currProfile) {
+              throw new Error("User profile not found in public_users");
+            }
             newUser.name = currProfile["name"];
             newUser.imageUrl = currProfile["pfp_thumb_link"]
               ? currProfile["pfp_thumb_link"]
@@ -119,17 +125,60 @@ export default function AppContainer(props: { firebase: any, database: any, stor
           .then(() => {
             setUser(newUser);
             setFullPubDir(dir);
+          })
+          .catch((error) => {
+            console.error("Error loading user profile:", error);
+            
+            // Allow localhost to continue with mock data
+            if (window.location.hostname === "localhost") {
+              console.log("Localhost: Using mock profile data");
+              setUser({
+                name: user.displayName || "Dev User",
+                imageUrl: user.photoURL || defaultUser.imageUrl,
+              });
+              setFullPubDir({});
+              return;
+            }
+            
+            Swal.fire({
+              icon: "error",
+              title: "Error loading profile",
+              text: "There was an error loading your profile. Please try signing in again or contact support@ktpnu.com if the issue persists.",
+            }).then(() => {
+              props.firebase.auth().signOut();
+              window.location.href = "/signup";
+            });
           });
-        get(child(dbRef, "users/" + user.uid)).then((snapshot) => {
-          const prof = snapshot.val();
-          if (prof["admin"]) {
-            setAdmin(true);
-          }
-          if (prof["Role"] === "Pledge") {
-            setPledge(true);
-          }
-        });
+        get(child(dbRef, "users/" + user.uid))
+          .then((snapshot) => {
+            if (!snapshot.exists()) {
+              console.warn("Private user data not found");
+              return;
+            }
+            const prof = snapshot.val();
+            if (prof["admin"]) {
+              setAdmin(true);
+            }
+            if (prof["Role"] === "Pledge") {
+              setPledge(true);
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading user permissions:", error);
+          });
       } else {
+        // Allow localhost access without authentication for development
+        if (window.location.hostname === "localhost") {
+          console.log("Localhost detected - bypassing authentication");
+          setUser({
+            name: "Dev User",
+            imageUrl: defaultUser.imageUrl,
+          });
+          setCurrUserUid("dev-user-id");
+          setAdmin(true); // Give admin access in dev mode
+          return;
+        }
+        
         let timerInterval: any;
         Swal.fire({
           title: "You are signed out. Redirecting to login...",

@@ -945,12 +945,13 @@ class NewUser extends React.Component {
 
   componentDidMount() {
     setTimeout(() => {
-      document.getElementById("last-name").value =
-        sessionStorage.getItem("fullName");
-      document.getElementById("email-address").value =
-        sessionStorage.getItem("emailAddress");
-      document.getElementById("profPicImg").src =
-        sessionStorage.getItem("photoURL");
+      const lastNameEl = document.getElementById("last-name");
+      const emailEl = document.getElementById("email-address");
+      const profPicEl = document.getElementById("profPicImg");
+      
+      if (lastNameEl) lastNameEl.value = sessionStorage.getItem("fullName");
+      if (emailEl) emailEl.value = sessionStorage.getItem("emailAddress");
+      if (profPicEl) profPicEl.src = sessionStorage.getItem("photoURL");
     }, 100);
     this.props.firebase.auth().onAuthStateChanged((user) => {
       if (user) {

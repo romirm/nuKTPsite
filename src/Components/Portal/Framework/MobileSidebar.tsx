@@ -112,9 +112,8 @@ export default function MobileSidebar(props: {
                               {currTab.name}
                             </a>
                           );
-                        } else {
-                          return <></>;
                         }
+                        return null;
                       })}
                     </div>
                     <hr
@@ -146,9 +145,8 @@ export default function MobileSidebar(props: {
                               {currTab.name}
                             </a>
                           );
-                        } else {
-                          return <></>;
                         }
+                        return null;
                       })}
                     </div>
                   </nav>

@@ -21,6 +21,8 @@ class SignUp extends React.Component {
               alert("Incorrect sign out");
               this.props.firebase.auth().signOut();
             }
+          } else if (window.location.hostname === 'localhost') {
+            window.location.href = "/newuser";
           }
         })
       }
