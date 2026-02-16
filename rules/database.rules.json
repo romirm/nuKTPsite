@@ -12,9 +12,9 @@
       }
     },
     "allowed_users": {
+      ".read": "auth.uid != null",
       "$user_id": {
-        ".write": "root.child('users').child(auth.uid).child('admin').val() === true",
-        ".read": false
+        ".write": "root.child('users').child(auth.uid).child('admin').val() === true"
       }
     },
     "public_users": {
@@ -32,6 +32,12 @@
     "announcements": {
       ".write": false,
       ".read": "auth.uid != null"
+    },
+    "calendar_events": {
+      ".read": "auth.uid != null",
+      "$event_id": {
+        ".write": "root.child('users').child(auth.uid).child('admin').val() == true"
+      }
     }
   }
 }

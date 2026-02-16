@@ -7,6 +7,7 @@ import { Calendar as BigCalendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import Modal from "react-modal";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
+import { ref, get, child } from "firebase/database";
 
 const tabNames = ["Upcoming Events", "Calendar View"];
 
@@ -152,6 +153,66 @@ class PledgeCalendar extends React.Component {
 
   componentDidMount() {
     this.loadNotionPage();
+    this.loadFirebaseEvents();
+  }
+
+  // Load events from Firebase
+  async loadFirebaseEvents() {
+    if (!this.props.database) {
+      console.log("Database not available");
+      return;
+    }
+
+    try {
+      const dbRef = ref(this.props.database);
+      const snapshot = await get(child(dbRef, "calendar_events"));
+      
+      if (snapshot.exists()) {
+        const firebaseEvents = snapshot.val();
+        const formattedEvents = [];
+
+        for (let eventId in firebaseEvents) {
+          const event = firebaseEvents[eventId];
+          
+          // Format to match Notion event structure
+          const formattedEvent = {
+            Name: event.Name,
+            Date: new Date(event.Date).toLocaleDateString("en-US", { 
+              month: "long", 
+              day: "numeric", 
+              year: "numeric" 
+            }),
+            Type: event.Type,
+            "Mandatory?": event["Mandatory?"] ? "Yes" : "No",
+            Group: event.Group || "Everyone",
+            Description: event.Description || "",
+            source: "firebase" // Mark as Firebase event
+          };
+
+          formattedEvents.push(formattedEvent);
+        }
+
+        // Merge with existing Notion events
+        this.setState((prevState) => {
+          const mergedEvents = [...prevState.notionEvents, ...formattedEvents];
+          
+          // Sort by date
+          mergedEvents.sort((a, b) => {
+            let a_date = new Date(Date.parse(a["Date"]));
+            let b_date = new Date(Date.parse(b["Date"]));
+            return a_date - b_date;
+          });
+
+          return { notionEvents: mergedEvents };
+        }, () => {
+          // Re-filter and recreate calendar after merging
+          this.filterOutPastEvents();
+          this.createEventDates();
+        });
+      }
+    } catch (error) {
+      console.error("Error loading Firebase events:", error);
+    }
   }
 
   // Parse data from notion

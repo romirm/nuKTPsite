@@ -21,13 +21,6 @@ const navigation = [
 export default function Hero(props: { maintenance: boolean }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const naturalSpring = {
-    type: "spring",
-    stiffness: 150,
-    damping: 20,
-    mass: 0.8,
-  };
-
   return (
     <div className="relative isolate bg-slate-50">
       <header className="fixed inset-x-0 top-0 z-50 bg-white/70 backdrop-blur-md border-b border-slate-200/50 transition-all duration-300">
@@ -108,45 +101,25 @@ export default function Hero(props: { maintenance: boolean }) {
               <div className="flex-none sm:max-w-5xl lg:max-w-none">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-3">
                   <div className="space-y-4 pt-12">
-                    <motion.div 
-                      whileHover={{ y: -10, scale: 1.02 }}
-                      transition={naturalSpring}
-                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
-                    >
-                      <img src={AnnikaPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                    </motion.div>
-                    <motion.div 
-                      whileHover={{ y: -10, scale: 1.02 }}
-                      transition={naturalSpring}
-                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
-                    >
-                      <img src={SpeakerPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                    </motion.div>
+                    <div className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200">
+                      <img src={AnnikaPic} alt="KTP" className="aspect-[2/3] w-48 object-cover" />
+                    </div>
+                    <div className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200">
+                      <img src={SpeakerPic} alt="KTP" className="aspect-[2/3] w-48 object-cover" />
+                    </div>
                   </div>
                   <div className="space-y-4">
-                    <motion.div 
-                      whileHover={{ y: -10, scale: 1.02 }}
-                      transition={naturalSpring}
-                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
-                    >
-                      <img src={LandingPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                    </motion.div>
-                    <motion.div 
-                      whileHover={{ y: -10, scale: 1.02 }}
-                      transition={naturalSpring}
-                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
-                    >
-                      <img src={PcPic} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                    </motion.div>
+                    <div className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200">
+                      <img src={LandingPic} alt="KTP" className="aspect-[2/3] w-48 object-cover" />
+                    </div>
+                    <div className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200">
+                      <img src={PcPic} alt="KTP" className="aspect-[2/3] w-48 object-cover" />
+                    </div>
                   </div>
                   <div className="space-y-4 pt-20">
-                    <motion.div 
-                      whileHover={{ y: -10, scale: 1.02 }}
-                      transition={naturalSpring}
-                      className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200"
-                    >
-                      <img src={SpringPC} alt="KTP" className="aspect-[2/3] w-48 object-cover transition-transform duration-500 hover:scale-110" />
-                    </motion.div>
+                    <div className="relative overflow-hidden rounded-2xl shadow-2xl ring-1 ring-slate-200">
+                      <img src={SpringPC} alt="KTP" className="aspect-[2/3] w-48 object-cover" />
+                    </div>
                   </div>
                 </div>
               </div>

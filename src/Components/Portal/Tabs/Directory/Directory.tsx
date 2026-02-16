@@ -277,7 +277,12 @@ function Directory(props: any) {
             </div>
             <ul role="list" className="relative z-0 divide-y divide-gray-200">
               {Object.keys(shownDirectory[0][letter]) //for each profile under the letter
-                .sort()
+                .sort((uidA: string, uidB: string) => {
+                  // Sort alphabetically by name
+                  const nameA = (shownDirectory[0][letter][uidA].name || "").toLowerCase();
+                  const nameB = (shownDirectory[0][letter][uidB].name || "").toLowerCase();
+                  return nameA.localeCompare(nameB);
+                })
                 .map((uid: string) => {
                   const person = shownDirectory[0][letter][uid]; //individual profile
                   return (

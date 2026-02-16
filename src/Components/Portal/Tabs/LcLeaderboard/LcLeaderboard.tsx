@@ -184,7 +184,7 @@ class LcLeaderboard extends React.Component<
                                         transform="translate(25, 0)"
                                       >
                                         <text className="stat bold" y="12.5">
-                                          Weighted Score:
+                                          Composite Score:
                                         </text>
                                         <text className="stat" x="200" y="12.5">
                                           {currUser.weightedScore}
@@ -197,7 +197,7 @@ class LcLeaderboard extends React.Component<
                                         transform="translate(25, 0)"
                                       >
                                         <text className="stat bold" y="12.5">
-                                          Total Questions Solved:
+                                          Total Questions:
                                         </text>
                                         <text className="stat" x="200" y="12.5">
                                           {currUser.easySolved +

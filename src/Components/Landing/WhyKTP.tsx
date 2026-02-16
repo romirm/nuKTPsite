@@ -5,14 +5,6 @@ import WinterPC from "@images/Branding/winterpc.jpg";
 import Awh from "@images/Branding/awh.jpg";
 
 export default function WhyKTP() {
-  // Define a consistent spring transition for a "natural" organic feel
-  const naturalSpring = {
-    type: "spring",
-    stiffness: 150, // Lower stiffness = less "snappy"
-    damping: 20,    // Higher damping = smoother settling
-    mass: 0.8,      // Adds a sense of physical weight
-  };
-
   return (
     <div id="WhatIsKTP" className="relative overflow-hidden bg-slate-50 py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:flex lg:px-8">
@@ -42,40 +34,32 @@ export default function WhyKTP() {
 
           <div className="flex flex-wrap items-start justify-end gap-6 sm:gap-8 lg:contents">
             <div className="w-0 flex-auto lg:ml-auto lg:w-auto lg:flex-none lg:self-end">
-              <motion.img
-                whileHover={{ y: -12, scale: 1.015 }}
-                transition={naturalSpring}
+              <img
                 src={WIKTP}
                 alt=""
-                className="aspect-[7/5] w-[37rem] max-w-none rounded-3xl bg-gray-50 object-cover shadow-xl hover:shadow-2xl transition-shadow duration-500"
+                className="aspect-[7/5] w-[37rem] max-w-none rounded-3xl bg-gray-50 object-cover shadow-xl"
               />
             </div>
             <div className="contents lg:col-span-2 lg:col-end-2 lg:ml-auto lg:flex lg:w-[37rem] lg:items-start lg:justify-end lg:gap-x-8">
               <div className="order-first flex w-64 flex-none justify-end self-end lg:w-auto">
-                <motion.img
-                  whileHover={{ y: -12, scale: 1.015 }}
-                  transition={naturalSpring}
+                <img
                   src={Pyramid}
                   alt=""
-                  className="aspect-[4/3] w-[24rem] max-w-none flex-none rounded-3xl bg-gray-50 object-cover shadow-xl hover:shadow-2xl transition-shadow duration-500"
+                  className="aspect-[4/3] w-[24rem] max-w-none flex-none rounded-3xl bg-gray-50 object-cover shadow-xl"
                 />
               </div>
               <div className="flex w-96 flex-auto justify-end lg:w-auto lg:flex-none">
-                <motion.img
-                  whileHover={{ y: -12, scale: 1.015 }}
-                  transition={naturalSpring}
+                <img
                   src={Awh}
                   alt=""
-                  className="aspect-[7/5] w-[37rem] max-w-none flex-none rounded-3xl bg-gray-50 object-cover shadow-xl hover:shadow-2xl transition-shadow duration-500"
+                  className="aspect-[7/5] w-[37rem] max-w-none flex-none rounded-3xl bg-gray-50 object-cover shadow-xl"
                 />
               </div>
               <div className="hidden sm:block sm:w-0 sm:flex-auto lg:w-auto lg:flex-none">
-                <motion.img
-                  whileHover={{ y: -12, scale: 1.015 }}
-                  transition={naturalSpring}
+                <img
                   src={WinterPC}
                   alt=""
-                  className="aspect-[4/3] w-[24rem] max-w-none rounded-3xl bg-gray-50 object-cover shadow-xl hover:shadow-2xl transition-shadow duration-500"
+                  className="aspect-[4/3] w-[24rem] max-w-none rounded-3xl bg-gray-50 object-cover shadow-xl"
                 />
               </div>
             </div>

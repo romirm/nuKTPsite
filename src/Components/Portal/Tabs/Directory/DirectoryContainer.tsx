@@ -40,8 +40,6 @@ const LoadingDirectory = {
 
 const tabs = [
   { name: "Profile", href: "#", current: true },
-  { name: "Calendar", href: "#", current: false },
-  { name: "Projects", href: "#", current: false },
 ];
 
 export default function DirectoryContainer(props: {
@@ -77,6 +75,7 @@ export default function DirectoryContainer(props: {
         newDirectory[first_letter][uid] = profile;
       }
     }
+    // Sort letters alphabetically
     const ordered = Object.keys(newDirectory)
       .sort()
       .reduce((obj: any, key) => {

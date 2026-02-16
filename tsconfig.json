@@ -35,7 +35,8 @@
     "baseUrl": "./src" /* Specify the base directory to resolve non-relative module names. */,
     "paths": {
       "@auth/*": ["Components/Portal/Auth/*"],
-     //"@vectors/*": ["Components/Assets/Vectors/*"],
+      "@images/*": ["Assets/Images/*"],
+      "@vectors/*": ["Assets/Vectors/*"],
       "@tabs/*": ["Components/Portal/Tabs/*"],
       "@portal/*": ["Components/Portal/*"],
       "@landing/*": ["Components/Landing/*"]

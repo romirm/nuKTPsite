@@ -105,14 +105,33 @@ export default function AppContainer(props: { firebase: any, database: any, stor
       if (user) {
         var newUser: any = {};
         var dir: any = {};
+        var allowedUsersData: any = {};
         const dbRef = ref(props.database);
         setCurrUserUid(user.uid);
-        get(child(dbRef, "public_users"))
-          .then((snapshot) => {
-            if (!snapshot.exists()) {
+        
+        // Load both public_users and allowed_users
+        Promise.all([
+          get(child(dbRef, "public_users")),
+          get(child(dbRef, "allowed_users"))
+        ])
+          .then(([publicSnapshot, allowedSnapshot]) => {
+            if (!publicSnapshot.exists()) {
               throw new Error("public_users data not found");
             }
-            dir = snapshot.val();
+            dir = publicSnapshot.val();
+            
+            // Get allowed_users data if available
+            if (allowedSnapshot.exists()) {
+              allowedUsersData = allowedSnapshot.val();
+              
+              // Merge role from allowed_users into public_users
+              for (let uid in dir) {
+                if (allowedUsersData[uid] && allowedUsersData[uid].role) {
+                  dir[uid].role = allowedUsersData[uid].role;
+                }
+              }
+            }
+            
             const currProfile = dir[user.uid];
             if (!currProfile) {
               throw new Error("User profile not found in public_users");
@@ -121,8 +140,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
             newUser.imageUrl = currProfile["pfp_thumb_link"]
               ? currProfile["pfp_thumb_link"]
               : currProfile["profile_pic_link"];
-          })
-          .then(() => {
+            
             setUser(newUser);
             setFullPubDir(dir);
           })
@@ -282,7 +300,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
 
         {/* Pledge calendar tab */}
         <div className={currTab=="Calendar" ? "overflow-y-auto" : "hidden"}>
-          <PledgeCalendar />
+          <PledgeCalendar firebase={props.firebase} database={props.database} />
         </div>
 
         <div className={currTab=="Resources" ? "overflow-y-auto" : "hidden"}>
