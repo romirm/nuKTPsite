@@ -25,11 +25,12 @@ function IndivProfile(props: {
   if(!currProfile) {
     return <div></div>;
   }
-  var socials = [];
+  var socials: Array<{ name: string; href: string; icon: any; className: string }> = [];
   if (currProfile.instagram) {
     socials.push({
       name: "Instagram",
       href: "https://instagram.com/" + currProfile.instagram,
+      className: "text-[#E1306C] hover:text-[#C13584]",
       icon: (props:any) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
           <path
@@ -45,6 +46,7 @@ function IndivProfile(props: {
     socials.push({
       name: "Leetcode",
       href: "https://leetcode.com/" + currProfile.leetcode.username,
+      className: "text-slate-500 hover:text-blue-600",
       icon: (props:any) => (
         <svg
           className="h-4 w-4"
@@ -64,6 +66,7 @@ function IndivProfile(props: {
     socials.push({
       name: "LinkedIn",
       href: "https://linkedin.com/in/" + currProfile.linkedin,
+      className: "text-[#0A66C2] hover:text-[#084C8C]",
       icon: (props:any) => (
         <svg fill="currentColor" viewBox="0 -1.3 28 28" {...props}>
           <path
@@ -138,7 +141,7 @@ function IndivProfile(props: {
                 </div>
                 <div className="mt-6 sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:justify-end sm:space-x-6 sm:pb-1">
                   <div className="mt-6 min-w-0 flex-1 sm:hidden 2xl:block">
-                    <h1 className="truncate text-2xl font-bold text-gray-900">
+                        <h1 className="truncate text-2xl font-bold text-gray-900">
                       {currProfile.name}
                     </h1>
                   </div>
@@ -150,11 +153,11 @@ function IndivProfile(props: {
                       type="button"
                       className={classNames(
                         currProfile.email ? "" : "hidden",
-                        "inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        "inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                       )}
                     >
                       <EnvelopeIcon
-                        className="-ml-1 mr-2 h-5 w-5 text-gray-400"
+                        className="-ml-1 mr-2 h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors"
                         aria-hidden="true"
                       />
                       <span>Email</span>
@@ -164,23 +167,26 @@ function IndivProfile(props: {
                       href={currProfile.resume_link}
                       className={classNames(
                         currProfile.resume_link ? "" : "hidden",
-                        "inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                        "inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                       )}
                     >
                       <DocumentTextIcon
-                        className="-ml-1 mr-2 h-5 w-5 text-gray-400"
+                        className="-ml-1 mr-2 h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors"
                         aria-hidden="true"
                       />
                       <span>Resume</span>
                     </a>
                     <div className="flex space-x-6 md:order-2 items-center">
                       {socials.map(
-                        (item: { name: string; href: string; icon: any }) => (
+                        (item: { name: string; href: string; icon: any; className: string }) => (
                           <a
                             key={item.name}
                             href={item.href}
                             target="_blank"
-                            className="text-gray-400 hover:text-gray-500"
+                            className={classNames(
+                              "transition-colors",
+                              item.className || "text-slate-400 hover:text-blue-600"
+                            )}
                           >
                             <span className="sr-only">{item.name}</span>
                             <item.icon className="h-6 w-6" aria-hidden="true" />
@@ -201,7 +207,7 @@ function IndivProfile(props: {
 
           {/* Tabs */}
           <div className="mt-6 sm:mt-2 2xl:mt-5">
-            <div className="border-b border-gray-200">
+            <div className="border-b border-slate-200">
               <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
                 <nav className="-mb-px flex space-x-8" aria-label="Tabs">
                   {props.tabs.map((tab) => (
@@ -210,9 +216,9 @@ function IndivProfile(props: {
                       href={tab.href}
                       className={classNames(
                         tab.current
-                          ? "border-indigo-600 text-gray-900"
-                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
-                        "whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                          ? "border-blue-600 text-blue-900 font-bold"
+                          : "border-transparent text-slate-600 hover:text-blue-700 hover:border-blue-300",
+                        "whitespace-nowrap py-4 px-1 border-b-2 transition-colors"
                       )}
                       aria-current={tab.current ? "page" : undefined}
                     >
@@ -226,25 +232,31 @@ function IndivProfile(props: {
 
           {/* Description list */}
           <div className="mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8">
-            <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
-              {Object.keys(fields).map((field) => (
-                <div key={field} className="sm:col-span-1">
-                  <dt className="text-sm font-medium text-gray-500">{field}</dt>
-                  <dd className="mt-1 text-sm text-gray-900">
-                    {fields[field]}
-                  </dd>
+            <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 sm:p-8">
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+                {Object.keys(fields).map((field) => (
+                  <div key={field} className="sm:col-span-1">
+                    <dt className="text-xs font-bold uppercase tracking-wider text-blue-600">
+                      {field}
+                    </dt>
+                    <dd className="mt-2 text-sm text-slate-900">
+                      {fields[field]}
+                    </dd>
+                  </div>
+                ))}
+                <div className="sm:col-span-2">
+                  <dt className="text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">
+                    About
+                  </dt>
+                  <dd
+                    className="mt-2 max-w-prose space-y-5 text-sm text-slate-900"
+                    dangerouslySetInnerHTML={{
+                      __html: currProfile.about,
+                    }}
+                  />
                 </div>
-              ))}
-              <div className="sm:col-span-2">
-                <dt className="text-sm font-medium text-gray-500">About</dt>
-                <dd
-                  className="mt-1 max-w-prose space-y-5 text-sm text-gray-900"
-                  dangerouslySetInnerHTML={{
-                    __html: currProfile.about,
-                  }}
-                />
-              </div>
-            </dl>
+              </dl>
+            </div>
           </div>
         </article>
       </main>

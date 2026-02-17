@@ -11,7 +11,7 @@ export default function Sidebar(props: { args: SideBarArgsType }) {
   return (
     <div className="hidden lg:flex lg:flex-shrink-0">
       <div className="flex w-64 flex-col">
-        <div className="flex min-h-0 flex-1 flex-col border-r border-gray-200 bg-gray-100">
+        <div className="flex min-h-0 flex-1 flex-col border-r border-slate-200 bg-white">
           <div className="flex flex-1 flex-col overflow-y-auto pt-5 pb-4">
             <div className="flex flex-shrink-0 items-center px-4">
               <img
@@ -37,17 +37,17 @@ export default function Sidebar(props: { args: SideBarArgsType }) {
                         }}
                         className={classNames(
                           isCurrent
-                            ? "bg-gray-200 text-gray-900"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                          "cursor-pointer group flex items-center px-2 py-2 text-sm font-medium rounded-md"
+                            ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 border-l-4 border-blue-600 shadow-sm"
+                            : "text-slate-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm transition-all",
+                          "cursor-pointer group flex items-center px-3 py-2 text-sm font-semibold rounded-md"
                         )}
                         aria-current={isCurrent ? "page" : undefined}
                       >
                         <currTab.icon
                           className={classNames(
                             isCurrent
-                              ? "text-gray-500"
-                              : "text-gray-400 group-hover:text-gray-500",
+                              ? "text-blue-600"
+                              : "text-slate-400 group-hover:text-blue-600 transition-colors",
                             "mr-3 flex-shrink-0 h-6 w-6"
                           )}
                           aria-hidden="true"
@@ -60,7 +60,7 @@ export default function Sidebar(props: { args: SideBarArgsType }) {
                 })}
               </div>
               <hr
-                className="my-5 border-t border-gray-200"
+                className="my-5 border-t border-slate-200"
                 aria-hidden="true"
               />
               <div className="flex-1 space-y-1 px-2">
@@ -76,16 +76,16 @@ export default function Sidebar(props: { args: SideBarArgsType }) {
                         }}
                         className={classNames(
                           isCurrent
-                            ? "bg-gray-200 text-gray-900"
-                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                          "cursor-pointer group flex items-center px-2 py-2 text-sm font-medium rounded-md"
+                            ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 border-l-4 border-blue-600 shadow-sm"
+                            : "text-slate-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm transition-all",
+                          "cursor-pointer group flex items-center px-3 py-2 text-sm font-semibold rounded-md"
                         )}
                       >
                         <currTab.icon
                           className={classNames(
                             isCurrent
-                              ? "text-gray-500"
-                              : "text-gray-400 group-hover:text-gray-500",
+                              ? "text-blue-600"
+                              : "text-slate-400 group-hover:text-blue-600 transition-colors",
                             "mr-3 flex-shrink-0 h-6 w-6"
                           )}
                           aria-hidden="true"
@@ -100,9 +100,9 @@ export default function Sidebar(props: { args: SideBarArgsType }) {
             </nav>
           </div>
           <div className="fixed bottom-0">
-            <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
+            <div className="flex flex-shrink-0 border-t border-slate-200 bg-white p-4 w-64">
               <a
-                className="cursor-pointer group block w-full flex-shrink-0"
+                className="cursor-pointer group block w-full flex-shrink-0 hover:opacity-80 transition-opacity"
                 onClick={() => {
                   args.onTabClick("Members");
                   setActiveProfile(args.uid);
@@ -117,10 +117,10 @@ export default function Sidebar(props: { args: SideBarArgsType }) {
                     />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                    <p className="text-sm font-bold text-slate-900">
                       {args.CurrentUserName}
                     </p>
-                    <p className="text-xs font-medium text-gray-500 group-hover:text-gray-700">
+                    <p className="text-xs font-semibold text-blue-600 group-hover:text-blue-700 transition-colors">
                       View profile
                     </p>
                   </div>

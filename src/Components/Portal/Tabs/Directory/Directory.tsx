@@ -124,7 +124,7 @@ function Directory(props: any) {
         </nav>
       </div>
       <div className="px-6 pt-6 pb-4">
-        <h2 className="text-lg font-medium text-gray-900">Member Directory</h2>
+        <h2 className="text-lg font-bold bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">Member Directory</h2>
         {searchVal === "" && showType === "Everyone" && (
           <p className="mt-1 text-sm text-gray-600">
             Search directory of {shownDirectory[1]} members
@@ -290,9 +290,9 @@ function Directory(props: any) {
                       <div
                         className={classNames(
                           uid === props.activeProfile
-                            ? "bg-gray-100"
-                            : "hover:bg-gray-50",
-                          "relative flex items-center space-x-3 px-6 py-5"
+                            ? "bg-blue-50 border-l-4 border-blue-600 shadow-sm"
+                            : "hover:bg-slate-50",
+                          "relative flex items-center space-x-3 px-6 py-5 transition-colors"
                         )}
                       >
                         <div className="flex-shrink-0">

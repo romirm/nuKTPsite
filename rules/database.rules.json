@@ -2,9 +2,15 @@
   "rules": {
     "users": {
       "$user_id": {
-        ".read":"$user_id === auth.uid",
+        ".read":"$user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true",
         "admin": {
           ".write":false
+        },
+        "year": {
+          ".write": "$user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true"
+        },
+        "major": {
+          ".write": "$user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true"
         },
         "$child": {
           ".write": "$user_id === auth.uid && $child != 'admin'"
@@ -19,6 +25,12 @@
     },
     "public_users": {
       "$user_id": {
+        "year": {
+          ".write": "$user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true"
+        },
+        "major": {
+          ".write": "$user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true"
+        },
         ".write": "$user_id === auth.uid"
       },
       ".read": "auth.uid != null"

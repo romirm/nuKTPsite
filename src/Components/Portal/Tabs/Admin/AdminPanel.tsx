@@ -4,8 +4,10 @@ import {
   PaperAirplaneIcon,
   LinkIcon,
   CalendarDaysIcon,
+  UserGroupIcon,
+  AcademicCapIcon,
 } from "@heroicons/react/20/solid";
-import { ref, set, get, child } from "firebase/database";
+import { ref, set, get, child, update } from "firebase/database";
 import Swal, { SweetAlertResult } from "sweetalert2";
 
 const validateEmail = (email: string) => {
@@ -21,6 +23,11 @@ interface AdminPanelState {
   loading: boolean;
   searchTerm: string;
   roleSelections: {[uid: string]: string}; // Track whether user selected Exec or Custom
+  selectedProfileUid: string;
+  editYear: string;
+  editMajor: string;
+  editStandingViewable: boolean | null;
+  editLoading: boolean;
   messageRecipientType: string;
   directMessageUid: string;
   eventName: string;
@@ -47,6 +54,11 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       loading: true,
       searchTerm: "",
       roleSelections: {},
+      selectedProfileUid: "",
+      editYear: "",
+      editMajor: "",
+      editStandingViewable: null,
+      editLoading: false,
       messageRecipientType: "Pledges",
       directMessageUid: "",
       eventName: "",
@@ -61,6 +73,8 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     this.loadUsers = this.loadUsers.bind(this);
     this.updateUserRole = this.updateUserRole.bind(this);
     this.updateUserRoleCustom = this.updateUserRoleCustom.bind(this);
+    this.loadUserAcademicInfo = this.loadUserAcademicInfo.bind(this);
+    this.updateUserAcademicInfo = this.updateUserAcademicInfo.bind(this);
     this.addCalendarEvent = this.addCalendarEvent.bind(this);
     this.emailButton = React.createRef<HTMLInputElement>();
     this.sendTextButton = React.createRef<HTMLTextAreaElement>();
@@ -138,6 +152,104 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       return;
     }
     this.updateUserRole(uid, customRole.trim());
+  }
+
+  async loadUserAcademicInfo(uid: string) {
+    if (!uid) {
+      this.setState({ editYear: "", editMajor: "", editStandingViewable: null });
+      return;
+    }
+
+    this.setState({ editLoading: true });
+    try {
+      const dbRef = ref(this.props.database);
+      const snapshot = await get(child(dbRef, `users/${uid}`));
+      if (!snapshot.exists()) {
+        Swal.fire({
+          icon: "error",
+          title: "User not found",
+          text: "Could not load academic info for this member."
+        });
+        this.setState({ editLoading: false });
+        return;
+      }
+
+      const userData = snapshot.val() || {};
+      this.setState({
+        editYear: userData.year || "",
+        editMajor: userData.major || "",
+        editStandingViewable: !!userData.standing_viewable,
+        editLoading: false
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to load",
+        text: "Could not load year/major for this member."
+      });
+      this.setState({ editLoading: false });
+    }
+  }
+
+  async updateUserAcademicInfo() {
+    const { selectedProfileUid, editYear, editMajor, editStandingViewable } = this.state;
+    if (!selectedProfileUid) {
+      Swal.fire({
+        icon: "error",
+        title: "Select a member",
+        text: "Please choose a member to update."
+      });
+      return;
+    }
+
+    if (!editYear.trim() && !editMajor.trim()) {
+      Swal.fire({
+        icon: "error",
+        title: "Missing info",
+        text: "Enter a year or major to update."
+      });
+      return;
+    }
+
+    this.setState({ editLoading: true });
+    try {
+      const yearValue = editYear.trim();
+      const majorValue = editMajor.trim();
+      let standingViewable = editStandingViewable;
+
+      if (standingViewable === null) {
+        const dbRef = ref(this.props.database);
+        const snapshot = await get(child(dbRef, `users/${selectedProfileUid}`));
+        standingViewable = !!snapshot.val()?.standing_viewable;
+      }
+
+      const publicYear = standingViewable ? yearValue : "";
+
+      await Promise.all([
+        update(ref(this.props.database, `users/${selectedProfileUid}`), {
+          year: yearValue,
+          major: majorValue
+        }),
+        update(ref(this.props.database, `public_users/${selectedProfileUid}`), {
+          year: publicYear,
+          major: majorValue
+        })
+      ]);
+
+      Swal.fire({
+        icon: "success",
+        title: "Updated",
+        text: "Year/major updated successfully."
+      });
+    } catch (error:any) {
+      Swal.fire({
+        icon: "error",
+        title: "Update failed",
+        text: error.message || "Could not update year/major."
+      });
+    } finally {
+      this.setState({ editLoading: false });
+    }
   }
 
   sendText() {
@@ -302,10 +414,10 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       return;
     }
 
-    // Create event object
+    // Create event object with properly formatted date
     const newEvent = {
       Name: eventName,
-      Date: eventDate,
+      Date: eventDate, // Keep in YYYY-MM-DD format from input
       Type: eventType,
       "Mandatory?": eventMandatory,
       Group: eventGroup,
@@ -359,23 +471,98 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
 
     return (
       <div className="">
-        {/* Role Management Section */}
-        <div className="mt-4 px-4 w-full">
-          <div className="bg-gray-100 shadow sm:rounded-lg">
+        {/* Member Management Section */}
+        <div className="mt-6 px-4 w-full">
+          <div className="flex items-center mb-4">
+            <UserPlusIcon className="h-6 w-6 text-blue-600 mr-2" />
+            <h2 className="text-xl font-bold text-gray-900">Member Management</h2>
+          </div>
+        </div>
+
+        {/* Add new user section */}
+        <div className="mt-2 px-4 w-full">
+          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
+              <h3 className="text-lg font-semibold leading-6 text-blue-900">
+                Add New Member
+              </h3>
+              <div className="mt-2 max-w-xl text-sm text-gray-600">
+                <p>Add a new member to the system using their Northwestern email.</p>
+              </div>
+              <form className="mt-5 space-y-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="new-member-email" className="block text-sm font-medium text-gray-700">
+                      Northwestern Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      id="new-member-email"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      placeholder="person@u.northwestern.edu"
+                      ref={this.emailButton}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="member-type" className="block text-sm font-medium text-gray-700">
+                      Member Type
+                    </label>
+                    <select
+                      id="member-type"
+                      name="member-type"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      defaultValue="Member"
+                      ref={this.typeOfMember}
+                    >
+                      <option>Pledge</option>
+                      <option>Member</option>
+                      <option>Alumni</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                      type="button"
+                      onClick={this.addNewUser}
+                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
+                  >
+                <UserPlusIcon className="-ml-1 mr-2 h-5 w-5" />
+            Add Member
+          </button>
+            </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* User Management Section */}
+        <div className="mt-6 px-4 w-full">
+          <div className="flex items-center mb-4">
+            <UserGroupIcon className="h-6 w-6 text-blue-600 mr-2" />
+            <h2 className="text-xl font-bold text-gray-900">User Management</h2>
+          </div>
+        </div>
+
+        <div className="mt-2 px-4 w-full">
+          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg font-semibold leading-6 text-blue-900">
                 Manage User Roles
               </h3>
-              <div className="mt-2 max-w-xl text-sm text-gray-500">
+              <div className="mt-2 max-w-xl text-sm text-gray-600">
                 <p>Update member roles. Select Member/Pledge/Alumni, or choose Exec for leadership positions, or Custom to type your own.</p>
               </div>
               
               {/* Search bar */}
               <div className="mt-4 mb-4">
+                <label htmlFor="search-users" className="sr-only">Search users</label>
                 <input
+                  id="search-users"
                   type="text"
                   placeholder="Search by name or role..."
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   value={this.state.searchTerm}
                   onChange={(e) => this.setState({ searchTerm: e.target.value })}
                 />
@@ -383,19 +570,19 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
 
               {/* User list */}
               {this.state.loading ? (
-                <div className="text-center py-4">Loading users...</div>
+                <div className="text-center py-4 text-gray-600">Loading users...</div>
               ) : (
                 <div className="mt-4 max-h-96 overflow-y-auto border border-gray-200 rounded-md">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-indigo-600 sticky top-0">
+                    <thead className="bg-gradient-to-r from-blue-50 to-blue-100 sticky top-0">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-white tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
                           Name
                         </th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-white tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
                           Current Role
                         </th>
-                        <th className="px-4 py-3 text-left text-sm font-semibold text-white tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
                           Update Role
                         </th>
                       </tr>
@@ -409,17 +596,19 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                         </tr>
                       ) : (
                         filteredUsers.map((user) => (
-                          <tr key={user.uid} className="hover:bg-gray-50">
+                          <tr key={user.uid} className="hover:bg-blue-50 transition-colors duration-150">
                             <td className="px-4 py-3 text-sm font-medium text-gray-900">
                               {user.name}
                             </td>
-                            <td className="px-4 py-3 text-sm text-gray-500">
-                              {user.currentRole}
+                            <td className="px-4 py-3 text-sm text-gray-600">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                {user.currentRole}
+                              </span>
                             </td>
                             <td className="px-4 py-3 text-sm">
-                              <div className="flex gap-2">
+                              <div className="flex flex-wrap gap-2">
                                 <select
-                                  className="block w-48 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                  className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                                   value={this.state.roleSelections[user.uid] || ""}
                                   onChange={(e) => {
                                     const selection = e.target.value;
@@ -446,7 +635,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                                 {/* Show exec dropdown if Exec is selected */}
                                 {this.state.roleSelections[user.uid] === "Exec" && (
                                   <select
-                                    className="block w-56 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                                     onChange={(e) => {
                                       if (e.target.value) {
                                         this.updateUserRole(user.uid, e.target.value);
@@ -469,7 +658,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                                   <input
                                     type="text"
                                     placeholder="Type custom role and press Enter"
-                                    className="block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                                     onKeyPress={(e) => {
                                       if (e.key === 'Enter' && e.currentTarget.value.trim()) {
                                         this.updateUserRoleCustom(user.uid, e.currentTarget.value);
@@ -491,197 +680,158 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                   </table>
                 </div>
               )}
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="mt-3 text-xs text-gray-500">
                 Showing {filteredUsers.length} of {this.state.users.length} users
               </div>
             </div>
           </div>
         </div>
 
-        {/* Send a text section */}
-        <div className="mt-4 px-4 w-full">
-          <div className="bg-gray-100 shadow sm:rounded-lg">
+        {/* Update Year/Major Section */}
+        <div className="mt-6 px-4 w-full">
+          <div className="flex items-center mb-4">
+            <AcademicCapIcon className="h-6 w-6 text-blue-600 mr-2" />
+            <h2 className="text-xl font-bold text-gray-900">Academic Info</h2>
+          </div>
+        </div>
+
+        <div className="mt-2 px-4 w-full">
+          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
-                Send a text
+              <h3 className="text-lg font-semibold leading-6 text-blue-900">
+                Update Year/Major
               </h3>
-              <div className="mt-2 max-w-xl text-sm text-gray-500">
-                <p>Enter the message you'd like to send to the members</p>
+              <div className="mt-2 max-w-xl text-sm text-gray-600">
+                <p>Fix a member's class standing or major. Year visibility respects their profile settings.</p>
               </div>
-              <form className="mt-5 flex flex-col sm:flex-row items-center">
-                <div className="flex flex-row items-center">
-                  <div className="w-full sm:max-w-sm mb-0">
-                    <label htmlFor="email" className="sr-only">
-                      Message
+
+              <div className="mt-5 space-y-4">
+                <div>
+                  <label htmlFor="academic-member" className="block text-sm font-medium text-gray-700">
+                    Select Member
+                  </label>
+                  <select
+                    id="academic-member"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    value={this.state.selectedProfileUid}
+                    onChange={(e) => {
+                      const uid = e.target.value;
+                      this.setState({ selectedProfileUid: uid });
+                      this.loadUserAcademicInfo(uid);
+                    }}
+                  >
+                    <option value="">Select member</option>
+                    {this.state.users.map((user) => (
+                      <option key={user.uid} value={user.uid}>{user.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="academic-year" className="block text-sm font-medium text-gray-700">
+                      Class Standing
                     </label>
-                    <textarea
-                      name="text"
-                      id="text"
-                      className="block w-full sm:min-w-[13rem] min-h-[2.5rem] h-[2.5rem] rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="Pledge meeting tonight @ 7:00..."
-                      ref={this.sendTextButton}
+                    <input
+                      id="academic-year"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      placeholder="e.g., Junior"
+                      value={this.state.editYear}
+                      onChange={(e) => this.setState({ editYear: e.target.value })}
+                      disabled={this.state.editLoading}
                     />
                   </div>
-                  <div className="sm:ml-1 sm:mr-1 relative bottom-[2px] my-2 sm:my-0">
-                    <select
-                      id="who-to-text"
-                      name="who-to-text"
-                      className="mt-1 block min-w-[7rem] w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                      value={this.state.messageRecipientType}
-                      onChange={(e) => this.setState({ messageRecipientType: e.target.value, directMessageUid: "" })}
-                      ref={this.whoToButton}
-                    >
-                      <option>Pledges</option>
-                      <option>Members</option>
-                      <option>Everyone</option>
-                      <option>Individual</option>
-                    </select>
-                  </div>
-                  {this.state.messageRecipientType === "Individual" && (
-                    <div className="sm:ml-1 sm:mr-1 relative bottom-[2px] my-2 sm:my-0">
-                      <select
-                        id="direct-recipient"
-                        name="direct-recipient"
-                        className="mt-1 block min-w-[10rem] w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                        value={this.state.directMessageUid}
-                        onChange={(e) => this.setState({ directMessageUid: e.target.value })}
-                      >
-                        <option value="">Select member</option>
-                        {this.state.users.map((user) => (
-                          <option key={user.uid} value={user.uid}>{user.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                  <div className="relative bottom-[2px] my-2 sm:my-0">
-                    <select
-                      id="event-type"
-                      name="event-type"
-                      className="mt-1 block w-full min-w-[7rem] rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                      defaultValue="Event"
-                      ref={this.messageTypeButton}
-                    >
-                      <option>Event</option>
-                      <option>Announcement</option>
-                    </select>
+                  <div>
+                    <label htmlFor="academic-major" className="block text-sm font-medium text-gray-700">
+                      Major
+                    </label>
+                    <input
+                      id="academic-major"
+                      type="text"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      placeholder="e.g., Computer Science"
+                      value={this.state.editMajor}
+                      onChange={(e) => this.setState({ editMajor: e.target.value })}
+                      disabled={this.state.editLoading}
+                    />
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={this.sendText}
-                  className="relative bottom-[1px] min-w-[157px] inline-flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                >
-                  <PaperAirplaneIcon className="-ml-1 mr-2 h-5 w-5" />
-                  Send Message
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-        <div className="mt-4 px-4 w-full">
-          <div className="bg-gray-100 shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
-                Add new user
-              </h3>
-              <div className="mt-2 max-w-xl text-sm text-gray-500">
-                <p>Enter the email of the user you want to add</p>
-              </div>
-              <form className="mt-5 flex flex-col sm:flex-row items-center">
-                <div className="flex flex-row items-center w-full sm:w-[297px]">
-                  <div className="w-full sm:max-w-xs">
-                    <label htmlFor="email" className="sr-only">
-                      Email
-                    </label>
-                    <input
-                      type="email"
-                      name="email"
-                      id="email"
-                      className="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="person@u.northwestern.edu"
-                      ref={this.emailButton}
-                    />
-                  </div>
-                  <div className="sm:ml-1 sm:mr-1 relative bottom-[2px] my-2 sm:my-0">
-                    <select
-                      id="type-of-user"
-                      name="type-of-user"
-                      className="mt-1 block min-w-[7rem] w-full rounded-md border-gray-300 py-2 pl-3 pr-10 text-base focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                      defaultValue="Member"
-                      ref={this.typeOfMember}
-                    >
-                      <option>Pledge</option>
-                      <option>Member</option>
-                      <option>Alumni</option>
-                    </select>
-                  </div>
+                <div>
+                  <button
+                    type="button"
+                    onClick={this.updateUserAcademicInfo}
+                    disabled={this.state.editLoading || !this.state.selectedProfileUid}
+                    className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors sm:text-sm"
+                  >
+                    Update Academic Info
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={this.addNewUser}
-                  className="inline-flex min-w-[121px] w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                >
-                  <UserPlusIcon className="-ml-1 mr-2 h-5 w-5" />
-                  Add User
-                </button>
-              </form>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Add Calendar Event Section */}
-        <div className="mt-4 px-4 w-full">
-          <div className="bg-gray-100 shadow sm:rounded-lg">
+        <div className="mt-6 px-4 w-full">
+          <div className="flex items-center mb-4">
+            <CalendarDaysIcon className="h-6 w-6 text-blue-600 mr-2" />
+            <h2 className="text-xl font-bold text-gray-900">Calendar Tools</h2>
+          </div>
+        </div>
+
+        <div className="mt-2 px-4 w-full">
+          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
-                Add Calendar Event
+              <h3 className="text-lg font-semibold leading-6 text-blue-900">
+                Create New Event
               </h3>
-              <div className="mt-2 max-w-xl text-sm text-gray-500">
-                <p>Create a new event that will appear in the member calendar.</p>
+              <div className="mt-2 max-w-xl text-sm text-gray-600">
+                <p>Add events to the calendar that will be visible to all members.</p>
               </div>
               
               <div className="mt-5 space-y-4">
-                {/* Event Name */}
-                <div>
-                  <label htmlFor="event-name" className="block text-sm font-medium text-gray-700">
-                    Event Name *
-                  </label>
-                  <input
-                    ref={this.eventNameInput}
-                    type="text"
-                    id="event-name"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Weekly Meeting"
-                    value={this.state.eventName}
-                    onChange={(e) => this.setState({ eventName: e.target.value })}
-                  />
-                </div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {/* Event Name */}
+                  <div className="sm:col-span-2">
+                    <label htmlFor="event-name" className="block text-sm font-medium text-gray-700">
+                      Event Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      ref={this.eventNameInput}
+                      type="text"
+                      id="event-name"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      placeholder="e.g., Weekly Meeting, Fundraiser"
+                      value={this.state.eventName}
+                      onChange={(e) => this.setState({ eventName: e.target.value })}
+                    />
+                  </div>
 
-                {/* Event Date */}
-                <div>
-                  <label htmlFor="event-date" className="block text-sm font-medium text-gray-700">
-                    Event Date *
-                  </label>
-                  <input
-                    ref={this.eventDateInput}
-                    type="date"
-                    id="event-date"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    value={this.state.eventDate}
-                    onChange={(e) => this.setState({ eventDate: e.target.value })}
-                  />
-                </div>
+                  {/* Event Date */}
+                  <div>
+                    <label htmlFor="event-date" className="block text-sm font-medium text-gray-700">
+                      Date <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      ref={this.eventDateInput}
+                      type="date"
+                      id="event-date"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      value={this.state.eventDate}
+                      onChange={(e) => this.setState({ eventDate: e.target.value })}
+                    />
+                  </div>
 
-                {/* Event Type and Group Row */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  {/* Event Type */}
                   <div>
                     <label htmlFor="event-type" className="block text-sm font-medium text-gray-700">
-                      Event Type
+                      Type
                     </label>
                     <select
                       id="event-type"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       value={this.state.eventType}
                       onChange={(e) => this.setState({ eventType: e.target.value })}
                     >
@@ -694,32 +844,35 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                     </select>
                   </div>
 
+                  {/* Event Group */}
                   <div>
                     <label htmlFor="event-group" className="block text-sm font-medium text-gray-700">
-                      Group
+                      For
                     </label>
                     <select
                       id="event-group"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       value={this.state.eventGroup}
                       onChange={(e) => this.setState({ eventGroup: e.target.value })}
                     >
                       <option value="Everyone">Everyone</option>
-                      <option value="Members">Members</option>
-                      <option value="Pledges">Pledges</option>
-                      <option value="Exec">Exec</option>
+                      <option value="Members">Members Only</option>
+                      <option value="Pledges">Pledges Only</option>
+                      <option value="Exec">Exec Only</option>
                     </select>
                   </div>
 
-                  <div className="flex items-end">
-                    <label className="flex items-center h-10">
-                      <input
-                        type="checkbox"
-                        className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                        checked={this.state.eventMandatory}
-                        onChange={(e) => this.setState({ eventMandatory: e.target.checked })}
-                      />
-                      <span className="ml-2 text-sm text-gray-700">Mandatory</span>
+                  {/* Mandatory Checkbox */}
+                  <div className="flex items-center pt-6">
+                    <input
+                      type="checkbox"
+                      id="event-mandatory"
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      checked={this.state.eventMandatory}
+                      onChange={(e) => this.setState({ eventMandatory: e.target.checked })}
+                    />
+                    <label htmlFor="event-mandatory" className="ml-2 text-sm text-gray-700">
+                      Mandatory Event
                     </label>
                   </div>
                 </div>
@@ -732,23 +885,23 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                   <textarea
                     ref={this.eventDescInput}
                     id="event-desc"
-                    rows={3}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                    placeholder="Event details, location, etc..."
+                    rows={2}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    placeholder="Location, time details, or additional info..."
                     value={this.state.eventDescription}
                     onChange={(e) => this.setState({ eventDescription: e.target.value })}
                   />
                 </div>
 
                 {/* Submit Button */}
-                <div>
+                <div className="pt-2">
                   <button
                     type="button"
                     onClick={this.addCalendarEvent}
-                    className="inline-flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:text-sm"
+                    className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
                   >
                     <CalendarDaysIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Add Event to Calendar
+                    Add to Calendar
                   </button>
                 </div>
               </div>
@@ -756,33 +909,143 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
           </div>
         </div>
 
-        <div className="mt-4 px-4 w-full">
-          <div className="bg-gray-100 shadow sm:rounded-lg">
+        {/* Messaging Section */}
+        <div className="mt-6 px-4 w-full">
+          <div className="flex items-center mb-4">
+            <PaperAirplaneIcon className="h-6 w-6 text-blue-600 mr-2" />
+            <h2 className="text-xl font-bold text-gray-900">Messaging</h2>
+          </div>
+        </div>
+
+        {/* Send a text section */}
+        <div className="mt-2 px-4 w-full">
+          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-medium leading-6 text-gray-900">
-                Notion Links
+              <h3 className="text-lg font-semibold leading-6 text-blue-900">
+                Send a Message
               </h3>
-              <div className="sm:flex sm:flex-row sm:gap-2">
-                <form className="sm:mt-5 min-w-[85px] sm:flex sm:items-center">
-                  <a
-                    target="_blank"
-                    className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                    href="https://www.notion.so/97757d83c1bc42708c8a2cd51f96e9aa?v=542627b9c9d4412b8aec5711552f4bb9"
-                  >
-                    <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Pledge Calendar
-                  </a>
-                </form>
-                <form className="sm:mt-5 min-w-[85px] sm:flex sm:items-center">
-                  <a
-                    target="_blank"
-                    className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                    href="https://www.notion.so/d1fe9440ad2e489299f645134a2bf7a9?v=1909dd71e41f40c0b23c6be525c7a8a6"
-                  >
-                    <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Sprint
-                  </a>
-                </form>
+              <div className="mt-2 max-w-xl text-sm text-gray-600">
+                <p>Send text messages or announcements to members.</p>
+              </div>
+              <form className="mt-5 space-y-4">
+                <div>
+                  <label htmlFor="message-text" className="block text-sm font-medium text-gray-700">
+                    Message <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="text"
+                    id="message-text"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    placeholder="Pledge meeting tonight @ 7:00..."
+                    ref={this.sendTextButton}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex flex-wrap items-end justify-between gap-4">
+                  {/* Left side controls */}
+                  <div className="flex flex-wrap gap-4">
+                    <div className="min-w-[12rem]">
+                      <label htmlFor="who-to-text" className="block text-sm font-medium text-gray-700">
+                        Send To
+                      </label>
+                      <select
+                        id="who-to-text"
+                        name="who-to-text"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        value={this.state.messageRecipientType}
+                        onChange={(e) => this.setState({ messageRecipientType: e.target.value, directMessageUid: "" })}
+                        ref={this.whoToButton}
+                      >
+                        <option>Pledges</option>
+                        <option>Members</option>
+                        <option>Everyone</option>
+                        <option>Individual</option>
+                      </select>
+                    </div>
+
+                    {this.state.messageRecipientType === "Individual" && (
+                      <div className="min-w-[12rem]">
+                        <label htmlFor="direct-recipient" className="block text-sm font-medium text-gray-700">
+                          Select Member
+                        </label>
+                        <select
+                          id="direct-recipient"
+                          name="direct-recipient"
+                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                          value={this.state.directMessageUid}
+                          onChange={(e) => this.setState({ directMessageUid: e.target.value })}
+                        >
+                          <option value="">Select member</option>
+                          {this.state.users.map((user) => (
+                            <option key={user.uid} value={user.uid}>{user.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    <div className="min-w-[12rem]">
+                      <label htmlFor="message-type" className="block text-sm font-medium text-gray-700">
+                        Type
+                      </label>
+                      <select
+                        id="message-type"
+                        name="message-type"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        defaultValue="Event"
+                        ref={this.messageTypeButton}
+                      >
+                        <option>Event</option>
+                        <option>Announcement</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Right side button */}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={this.sendText}
+                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
+                    >
+                      <PaperAirplaneIcon className="-ml-1 mr-2 h-5 w-5" />
+                      Send Message
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-4 px-4 w-full">
+          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg font-semibold leading-6 text-blue-900">
+                Quick Links
+              </h3>
+              <div className="mt-2 max-w-xl text-sm text-gray-600">
+                <p>Access frequently used Notion pages and external resources.</p>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
+                  href="https://www.notion.so/97757d83c1bc42708c8a2cd51f96e9aa?v=542627b9c9d4412b8aec5711552f4bb9"
+                >
+                  <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
+                  Pledge Calendar
+                </a>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
+                  href="https://www.notion.so/d1fe9440ad2e489299f645134a2bf7a9?v=1909dd71e41f40c0b23c6be525c7a8a6"
+                >
+                  <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
+                  Sprint
+                </a>
               </div>
             </div>
           </div>

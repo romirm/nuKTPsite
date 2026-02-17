@@ -1,17 +1,53 @@
 import React from "react";
 import request from "axios";
-import { CalendarDaysIcon } from "@heroicons/react/24/outline";
+import { CalendarDaysIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import { Tab } from "@headlessui/react";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-import { Calendar as BigCalendar, momentLocalizer } from "react-big-calendar";
+import { Calendar as BigCalendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import Modal from "react-modal";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import { ref, get, child } from "firebase/database";
+import { ref, get, child, remove } from "firebase/database";
+import Swal from "sweetalert2";
 
 const tabNames = ["Upcoming Events", "Calendar View"];
 
 const localizer = momentLocalizer(moment);
+
+// Custom Toolbar Component
+const CustomToolbar = (toolbar) => {
+  const goToToday = () => toolbar.onNavigate("TODAY");
+  const goToBack = () => toolbar.onNavigate("PREV");
+  const goToNext = () => toolbar.onNavigate("NEXT");
+
+  return (
+    <div className="rbc-toolbar-custom">
+      <div className="rbc-btn-group">
+        <button onClick={goToBack} className="rbc-toolbar-btn-nav">
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
+        <button onClick={goToNext} className="rbc-toolbar-btn-nav">
+          <ChevronRightIcon className="h-5 w-5" />
+        </button>
+      </div>
+
+      <span className="rbc-toolbar-label">{toolbar.label}</span>
+
+      <div className="rbc-btn-group">
+        {toolbar.views.map((v) => (
+          <button
+            key={v}
+            onClick={() => toolbar.onView(v)}
+            className={`rbc-toolbar-btn-view ${toolbar.view === v ? "active" : ""}`}
+          >
+            {v.charAt(0).toUpperCase() + v.slice(1)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const customStyles = {
   content: {
@@ -22,9 +58,9 @@ const customStyles = {
     marginRight: "-50%",
     transform: "translate(-50%, -50%)",
     background: "#fff",
-    borderRadius: "10px",
-    borderColor: "#7c3aed",
-    boxShadow: "rgb(0 0 0 / 10%) 0px 0px 5px 2px",
+    borderRadius: "12px",
+    border: "1px solid #dbeafe",
+    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
   },
 };
 
@@ -55,6 +91,7 @@ class PledgeCalendar extends React.Component {
       // Modal
       showModal: false,
       selectedEvent: null,
+      selectedEventData: null, // Store original event data for deletion
     };
 
     // ID of notion page
@@ -93,31 +130,8 @@ class PledgeCalendar extends React.Component {
         let mand = event["Mandatory?"];
         let group = event["Group"];
         let desc = event["Description"];
-
-        // Rush, Social, Pledge Task, Briefing, Capstone, and Professional styles
-        let eventStyle = {};
-        switch (type) {
-          case 'Rush':
-            eventStyle = {backgroundColor: 'blue'};
-            break;
-          case 'Social':
-            eventStyle = {backgroundColor: 'yellow'};
-            break;
-          case 'Pledge Task':
-            eventStyle = {backgroundColor: 'orange'};
-            break;
-          case 'Briefing':
-            eventStyle = {backgroundColor: 'pink'};
-            break;
-          case 'Capstone':
-            eventStyle = {backgroundColor: 'green'};
-            break;
-          case 'Professional':
-            eventStyle = {backgroundColor: 'purple'};
-            break;
-          default:
-            break;
-        }
+        let source = event["source"];
+        let firebaseId = event["firebaseId"];
 
         // Turn "Yes" for the mandatory field into
         // "Mandatory" or "Not Mandatory"
@@ -135,7 +149,8 @@ class PledgeCalendar extends React.Component {
           end: date,
           desc: fullDesc,
           type: type,
-          style: eventStyle
+          source: source,
+          firebaseId: firebaseId
         };
 
         return currEvent;
@@ -144,11 +159,62 @@ class PledgeCalendar extends React.Component {
   }
 
   onSelectEvent = (event) => {
-    this.setState({ showModal: true, selectedEvent: event });
+    // Find the original event data to check if it's from Firebase
+    const originalEvent = this.state.notionEvents.find(e => e.Name === event.title);
+    this.setState({ 
+      showModal: true, 
+      selectedEvent: event,
+      selectedEventData: originalEvent 
+    });
+  };
+
+  deleteEvent = async () => {
+    const { selectedEventData } = this.state;
+    
+    if (!selectedEventData || selectedEventData.source !== "firebase") {
+      Swal.fire({
+        icon: "error",
+        title: "Cannot Delete",
+        text: "Only events added through the admin panel can be deleted."
+      });
+      return;
+    }
+
+    const confirmed = await Swal.fire({
+      icon: "warning",
+      title: "Delete Event?",
+      text: `Are you sure you want to delete "${selectedEventData.Name}"? This cannot be undone.`,
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it"
+    });
+
+    if (!confirmed.isConfirmed) return;
+
+    try {
+      await remove(ref(this.props.database, `calendar_events/${selectedEventData.firebaseId}`));
+      
+      Swal.fire({
+        icon: "success",
+        title: "Deleted!",
+        text: "Event has been removed from the calendar."
+      });
+
+      // Reload events
+      this.setState({ showModal: false, selectedEvent: null, selectedEventData: null });
+      this.loadFirebaseEvents();
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Delete Failed",
+        text: error.message || "Could not delete the event."
+      });
+    }
   };
 
   closeModal = () => {
-    this.setState({ showModal: false, selectedEvent: null });
+    this.setState({ showModal: false, selectedEvent: null, selectedEventData: null });
   };
 
   componentDidMount() {
@@ -174,19 +240,27 @@ class PledgeCalendar extends React.Component {
         for (let eventId in firebaseEvents) {
           const event = firebaseEvents[eventId];
           
-          // Format to match Notion event structure
+          // Keep the date in a parseable format (YYYY-MM-DD or ISO string)
+          let dateStr = event.Date;
+          
+          // If it's already a Date object or ISO string, parse it
+          // If it's YYYY-MM-DD format from input, keep it as is
+          let dateObj = new Date(dateStr);
+          
+          // Format to match Notion event structure with consistent date format
           const formattedEvent = {
             Name: event.Name,
-            Date: new Date(event.Date).toLocaleDateString("en-US", { 
+            Date: dateObj.toLocaleDateString("en-US", { 
               month: "long", 
               day: "numeric", 
               year: "numeric" 
             }),
-            Type: event.Type,
+            Type: event.Type || "Social",
             "Mandatory?": event["Mandatory?"] ? "Yes" : "No",
             Group: event.Group || "Everyone",
             Description: event.Description || "",
-            source: "firebase" // Mark as Firebase event
+            source: "firebase",
+            firebaseId: eventId // Store the Firebase ID for deletion
           };
 
           formattedEvents.push(formattedEvent);
@@ -206,6 +280,12 @@ class PledgeCalendar extends React.Component {
           return { notionEvents: mergedEvents };
         }, () => {
           // Re-filter and recreate calendar after merging
+          this.filterOutPastEvents();
+          this.createEventDates();
+        });
+      } else {
+        // No events yet - just proceed with empty list
+        this.setState({}, () => {
           this.filterOutPastEvents();
           this.createEventDates();
         });
@@ -359,25 +439,32 @@ class PledgeCalendar extends React.Component {
     // Rush, Social, Pledge Task, Briefing, Capstone, and Professional
     switch (event.type) {
       case 'Rush':
-        newStyle.backgroundColor = '#4db8a1';
+        newStyle.backgroundColor = '#2563eb'; // Blue-600
+        newStyle.color = '#ffffff';
         break;
       case 'Social':
-        newStyle.backgroundColor = '#9a8fbf';
+        newStyle.backgroundColor = '#0ea5e9'; // Cyan-500
+        newStyle.color = '#ffffff';
         break;
       case 'Pledge Task':
-        newStyle.backgroundColor = '#ff6b6b';
+        newStyle.backgroundColor = '#dc2626'; // Red-600
+        newStyle.color = '#ffffff';
         break;
       case 'Briefing':
-        newStyle.backgroundColor = '#5c7cfa';
+        newStyle.backgroundColor = '#7c3aed'; // Violet-600
+        newStyle.color = '#ffffff';
         break;
       case 'Capstone':
-        newStyle.backgroundColor = '#789764';
+        newStyle.backgroundColor = '#059669'; // Emerald-600
+        newStyle.color = '#ffffff';
         break;
       case 'Professional':
-        newStyle.backgroundColor = '#EDC483';
+        newStyle.backgroundColor = '#f59e0b'; // Amber-500
+        newStyle.color = '#ffffff';
         break;
       default:
-        newStyle.backgroundColor = '#B5BFB6';
+        newStyle.backgroundColor = '#6b7280'; // Gray-500
+        newStyle.color = '#ffffff';
         break;
     }
 
@@ -391,44 +478,39 @@ class PledgeCalendar extends React.Component {
       <>
         <div className="overflow-y-auto m-8">
           {/* Header */}
-          <div className="">
+          <div className="mb-6">
             {/* Icon and Title */}
             <div className="flex items-center pb-2">
               {/* Calendar Icon */}
               <div className="flex justify-center items-center">
-                <CalendarDaysIcon className="text-indigo-700 mr-[0.5rem] h-[2.5rem] w-[2.5rem]" />
+                <CalendarDaysIcon className="text-blue-600 mr-3 h-8 w-8" />
               </div>
 
               {/* Title */}
-              <div className="text-2xl font-semibold tracking-tight text-gray-900 sm:text-3xl">
+              <div className="text-3xl font-bold tracking-tight text-gray-900">
                 KTP Calendar
               </div>
             </div>
 
             {/* Subtitle */}
-            {false && (
-              <div className="mx-auto text-sm inline-block text-gray-500 flex items-center">
-                Use this calendar to plan and stay on top of all your KTP
-                events and deadlines.
-              </div>
-            )}
-            <div className="mx-auto text-sm inline-block text-gray-500 flex items-center">
-              This calendar contains upcoming events.
+            <div className="mt-2 text-sm text-gray-600">
+              View upcoming events and add them to your Google Calendar
             </div>
           </div>
 
           <Tab.Group>
-            <Tab.List className="flex space-x-1 drop-shadow-md mb-4 mt-6">
+            <Tab.List className="flex flex-wrap gap-2 mb-6">
               {/* Render tabs */}
               {Object.values(tabNames).map((tabName) => (
                 <Tab
+                  key={tabName}
                   className={({ selected }) =>
                     this.classNames(
-                      "w-[10rem] rounded-lg py-2 text-sm font-medium leading-5 text-white",
-                      "focus:outline-none shadow",
+                      "px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
+                      "focus:outline-none",
                       selected
-                        ? "bg-indigo-700"
-                        : "bg-white text-indigo-700 hover:bg-white/[0.2] border border-indigo-700"
+                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
+                        : "bg-white text-gray-700 border border-gray-200 hover:bg-blue-50 hover:text-blue-700"
                     )
                   }
                 >
@@ -438,11 +520,12 @@ class PledgeCalendar extends React.Component {
               <a
                 href="https://calendar.google.com/calendar/u/0?cid=0d50eaeb066499c78cb55207b8499ba6dbc9f06ab7e903f45c46eada3b947f5c@group.calendar.google.com"
                 target="_blank"
-                className="inline-flex items-center gap-x-1.5 rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-md hover:bg-blue-700 transition-colors duration-200 ml-auto"
               >
-                Add events to your Google calendar
+                <span>Add to Google Calendar</span>
                 <ArrowTopRightOnSquareIcon
-                  className="-mr-0.5 h-5 w-5"
+                  className="h-4 w-4"
                   aria-hidden="true"
                 />
               </a>
@@ -450,32 +533,64 @@ class PledgeCalendar extends React.Component {
             <Tab.Panels>
               <Tab.Panel>
                 {this.state.notionPageData ? (
-                  <div className="bg-white w-full h-full">
-                    <div className="bg-white sm:rounded-lg">
+                  <div className="w-full">
+                    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                       {/* Table */}
-                      <div className="mt-6 overflow-x-auto scrollbar-hide overscroll-x-none">
-                        <table>
-                          <thead>
+                      <div className="overflow-x-auto">
+                        <table className="w-full divide-y divide-gray-200">
+                          <thead className="bg-gradient-to-r from-blue-50 to-blue-100">
                             {/* Render columns */}
                             <tr>
                               {this.state.notionCols.map((column, index) => (
-                                <th key={index} className={`th-${index}`}>
+                                <th 
+                                  key={index} 
+                                  className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider"
+                                >
                                   {column}
                                 </th>
                               ))}
                             </tr>
                           </thead>
-                          <tbody>
+                          <tbody className="divide-y divide-gray-200">
                             {/* Render rows */}
                             {this.state.notionEventsFuture.map(
                               (event, index) => (
-                                <tr key={index}>
+                                <tr 
+                                  key={index}
+                                  className="hover:bg-blue-50 transition-colors duration-150"
+                                >
                                   {/* Render each point in each row */}
-                                  {Object.entries(event).map(([key, value]) => (
-                                    <td>{value}</td>
+                                  {Object.entries(event).map(([key, value], cellIndex) => (
+                                    <td 
+                                      key={cellIndex}
+                                      className="px-6 py-3 whitespace-nowrap text-sm text-gray-900"
+                                    >
+                                      {key === "Type" ? (
+                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                          {value}
+                                        </span>
+                                      ) : key === "Mandatory?" ? (
+                                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                          value === "Yes" 
+                                            ? "bg-red-100 text-red-800" 
+                                            : "bg-green-100 text-green-800"
+                                        }`}>
+                                          {value === "Yes" ? "Required" : "Optional"}
+                                        </span>
+                                      ) : (
+                                        value
+                                      )}
+                                    </td>
                                   ))}
                                 </tr>
                               )
+                            )}
+                            {this.state.notionEventsFuture.length === 0 && (
+                              <tr>
+                                <td colSpan={this.state.notionCols.length} className="px-6 py-8 text-center text-gray-500">
+                                  No upcoming events
+                                </td>
+                              </tr>
                             )}
                           </tbody>
                         </table>
@@ -483,18 +598,27 @@ class PledgeCalendar extends React.Component {
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4">Loading...</div>
+                  <div className="p-8 text-center">
+                    <div className="inline-block">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    </div>
+                    <p className="mt-2 text-gray-600">Loading events...</p>
+                  </div>
                 )}
               </Tab.Panel>
               <Tab.Panel className="h-[72vh]">
-                <BigCalendar
-                  localizer={localizer}
-                  events={this.state.calEvents}
-                  defaultView="month"
-                  selectable
-                  onSelectEvent={this.onSelectEvent}
-                  eventPropGetter={this.eventStyleGetter}
-                />
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 h-full">
+                  <BigCalendar
+                    localizer={localizer}
+                    events={this.state.calEvents}
+                    defaultView="month"
+                    views={[Views.MONTH, Views.WEEK, Views.DAY, Views.AGENDA]}
+                    selectable
+                    onSelectEvent={this.onSelectEvent}
+                    eventPropGetter={this.eventStyleGetter}
+                    components={{ toolbar: CustomToolbar }}
+                  />
+                </div>
                 <Modal
                   isOpen={this.state.showModal}
                   onRequestClose={this.closeModal}
@@ -503,14 +627,49 @@ class PledgeCalendar extends React.Component {
                   portalClassName="modal-portal"
                 >
                   {this.state.selectedEvent && (
-                    <div>
-                      <h3 style={{ fontWeight: "bold" }}>
-                        {this.state.selectedEvent.title}
-                      </h3>
-                      <p>
-                        Date: {this.state.selectedEvent.start.toDateString()}
-                      </p>
-                      <p>Description: {this.state.selectedEvent.desc}</p>
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg font-bold text-gray-900">
+                            {this.state.selectedEvent.title}
+                          </h3>
+                          <span className="inline-flex items-center mt-2 px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {this.state.selectedEvent.type}
+                          </span>
+                        </div>
+                        {this.state.selectedEventData?.source === "firebase" && (
+                          <button
+                            onClick={this.deleteEvent}
+                            className="text-red-600 hover:text-red-800 transition-colors"
+                            title="Delete event"
+                          >
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-3 text-sm text-gray-700 border-t pt-4">
+                        <p>
+                          <span className="font-semibold text-gray-900">Date:</span>{" "}
+                          {this.state.selectedEvent.start.toLocaleDateString("en-US", {
+                            weekday: "long",
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric"
+                          })}
+                        </p>
+                        <p>
+                          <span className="font-semibold text-gray-900">Details:</span>
+                        </p>
+                        <p className="text-gray-600 bg-gray-50 p-3 rounded">
+                          {this.state.selectedEvent.desc}
+                        </p>
+                      </div>
+                      <button
+                        onClick={this.closeModal}
+                        className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200"
+                      >
+                        Close
+                      </button>
                     </div>
                   )}
                 </Modal>

@@ -43,7 +43,7 @@ export default function MobileSidebar(props: {
               leaveFrom="translate-x-0"
               leaveTo="-translate-x-full"
             >
-              <Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-white focus:outline-none">
+              <Dialog.Panel className="relative flex w-full max-w-xs flex-1 flex-col bg-white focus:outline-none border-r border-slate-200">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-in-out duration-300"
@@ -92,9 +92,9 @@ export default function MobileSidebar(props: {
                               }}
                               className={classNames(
                                 isCurrent
-                                  ? "bg-gray-100 text-gray-900"
-                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                                "group flex items-center px-2 py-2 text-base font-medium rounded-md"
+                                  ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 border-l-4 border-blue-600 shadow-sm"
+                                  : "text-slate-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm transition-all",
+                                "group flex items-center px-3 py-2 text-base font-semibold rounded-md"
                               )}
                               aria-current={
                                 isCurrent ? "page" : undefined
@@ -103,8 +103,8 @@ export default function MobileSidebar(props: {
                               <currTab.icon
                                 className={classNames(
                                   isCurrent
-                                    ? "text-gray-500"
-                                    : "text-gray-400 group-hover:text-gray-500",
+                                    ? "text-blue-600"
+                                    : "text-slate-400 group-hover:text-blue-700 transition-colors",
                                   "mr-4 h-6 w-6"
                                 )}
                                 aria-hidden="true"
@@ -117,7 +117,7 @@ export default function MobileSidebar(props: {
                       })}
                     </div>
                     <hr
-                      className="my-5 border-t border-gray-200"
+                      className="my-5 border-t border-slate-200"
                       aria-hidden="true"
                     />
                     <div className="space-y-1 px-2">
@@ -133,13 +133,18 @@ export default function MobileSidebar(props: {
                               }}
                               className={classNames(
                                 isCurrent
-                                  ? "bg-gray-100 text-gray-900"
-                                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900",
-                                "group flex items-center px-2 py-2 text-base font-medium rounded-md"
+                                  ? "bg-gradient-to-r from-blue-50 to-blue-100 text-blue-900 border-l-4 border-blue-600 shadow-sm"
+                                  : "text-slate-600 hover:bg-blue-50 hover:text-blue-700 hover:shadow-sm transition-all",
+                                "group flex items-center px-3 py-2 text-base font-semibold rounded-md"
                               )}
                             >
                               <currTab.icon
-                                className="mr-4 h-6 w-6 flex-shrink-0 text-gray-400 group-hover:text-gray-500"
+                                className={classNames(
+                                  isCurrent
+                                    ? "text-blue-600"
+                                    : "text-slate-400 group-hover:text-blue-700 transition-colors",
+                                  "mr-4 h-6 w-6 flex-shrink-0"
+                                )}
                                 aria-hidden="true"
                               />
                               {currTab.name}
@@ -151,9 +156,9 @@ export default function MobileSidebar(props: {
                     </div>
                   </nav>
                 </div>
-                <div className="flex flex-shrink-0 border-t border-gray-200 p-4">
+                <div className="flex flex-shrink-0 border-t border-slate-200 bg-white p-4">
                   <a
-                    className="cursor-pointer group block flex-shrink-0"
+                    className="cursor-pointer group block w-full flex-shrink-0 hover:opacity-80 transition-opacity"
                     onClick={() => {
                       props.setSidebarOpen(false);
                       args.onTabClick("Members");
@@ -169,10 +174,10 @@ export default function MobileSidebar(props: {
                         />
                       </div>
                       <div className="ml-3">
-                        <p className="text-base font-medium text-gray-700 group-hover:text-gray-900">
+                        <p className="text-base font-bold text-slate-900">
                           {args.CurrentUserName}
                         </p>
-                        <p className="text-sm font-medium text-gray-500 group-hover:text-gray-700">
+                        <p className="text-sm font-semibold text-blue-600 group-hover:text-blue-700 transition-colors">
                           View profile
                         </p>
                       </div>
