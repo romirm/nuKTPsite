@@ -29,7 +29,7 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
   fullPubDir,
 }) => {
   const [lcStats, setLcStats] = useState<LeaderboardUser[]>([]);
-  const [leaderboardType, setLeaderboardType] = useState<"allTime" | "active">("allTime");
+  const [leaderboardType, setLeaderboardType] = useState<"allTime" | "active" | "pledges">("allTime");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -129,6 +129,13 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
       return lcStats;
     }
 
+    if (leaderboardType === "pledges") {
+      return lcStats.filter((user) => {
+        const normalizedRole = (user.role || "").trim().toLowerCase();
+        return normalizedRole === "pledge";
+      });
+    }
+
     return lcStats.filter((user) => {
       const normalizedRole = (user.role || "").trim().toLowerCase();
       const normalizedName = (user.name || "").trim().toLowerCase();
@@ -196,11 +203,22 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
                 onClick={() => setLeaderboardType("active")}
                 className={
                   leaderboardType === "active"
+                    ? "px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600"
+                    : "px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 hover:bg-blue-100"
+                }
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => setLeaderboardType("pledges")}
+                className={
+                  leaderboardType === "pledges"
                     ? "px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-r-md"
                     : "px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-300 rounded-r-md hover:bg-blue-100"
                 }
               >
-                Active
+                Pledges
               </button>
             </div>
 
@@ -218,6 +236,8 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
                 <p className="text-gray-500 text-lg">
                   {leaderboardType === "active"
                     ? "No active leaderboard entries match the current filter."
+                    : leaderboardType === "pledges"
+                    ? "No pledge leaderboard entries are available right now."
                     : "No leaderboard data available. Please check back later."}
                 </p>
               </div>
