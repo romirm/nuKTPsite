@@ -5,9 +5,6 @@ const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
 const os = require("os");
 const { Storage } = require("@google-cloud/storage");
-/*var request = require("request").defaults({
-  encoding: null,
-});*/
 const gcs = new Storage();
 
 // const ACC_SID = functions.config().twilio.acc_sid;
@@ -21,7 +18,6 @@ const fs = require("fs-extra");
 const uuid = require("uuid");
 
 admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
   databaseURL: "https://ktp-site-default-rtdb.firebaseio.com/",
 });
 let usersRef = admin.database().ref("users");
@@ -29,66 +25,250 @@ let allowedRef = admin.database().ref("allowed_users");
 let publicRef = admin.database().ref("public_users");
 let announcementsRef = admin.database().ref("announcements");
 
-exports.lcupdate = onSchedule("*/10 * * * *", async (event) => {
-  const responseFunction = (user_uid2, offsets) => {
-    return async (error, response, body) => {
-      if (error) {
-        console.log("Error fetching leetcode stats for " + user_uid2)
-      } else {
-        const res = JSON.parse(body);
-        if (res.easySolved === undefined || res.easySolved === null) {
-          console.log("Error fetching Leetcode data for user " + user.leetcode);
+const LEETCODE_API_BASE_URL = "https://leetcode-stats-api.herokuapp.com/";
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchLeetCodeStats(username) {
+  let retries = 3;
+  let lastError = null;
+
+  while (retries > 0) {
+    try {
+      const response = await fetch(LEETCODE_API_BASE_URL + username, {
+        timeout: 10000,
+      });
+
+      if (response && response.ok) {
+        const data = await response.json();
+        if (data.easySolved === undefined || data.easySolved === null) {
+          lastError = "Invalid payload";
         } else {
-          if(!offsets) {
-            // await publicRef.child(user_uid2+"/leetcode/offsets").set({
-            //   easySolved: res.easySolved,
-            //   mediumSolved: res.mediumSolved,
-            //   hardSolved: res.hardSolved,
-            // })
-          }
-          console.log("Adding results for " + user_uid2 + ":", res);
-          // await publicRef.child(user_uid2 + "/leetcode/answers").set({
-          //   easySolved: res.easySolved,
-          //   mediumSolved: res.mediumSolved,
-          //   hardSolved: res.hardSolved,
-          //   acceptanceRate: res.acceptanceRate,
-          // });
+          return { ok: true, data };
         }
+      } else {
+        lastError = "HTTP " + (response ? response.status : "unknown error");
       }
-    };
-  };
-  const prom = new Promise((resolve, reject) => {
-    publicRef.once("value", (pubusers) => {
-      for (var user_uid in pubusers.val()) {
-        const user = pubusers.val()[user_uid];
-        if (user.leetcode && user.leetcode.username) {
-          console.log("Updating leetcode stats of " + user.leetcode.username);
-          const indiv_user_offsets = user.leetcode.offsets;
-          const indiv_user_id = String(user_uid);
-          console.log("Fetching LC stats for user.leetcode.name")
-          request.get(
-            "https://leetcode-stats-api.herokuapp.com/" +
-              user.leetcode.username,
-            responseFunction(indiv_user_id, indiv_user_offsets)
-          );
-        } else if(user.leetcode && !user.leetcode.username) {
-          console.log("Removing " + user_uid + "'s leetcode data")
-          try {
-            usersRef.child(user_uid+"/leetcode").remove();
-            publicRef.child(user_uid+"/leetcode").remove();
-          } catch (error) {
-            console.log("Error removing leetcode data for " + user_uid);
-            console.log(error);
-          }
-        }
+    } catch (error) {
+      lastError = error.message;
+    }
+
+    retries--;
+    if (retries > 0) {
+      await delay(2000);
+    }
+  }
+
+  return { ok: false, error: lastError };
+}
+
+async function runLeetCodeUpdate(options = {}) {
+  const { clearOffsets = false } = options;
+  const pubusersSnapshot = await publicRef.once("value");
+  const pubusers = pubusersSnapshot.val();
+
+  if (!pubusers) {
+    return { updated: 0, failed: [], skipped: 0 };
+  }
+
+  const failedUsers = [];
+  let skipped = 0;
+
+  const updatePromises = Object.keys(pubusers).map(async (user_uid) => {
+    const user = pubusers[user_uid];
+
+    if (user.leetcode && user.leetcode.username) {
+      const username = user.leetcode.username;
+      logger.log("Updating leetcode stats for " + username);
+
+      const result = await fetchLeetCodeStats(username);
+      if (!result.ok) {
+        logger.error(
+          "Failed to fetch leetcode stats for " + username + ": " + result.error
+        );
+        failedUsers.push(username);
+        return false;
       }
-      resolve();
-    });
+
+      const res = result.data;
+      const easySolved = Number(res.easySolved) || 0;
+      const mediumSolved = Number(res.mediumSolved) || 0;
+      const hardSolved = Number(res.hardSolved) || 0;
+      const weightedScore = easySolved * 2 + mediumSolved * 5 + hardSolved * 8;
+
+      await publicRef.child(user_uid + "/leetcode/answers").set({
+        easySolved,
+        mediumSolved,
+        hardSolved,
+        totalSolved: easySolved + mediumSolved + hardSolved,
+        weightedScore,
+        acceptanceRate: Number(res.acceptanceRate) || 0,
+        lastUpdated: admin.database.ServerValue.TIMESTAMP,
+      });
+
+      if (clearOffsets) {
+        await publicRef.child(user_uid + "/leetcode/offsets").set({
+          easySolved: 0,
+          mediumSolved: 0,
+          hardSolved: 0,
+        });
+      }
+
+      logger.log(
+        "Updated " +
+          username +
+          ": easy=" +
+          easySolved +
+          ", medium=" +
+          mediumSolved +
+          ", hard=" +
+          hardSolved
+      );
+      return true;
+    }
+
+    if (user.leetcode && !user.leetcode.username) {
+      logger.log("Removing " + user_uid + "'s leetcode data (no username)");
+      await usersRef.child(user_uid + "/leetcode").remove();
+      await publicRef.child(user_uid + "/leetcode").remove();
+      return false;
+    }
+
+    skipped++;
+    return false;
   });
 
-  logger.log("Function starting...");
+  const results = await Promise.all(updatePromises);
+  const updated = results.filter((result) => result === true).length;
+  return {
+    updated,
+    failed: failedUsers,
+    skipped,
+  };
+}
 
-  return prom;
+exports.lcupdate = onSchedule("*/10 * * * *", async (event) => {
+  logger.log("LeetCode update function starting...");
+  
+  try {
+    const summary = await runLeetCodeUpdate({ clearOffsets: false });
+    logger.log(
+      "LeetCode update completed. updated=" +
+        summary.updated +
+        ", failed=" +
+        summary.failed.length +
+        ", skipped=" +
+        summary.skipped
+    );
+  } catch (error) {
+    logger.error("LeetCode update function error:", error);
+    throw error;
+  }
+});
+
+// Manual function to trigger LC update (for testing)
+exports.lcupdateNow = functions.https.onCall(async (data, context) => {
+  logger.log("Manual LeetCode update triggered");
+  
+  try {
+    // Check if user is admin
+    if (!context.auth) {
+      throw new Error("User not authenticated");
+    }
+    
+    const userSnapshot = await usersRef.child(context.auth.uid).once("value");
+    if (!userSnapshot.val() || !userSnapshot.val().admin) {
+      throw new Error("User is not an admin");
+    }
+    
+    const initialScrape = !!(data && data.initialScrape);
+    const summary = await runLeetCodeUpdate({ clearOffsets: initialScrape });
+    logger.log("Manual update completed. Updated " + summary.updated + " users");
+
+    return { 
+      status: "success", 
+      message: initialScrape
+        ? "Initial scrape completed for " + summary.updated + " LeetCode profiles"
+        : "Updated " + summary.updated + " LeetCode profiles",
+      initialScrape,
+      updated: summary.updated,
+      failed: summary.failed.length > 0 ? summary.failed : null,
+      skipped: summary.skipped
+    };
+  } catch (error) {
+    logger.error("Manual LeetCode update error:", error);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
+});
+
+// Admin function to reset a specific user's LeetCode offsets
+// This is useful if offsets were set incorrectly and you want the user's actual total count
+// Usage: Call with data.username = "leetcode_username" to reset that user's offsets
+exports.resetLcOffsets = functions.https.onCall(async (data, context) => {
+  try {
+    // Check if user is admin
+    if (!context.auth) {
+      throw new Error("User not authenticated");
+    }
+    
+    const userSnapshot = await usersRef.child(context.auth.uid).once("value");
+    if (!userSnapshot.val() || !userSnapshot.val().admin) {
+      throw new Error("User is not an admin");
+    }
+    
+    const targetUsername = data.username;
+    if (!targetUsername) {
+      throw new Error("Target username not provided");
+    }
+    
+    logger.log("Admin attempting to reset offsets for: " + targetUsername);
+    
+    // Find the user with this username
+    const pubusersSnapshot = await publicRef.once("value");
+    const pubusers = pubusersSnapshot.val();
+    
+    let targetUid = null;
+    for (const uid in pubusers) {
+      if (pubusers[uid].leetcode && pubusers[uid].leetcode.username === targetUsername) {
+        targetUid = uid;
+        break;
+      }
+    }
+    
+    if (!targetUid) {
+      throw new Error("User with username " + targetUsername + " not found");
+    }
+    
+    const targetUser = pubusers[targetUid];
+    
+    if (!targetUser.leetcode || !targetUser.leetcode.answers) {
+      throw new Error("Target user has no leetcode answers to reset");
+    }
+    
+    // Reset offsets to match current answers
+    const newOffsets = {
+      easySolved: targetUser.leetcode.answers.easySolved,
+      mediumSolved: targetUser.leetcode.answers.mediumSolved,
+      hardSolved: targetUser.leetcode.answers.hardSolved,
+    };
+    
+    await publicRef.child(targetUid + "/leetcode/offsets").set(newOffsets);
+    
+    logger.log("Successfully reset offsets for " + targetUsername + ". New offsets: " + JSON.stringify(newOffsets));
+    
+    return {
+      status: "success",
+      message: "Offsets reset for " + targetUsername,
+      username: targetUsername,
+      oldScore: "Recalculated to 0",
+      explanation: "User's current answers are now treated as their starting point"
+    };
+  } catch (error) {
+    logger.error("Reset offsets error:", error);
+    throw new functions.https.HttpsError("internal", error.message);
+  }
 });
 
 // exports.sendText = functions.https.onCall(async (data, context) => {

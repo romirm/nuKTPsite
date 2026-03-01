@@ -314,7 +314,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
 
         {/* Leetcode Leaderboard tab */}
         <div className={currTab=="Leaderboard" ? "h-full" : "hidden"}>
-          <LcLeaderboard firebase={props.firebase} database={props.database} fullPubDir={fullPubDir} />
+          <LcLeaderboard fullPubDir={fullPubDir} />
         </div>
       </div>
     </div>
