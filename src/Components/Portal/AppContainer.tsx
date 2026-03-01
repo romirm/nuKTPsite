@@ -300,7 +300,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
 
         {/* Pledge calendar tab */}
         <div className={currTab=="Calendar" ? "overflow-y-auto" : "hidden"}>
-          <PledgeCalendar firebase={props.firebase} database={props.database} />
+          <PledgeCalendar firebase={props.firebase} database={props.database} admin={admin} role={pledge ? "Pledge" : "Member"} />
         </div>
 
         <div className={currTab=="Resources" ? "overflow-y-auto" : "hidden"}>

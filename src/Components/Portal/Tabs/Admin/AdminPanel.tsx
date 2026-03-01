@@ -6,9 +6,11 @@ import {
   CalendarDaysIcon,
   UserGroupIcon,
   AcademicCapIcon,
+  TrashIcon,
 } from "@heroicons/react/20/solid";
-import { ref, set, get, child, update } from "firebase/database";
+import { ref, set, get, child, update, remove } from "firebase/database";
 import Swal, { SweetAlertResult } from "sweetalert2";
+import { Tab } from "@headlessui/react";
 
 const validateEmail = (email: string) => {
   return String(email)
@@ -36,6 +38,9 @@ interface AdminPanelState {
   eventMandatory: boolean;
   eventGroup: string;
   eventDescription: string;
+  selectedTab: number;
+  calendarEvents: Array<{id: string, Name: string, Date: string, Type: string, "Mandatory?": boolean, Group: string, Description: string}>;
+  calendarLoading: boolean;
 }
 
 class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanelState> {
@@ -66,7 +71,10 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       eventType: "Social",
       eventMandatory: false,
       eventGroup: "Everyone",
-      eventDescription: ""
+      eventDescription: "",
+      selectedTab: 0,
+      calendarEvents: [],
+      calendarLoading: true
     };
     this.addNewUser = this.addNewUser.bind(this);
     this.sendText = this.sendText.bind(this);
@@ -76,6 +84,8 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     this.loadUserAcademicInfo = this.loadUserAcademicInfo.bind(this);
     this.updateUserAcademicInfo = this.updateUserAcademicInfo.bind(this);
     this.addCalendarEvent = this.addCalendarEvent.bind(this);
+    this.loadCalendarEvents = this.loadCalendarEvents.bind(this);
+    this.deleteCalendarEvent = this.deleteCalendarEvent.bind(this);
     this.emailButton = React.createRef<HTMLInputElement>();
     this.sendTextButton = React.createRef<HTMLTextAreaElement>();
     this.whoToButton = React.createRef<HTMLSelectElement>();
@@ -451,6 +461,9 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         if (this.eventNameInput.current) this.eventNameInput.current.value = "";
         if (this.eventDateInput.current) this.eventDateInput.current.value = "";
         if (this.eventDescInput.current) this.eventDescInput.current.value = "";
+        
+        // Reload calendar events
+        this.loadCalendarEvents();
       })
       .catch((error) => {
         Swal.fire({
@@ -461,6 +474,97 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       });
   }
 
+  async loadCalendarEvents() {
+    try {
+      this.setState({ calendarLoading: true });
+      const dbRef = ref(this.props.database);
+      const snapshot = await get(child(dbRef, "calendar_events"));
+      
+      if (snapshot.exists()) {
+        const firebaseEvents = snapshot.val();
+        const formattedEvents = [];
+
+        for (let eventId in firebaseEvents) {
+          const event = firebaseEvents[eventId];
+          
+          // Parse date to ensure proper formatting
+          let dateStr = event.Date;
+          let dateObj;
+          if (dateStr && dateStr.includes('-')) {
+            const [year, month, day] = dateStr.split('-');
+            dateObj = new Date(year, month - 1, day);
+          } else {
+            dateObj = new Date(dateStr);
+          }
+          
+          const formattedEvent = {
+            id: eventId,
+            Name: event.Name,
+            Date: dateObj.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+            Type: event.Type || "Social",
+            "Mandatory?": event["Mandatory?"],
+            Group: event.Group || "Everyone",
+            Description: event.Description || ""
+          };
+
+          formattedEvents.push(formattedEvent);
+        }
+
+        // Sort by date
+        formattedEvents.sort((a, b) => {
+          let a_date = new Date(Date.parse(a.Date));
+          let b_date = new Date(Date.parse(b.Date));
+          return a_date.getTime() - b_date.getTime();
+        });
+
+        this.setState({ calendarEvents: formattedEvents, calendarLoading: false });
+      } else {
+        this.setState({ calendarEvents: [], calendarLoading: false });
+      }
+    } catch (error) {
+      console.error("Error loading calendar events:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Load Events",
+        text: "Could not load calendar events. Check console for details."
+      });
+      this.setState({ calendarLoading: false });
+    }
+  }
+
+  deleteCalendarEvent(eventId: string, eventName: string) {
+    Swal.fire({
+      title: "Delete Event?",
+      text: `Are you sure you want to delete "${eventName}"? This action cannot be undone.`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "Cancel"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        remove(ref(this.props.database, `calendar_events/${eventId}`))
+          .then(() => {
+            Swal.fire({
+              icon: "success",
+              title: "Event Deleted!",
+              text: "The event has been removed from the calendar."
+            });
+            // Reload events
+            this.loadCalendarEvents();
+          })
+          .catch((error) => {
+            Swal.fire({
+              icon: "error",
+              title: "Failed to Delete Event",
+              text: error.message
+            });
+          });
+      }
+    });
+  }
+
   render() {
     const execRoles = ["President", "VP of Technology", "VP of Programming", "VP of Recruitment", "VP of External Affairs", "VP of Internal Experience", "VP of Marketing", "VP of Finance", "VP of DEI", "VP of Pledge Experience"];
     
@@ -469,10 +573,35 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       user.currentRole.toLowerCase().includes(this.state.searchTerm.toLowerCase())
     );
 
+    const tabNames = ["Member Management", "User Roles", "Academic Info", "Calendar", "Messaging", "Quick Links"];
+
     return (
-      <div className="">
-        {/* Member Management Section */}
-        <div className="mt-6 px-4 w-full">
+      <div className="h-full flex flex-col">
+        <Tab.Group selectedIndex={this.state.selectedTab} onChange={(index) => this.setState({ selectedTab: index })}>
+          <div className="px-4 pt-4">
+            <Tab.List className="flex space-x-1 rounded-lg bg-blue-50 border border-blue-100 p-1">
+              {tabNames.map((tabName) => (
+                <Tab
+                  key={tabName}
+                  className={({ selected }) =>
+                    `flex-1 px-3 py-2 text-sm font-semibold rounded-md transition-colors ${
+                      selected
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-700 hover:bg-blue-100"
+                    }`
+                  }
+                >
+                  {tabName}
+                </Tab>
+              ))}
+            </Tab.List>
+          </div>
+
+          <div className="flex-1 overflow-y-auto px-4 py-4">
+            <Tab.Panels>
+              {/* Tab 1: Member Management */}
+              <Tab.Panel>
+                <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
             <UserPlusIcon className="h-6 w-6 text-blue-600 mr-2" />
             <h2 className="text-xl font-bold text-gray-900">Member Management</h2>
@@ -490,8 +619,8 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 <p>Add a new member to the system using their Northwestern email.</p>
               </div>
               <form className="mt-5 space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="sm:col-span-2">
                     <label htmlFor="new-member-email" className="block text-sm font-medium text-gray-700">
                       Northwestern Email <span className="text-red-500">*</span>
                     </label>
@@ -522,11 +651,11 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="flex justify-end pt-2">
                   <button
                       type="button"
                       onClick={this.addNewUser}
-                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
+                      className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
                   >
                 <UserPlusIcon className="-ml-1 mr-2 h-5 w-5" />
             Add Member
@@ -536,12 +665,14 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
             </div>
           </div>
         </div>
+              </Tab.Panel>
 
-        {/* User Management Section */}
-        <div className="mt-6 px-4 w-full">
+              {/* Tab 2: User Roles */}
+              <Tab.Panel>
+                <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
             <UserGroupIcon className="h-6 w-6 text-blue-600 mr-2" />
-            <h2 className="text-xl font-bold text-gray-900">User Management</h2>
+            <h2 className="text-xl font-bold text-gray-900">Role Management</h2>
           </div>
         </div>
 
@@ -552,7 +683,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 Manage User Roles
               </h3>
               <div className="mt-2 max-w-xl text-sm text-gray-600">
-                <p>Update member roles. Select Member/Pledge/Alumni, or choose Exec for leadership positions, or Custom to type your own.</p>
+                <p>Select Member/Pledge/Alumni, or choose Exec for leadership or Custom.</p>
               </div>
               
               {/* Search bar */}
@@ -686,9 +817,11 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
             </div>
           </div>
         </div>
+              </Tab.Panel>
 
-        {/* Update Year/Major Section */}
-        <div className="mt-6 px-4 w-full">
+              {/* Tab 3: Academic Info */}
+              <Tab.Panel>
+                <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
             <AcademicCapIcon className="h-6 w-6 text-blue-600 mr-2" />
             <h2 className="text-xl font-bold text-gray-900">Academic Info</h2>
@@ -772,9 +905,11 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
             </div>
           </div>
         </div>
+              </Tab.Panel>
 
-        {/* Add Calendar Event Section */}
-        <div className="mt-6 px-4 w-full">
+              {/* Tab 4: Calendar */}
+              <Tab.Panel>
+                <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
             <CalendarDaysIcon className="h-6 w-6 text-blue-600 mr-2" />
             <h2 className="text-xl font-bold text-gray-900">Calendar Tools</h2>
@@ -909,8 +1044,95 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
           </div>
         </div>
 
-        {/* Messaging Section */}
+        {/* Existing Events Section */}
         <div className="mt-6 px-4 w-full">
+          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
+            <div className="px-4 py-5 sm:p-6">
+              <h3 className="text-lg font-semibold leading-6 text-blue-900 mb-4">
+                Manage Events
+              </h3>
+              
+              {this.state.calendarLoading ? (
+                <div className="flex justify-center items-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <p className="ml-2 text-gray-600">Loading events...</p>
+                </div>
+              ) : this.state.calendarEvents.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full divide-y divide-gray-200">
+                    <thead className="bg-blue-100">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                          Type
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                          Required
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                          For
+                        </th>
+                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {this.state.calendarEvents.map((event, index) => (
+                        <tr key={index} className="hover:bg-blue-50 transition-colors">
+                          <td className="px-4 py-2 text-sm text-gray-900 font-medium">
+                            {event.Name}
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-700">
+                            {event.Date}
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {event.Type}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              event["Mandatory?"] 
+                                ? "bg-red-100 text-red-800" 
+                                : "bg-green-100 text-green-800"
+                            }`}>
+                              {event["Mandatory?"] ? "Yes" : "No"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2 text-sm text-gray-700">
+                            {event.Group}
+                          </td>
+                          <td className="px-4 py-2 text-sm">
+                            <button
+                              onClick={() => this.deleteCalendarEvent(event.id, event.Name)}
+                              className="inline-flex items-center justify-center rounded-md bg-red-100 text-red-800 p-2 hover:bg-red-200 transition-colors"
+                              title="Delete event"
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-gray-600 py-8 text-center">No calendar events yet. Create one using the form above.</p>
+              )}
+            </div>
+          </div>
+        </div>
+              </Tab.Panel>
+
+              {/* Tab 5: Messaging */}
+              <Tab.Panel>
+                <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
             <PaperAirplaneIcon className="h-6 w-6 text-blue-600 mr-2" />
             <h2 className="text-xl font-bold text-gray-900">Messaging</h2>
@@ -921,104 +1143,107 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         <div className="mt-2 px-4 w-full">
           <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-semibold leading-6 text-blue-900">
+              <h3 className="text-lg font-semibold leading-6 text-blue-900 mb-2">
                 Send a Message
               </h3>
-              <div className="mt-2 max-w-xl text-sm text-gray-600">
+              <div className="mb-5 text-sm text-gray-600">
                 <p>Send text messages or announcements to members.</p>
               </div>
-              <form className="mt-5 space-y-4">
-                <div>
-                  <label htmlFor="message-text" className="block text-sm font-medium text-gray-700">
-                    Message <span className="text-red-500">*</span>
-                  </label>
-                  <textarea
-                    name="text"
-                    id="message-text"
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    placeholder="Pledge meeting tonight @ 7:00..."
-                    ref={this.sendTextButton}
-                    rows={3}
-                  />
-                </div>
+              
+              {/* Message textarea - full width of container */}
+              <div className="mb-4">
+                <label htmlFor="message-text" className="block text-sm font-medium text-gray-700 mb-2">
+                  Message <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="text"
+                  id="message-text"
+                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm resize-none"
+                  placeholder="Pledge meeting tonight @ 7:00..."
+                  ref={this.sendTextButton}
+                  rows={5}
+                />
+              </div>
 
-                <div className="flex flex-wrap items-end justify-between gap-4">
-                  {/* Left side controls */}
-                  <div className="flex flex-wrap gap-4">
-                    <div className="min-w-[12rem]">
-                      <label htmlFor="who-to-text" className="block text-sm font-medium text-gray-700">
-                        Send To
-                      </label>
-                      <select
-                        id="who-to-text"
-                        name="who-to-text"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        value={this.state.messageRecipientType}
-                        onChange={(e) => this.setState({ messageRecipientType: e.target.value, directMessageUid: "" })}
-                        ref={this.whoToButton}
-                      >
-                        <option>Pledges</option>
-                        <option>Members</option>
-                        <option>Everyone</option>
-                        <option>Individual</option>
-                      </select>
-                    </div>
-
-                    {this.state.messageRecipientType === "Individual" && (
-                      <div className="min-w-[12rem]">
-                        <label htmlFor="direct-recipient" className="block text-sm font-medium text-gray-700">
-                          Select Member
-                        </label>
-                        <select
-                          id="direct-recipient"
-                          name="direct-recipient"
-                          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                          value={this.state.directMessageUid}
-                          onChange={(e) => this.setState({ directMessageUid: e.target.value })}
-                        >
-                          <option value="">Select member</option>
-                          {this.state.users.map((user) => (
-                            <option key={user.uid} value={user.uid}>{user.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                    )}
-
-                    <div className="min-w-[12rem]">
-                      <label htmlFor="message-type" className="block text-sm font-medium text-gray-700">
-                        Type
-                      </label>
-                      <select
-                        id="message-type"
-                        name="message-type"
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        defaultValue="Event"
-                        ref={this.messageTypeButton}
-                      >
-                        <option>Event</option>
-                        <option>Announcement</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Right side button */}
+              {/* Send To, Type fields (left) and Send Message button (right) on same line */}
+              <div className="flex items-end justify-between gap-4 flex-wrap">
+                <div className="flex gap-4 flex-wrap">
                   <div>
-                    <button
-                      type="button"
-                      onClick={this.sendText}
-                      className="w-full sm:w-auto inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
+                    <label htmlFor="who-to-text" className="block text-sm font-medium text-gray-700 mb-2">
+                      Send To
+                    </label>
+                    <select
+                      id="who-to-text"
+                      name="who-to-text"
+                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      style={{ minWidth: "160px" }}
+                      value={this.state.messageRecipientType}
+                      onChange={(e) => this.setState({ messageRecipientType: e.target.value, directMessageUid: "" })}
+                      ref={this.whoToButton}
                     >
-                      <PaperAirplaneIcon className="-ml-1 mr-2 h-5 w-5" />
-                      Send Message
-                    </button>
+                      <option>Pledges</option>
+                      <option>Members</option>
+                      <option>Everyone</option>
+                      <option>Individual</option>
+                    </select>
+                  </div>
+
+                  {this.state.messageRecipientType === "Individual" && (
+                    <div>
+                      <label htmlFor="direct-recipient" className="block text-sm font-medium text-gray-700 mb-2">
+                        Select Member
+                      </label>
+                      <select
+                        id="direct-recipient"
+                        name="direct-recipient"
+                        className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        style={{ minWidth: "200px" }}
+                        value={this.state.directMessageUid}
+                        onChange={(e) => this.setState({ directMessageUid: e.target.value })}
+                      >
+                        <option value="">Select member</option>
+                        {this.state.users.map((user) => (
+                          <option key={user.uid} value={user.uid}>{user.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div>
+                    <label htmlFor="message-type" className="block text-sm font-medium text-gray-700 mb-2">
+                      Type
+                    </label>
+                    <select
+                      id="message-type"
+                      name="message-type"
+                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      style={{ minWidth: "160px" }}
+                      defaultValue="Event"
+                      ref={this.messageTypeButton}
+                    >
+                      <option>Event</option>
+                      <option>Announcement</option>
+                    </select>
                   </div>
                 </div>
-              </form>
+
+                <button
+                  type="button"
+                  onClick={this.sendText}
+                  className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                >
+                  <PaperAirplaneIcon className="-ml-1 mr-2 h-5 w-5" />
+                  Send Message
+                </button>
+              </div>
             </div>
           </div>
         </div>
+              </Tab.Panel>
 
-        <div className="mt-4 px-4 w-full">
+              {/* Tab 6: Quick Links */}
+              <Tab.Panel>
+                <div className="mt-4 px-4 w-full">
           <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <h3 className="text-lg font-semibold leading-6 text-blue-900">
@@ -1050,11 +1275,16 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
             </div>
           </div>
         </div>
+              </Tab.Panel>
+            </Tab.Panels>
+          </div>
+        </Tab.Group>
       </div>
     );
   }
   componentDidMount() {
     this.loadUsers();
+    this.loadCalendarEvents();
   }
 }
 

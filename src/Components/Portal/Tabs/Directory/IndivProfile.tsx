@@ -46,7 +46,7 @@ function IndivProfile(props: {
     socials.push({
       name: "Leetcode",
       href: "https://leetcode.com/" + currProfile.leetcode.username,
-      className: "text-slate-500 hover:text-blue-600",
+      className: "text-yellow-400 hover:text-yellow-500",
       icon: (props:any) => (
         <svg
           className="h-4 w-4"
