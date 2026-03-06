@@ -31,6 +31,9 @@
         "major": {
           ".write": "$user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true"
         },
+        "pledge_tracker": {
+          ".write": "$user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true"
+        },
         ".write": "$user_id === auth.uid"
       },
       ".read": "auth.uid != null"

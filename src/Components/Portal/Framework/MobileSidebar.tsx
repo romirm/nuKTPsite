@@ -83,7 +83,7 @@ export default function MobileSidebar(props: {
                       {Object.keys(args.Navigation).map((NavKey: string) => {
                         const currTab = args.Navigation[NavKey];
                         const isCurrent = args.CurrTab === NavKey;
-                        if (!currTab.secondary && (args.Admin || !currTab.adminonly)) {
+                        if (!currTab.secondary && (args.Admin || !currTab.adminonly) && (args.Pledge || !currTab.pledgeonly || args.Admin)) {
                           return (
                             <a
                               key={currTab.name}

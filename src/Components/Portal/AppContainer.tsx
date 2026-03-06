@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { ref, child, get } from "firebase/database";
 import LcLeaderboard from "@tabs/LcLeaderboard/LcLeaderboard";
+import PledgeTracker from "@tabs/PledgeTracker/PledgeTracker";
 import DirectoryContainer from "@tabs/Directory/DirectoryContainer";
 import NewUser from "@auth/NewUser";
 import RushEvents from "@landing/RushEvents";
@@ -20,6 +21,7 @@ import {
   CalendarIcon,
   FolderIcon,
   BoltIcon,
+  ClipboardDocumentListIcon,
 } from "@heroicons/react/24/outline";
 
 //Default user to show while loading, replaced by real user after. Image data encoded in the code.
@@ -52,6 +54,14 @@ var navigation: NavigationType = {
     secondary: false,
     adminonly: false,
     pledgeonly: false,
+  },
+  PledgeTracker: {
+    name: "Pledge Tracker",
+    icon: ClipboardDocumentListIcon,
+    current: false,
+    secondary: false,
+    adminonly: false,
+    pledgeonly: true,
   },
   Resources: {
     name: "Resources",
@@ -303,10 +313,6 @@ export default function AppContainer(props: { firebase: any, database: any, stor
           <PledgeCalendar firebase={props.firebase} database={props.database} admin={admin} role={pledge ? "Pledge" : "Member"} />
         </div>
 
-        <div className={currTab=="Resources" ? "overflow-y-auto" : "hidden"}>
-          <PledgeResources />
-        </div>
-
         {/* Admin tab, only visible to users with entry in users/UID/admin set to true */}
         <div className={currTab=="Admin" ? "" : "hidden"}>
           <AdminPanel firebase={props.firebase} database={props.database} />
@@ -315,6 +321,15 @@ export default function AppContainer(props: { firebase: any, database: any, stor
         {/* Leetcode Leaderboard tab */}
         <div className={currTab=="Leaderboard" ? "h-full" : "hidden"}>
           <LcLeaderboard fullPubDir={fullPubDir} />
+        </div>
+
+        {/* Pledge Tracker tab */}
+        <div className={currTab=="PledgeTracker" ? "h-full" : "hidden"}>
+          <PledgeTracker fullPubDir={fullPubDir} />
+        </div>
+
+        <div className={currTab=="Resources" ? "overflow-y-auto" : "hidden"}>
+          <PledgeResources />
         </div>
       </div>
     </div>

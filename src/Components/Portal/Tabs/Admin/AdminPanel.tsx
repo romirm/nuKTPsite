@@ -7,6 +7,7 @@ import {
   UserGroupIcon,
   AcademicCapIcon,
   TrashIcon,
+  CheckBadgeIcon,
 } from "@heroicons/react/20/solid";
 import { ref, set, get, child, update, remove } from "firebase/database";
 import Swal, { SweetAlertResult } from "sweetalert2";
@@ -19,6 +20,37 @@ const validateEmail = (email: string) => {
       /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
 };
+
+const PLACEHOLDER_PFP_URL = "https://via.placeholder.com/200";
+const DEFAULT_PLEDGE_POINTS = 100;
+
+const toSafeNumber = (value: any): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0;
+};
+
+const parseCapstoneProgress = (rawValue: any): [boolean, boolean, boolean] => {
+  if (Array.isArray(rawValue)) {
+    return [Boolean(rawValue[0]), Boolean(rawValue[1]), Boolean(rawValue[2])];
+  }
+
+  const capstoneObj = rawValue && typeof rawValue === "object" ? rawValue : {};
+  return [
+    Boolean(capstoneObj.milestone_1 ?? capstoneObj.step_1 ?? capstoneObj.box_1 ?? capstoneObj.stage_1),
+    Boolean(capstoneObj.milestone_2 ?? capstoneObj.step_2 ?? capstoneObj.box_2 ?? capstoneObj.stage_2),
+    Boolean(capstoneObj.milestone_3 ?? capstoneObj.step_3 ?? capstoneObj.box_3 ?? capstoneObj.stage_3),
+  ];
+};
+
+interface PledgeTrackerUserRow {
+  uid: string;
+  name: string;
+  pictureLink: string;
+  pledgePoints: number;
+  coffeeChatsCompleted: number;
+  thankYouNotesSent: number;
+  capstoneProjectProgress: [boolean, boolean, boolean];
+}
 
 interface AdminPanelState {
   users: Array<{uid: string, name: string, currentRole: string}>;
@@ -41,6 +73,9 @@ interface AdminPanelState {
   selectedTab: number;
   calendarEvents: Array<{id: string, Name: string, Date: string, Type: string, "Mandatory?": boolean, Group: string, Description: string}>;
   calendarLoading: boolean;
+  pledgeTrackerRows: PledgeTrackerUserRow[];
+  pledgeTrackerLoading: boolean;
+  pledgeTrackerSavingUid: string;
 }
 
 class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanelState> {
@@ -74,7 +109,10 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       eventDescription: "",
       selectedTab: 0,
       calendarEvents: [],
-      calendarLoading: true
+      calendarLoading: true,
+      pledgeTrackerRows: [],
+      pledgeTrackerLoading: true,
+      pledgeTrackerSavingUid: "",
     };
     this.addNewUser = this.addNewUser.bind(this);
     this.sendText = this.sendText.bind(this);
@@ -86,6 +124,9 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     this.addCalendarEvent = this.addCalendarEvent.bind(this);
     this.loadCalendarEvents = this.loadCalendarEvents.bind(this);
     this.deleteCalendarEvent = this.deleteCalendarEvent.bind(this);
+    this.updatePledgeTrackerNumber = this.updatePledgeTrackerNumber.bind(this);
+    this.toggleCapstoneProgress = this.toggleCapstoneProgress.bind(this);
+    this.saveAllPledgeTrackerRows = this.saveAllPledgeTrackerRows.bind(this);
     this.emailButton = React.createRef<HTMLInputElement>();
     this.sendTextButton = React.createRef<HTMLTextAreaElement>();
     this.whoToButton = React.createRef<HTMLSelectElement>();
@@ -100,6 +141,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
 
   async loadUsers() {
     try {
+      this.setState({ loading: true, pledgeTrackerLoading: true });
       const dbRef = ref(this.props.database);
       const [publicSnapshot, allowedSnapshot] = await Promise.all([
         get(child(dbRef, "public_users")),
@@ -117,7 +159,53 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
-      this.setState({ users: usersList, loading: false });
+      const pledgeRows: PledgeTrackerUserRow[] = [];
+      Object.keys(publicUsers).forEach((uid) => {
+        const user = publicUsers[uid] || {};
+        const mergedRole = String(allowedUsers[uid]?.role || user.role || "").trim().toLowerCase();
+
+        if (mergedRole !== "pledge") {
+          return;
+        }
+
+        const pledgeTracker = user.pledge_tracker || user.pledgeTracker || {};
+        pledgeRows.push({
+          uid,
+          name: user.name || "Unknown",
+          pictureLink:
+            user.pfp_large_link ||
+            user.profile_pic_link ||
+            user.pfp_thumb_link ||
+            PLACEHOLDER_PFP_URL,
+          pledgePoints: toSafeNumber(
+            pledgeTracker.pledge_points ??
+              pledgeTracker.pledgePoints ??
+              DEFAULT_PLEDGE_POINTS
+          ),
+          coffeeChatsCompleted: toSafeNumber(
+            pledgeTracker.coffee_chats_completed ??
+              pledgeTracker.coffeeChatsCompleted
+          ),
+          thankYouNotesSent: toSafeNumber(
+            pledgeTracker.thank_you_notes_sent ?? pledgeTracker.thankYouNotesSent
+          ),
+          capstoneProjectProgress: parseCapstoneProgress(
+            pledgeTracker.capstone_project_progress ??
+              pledgeTracker.capstoneProjectProgress
+          ),
+        });
+      });
+
+      pledgeRows.sort((a, b) =>
+        a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+      );
+
+      this.setState({
+        users: usersList,
+        loading: false,
+        pledgeTrackerRows: pledgeRows,
+        pledgeTrackerLoading: false,
+      });
     } catch (error) {
       console.error("Error loading users:", error);
       Swal.fire({
@@ -125,7 +213,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         title: "Error loading users",
         text: "Could not load user list. Check console for details."
       });
-      this.setState({ loading: false });
+      this.setState({ loading: false, pledgeTrackerLoading: false });
     }
   }
 
@@ -565,6 +653,97 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     });
   }
 
+  updatePledgeTrackerNumber(
+    uid: string,
+    field: "pledgePoints" | "coffeeChatsCompleted" | "thankYouNotesSent",
+    value: string
+  ) {
+    const sanitizedValue = value === "" ? 0 : toSafeNumber(value);
+
+    this.setState((prevState) => ({
+      pledgeTrackerRows: prevState.pledgeTrackerRows.map((row) => {
+        if (row.uid !== uid) {
+          return row;
+        }
+
+        return {
+          ...row,
+          pledgePoints:
+            field === "pledgePoints" ? sanitizedValue : row.pledgePoints,
+          coffeeChatsCompleted:
+            field === "coffeeChatsCompleted"
+              ? sanitizedValue
+              : row.coffeeChatsCompleted,
+          thankYouNotesSent:
+            field === "thankYouNotesSent"
+              ? sanitizedValue
+              : row.thankYouNotesSent,
+        };
+      }),
+    }));
+  }
+
+  toggleCapstoneProgress(uid: string, index: 0 | 1 | 2) {
+    this.setState((prevState) => ({
+      pledgeTrackerRows: prevState.pledgeTrackerRows.map((row) => {
+        if (row.uid !== uid) {
+          return row;
+        }
+
+        const nextProgress: [boolean, boolean, boolean] = [
+          row.capstoneProjectProgress[0],
+          row.capstoneProjectProgress[1],
+          row.capstoneProjectProgress[2],
+        ];
+        nextProgress[index] = !nextProgress[index];
+
+        return {
+          ...row,
+          capstoneProjectProgress: nextProgress,
+        };
+      }),
+    }));
+  }
+
+  async saveAllPledgeTrackerRows() {
+    const rows = this.state.pledgeTrackerRows;
+    if (rows.length === 0) {
+      return;
+    }
+
+    const updatesMap: { [path: string]: any } = {};
+    rows.forEach((row) => {
+      updatesMap[`public_users/${row.uid}/pledge_tracker`] = {
+        pledge_points: toSafeNumber(row.pledgePoints),
+        coffee_chats_completed: toSafeNumber(row.coffeeChatsCompleted),
+        thank_you_notes_sent: toSafeNumber(row.thankYouNotesSent),
+        capstone_project_progress: {
+          milestone_1: Boolean(row.capstoneProjectProgress[0]),
+          milestone_2: Boolean(row.capstoneProjectProgress[1]),
+          milestone_3: Boolean(row.capstoneProjectProgress[2]),
+        },
+      };
+    });
+
+    this.setState({ pledgeTrackerSavingUid: "ALL" });
+    try {
+      await update(ref(this.props.database), updatesMap);
+      Swal.fire({
+        icon: "success",
+        title: "Pledge tracker updated",
+        text: `Saved pledge tracker fields for ${rows.length} pledge${rows.length === 1 ? "" : "s"}.`,
+      });
+    } catch (error:any) {
+      Swal.fire({
+        icon: "error",
+        title: "Save failed",
+        text: error.message || "Could not update pledge tracker fields.",
+      });
+    } finally {
+      this.setState({ pledgeTrackerSavingUid: "" });
+    }
+  }
+
   render() {
     const execRoles = ["President", "VP of Technology", "VP of Programming", "VP of Recruitment", "VP of External Affairs", "VP of Internal Experience", "VP of Marketing", "VP of Finance", "VP of DEI", "VP of Pledge Experience"];
     
@@ -573,7 +752,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       user.currentRole.toLowerCase().includes(this.state.searchTerm.toLowerCase())
     );
 
-    const tabNames = ["Member Management", "User Roles", "Academic Info", "Calendar", "Messaging", "Quick Links"];
+    const tabNames = ["Member Management", "User Roles", "Academic Info", "Calendar", "Messaging", "Pledge Tracker", "Quick Links"];
 
     return (
       <div className="h-full flex flex-col">
@@ -604,7 +783,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
             <UserPlusIcon className="h-6 w-6 text-blue-600 mr-2" />
-            <h2 className="text-xl font-bold text-gray-900">Member Management</h2>
+            <h2 className="text-xl font-bold text-gray-900">Add Member</h2>
           </div>
         </div>
 
@@ -1241,7 +1420,178 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         </div>
               </Tab.Panel>
 
-              {/* Tab 6: Quick Links */}
+              {/* Tab 6: Pledge Tracker */}
+              <Tab.Panel>
+                <div className="mt-6 px-4 w-full">
+                  <div className="flex items-center mb-4">
+                    <CheckBadgeIcon className="h-6 w-6 text-blue-600 mr-2" />
+                    <h2 className="text-xl font-bold text-gray-900">Pledge Tracker</h2>
+                  </div>
+                </div>
+
+                <div className="mt-2 px-4 w-full">
+                  <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                      <div className="flex flex-wrap items-start justify-between gap-4">
+                        <div>
+                          <h3 className="text-lg font-semibold leading-6 text-blue-900">
+                            Update Pledge Progress
+                          </h3>
+                          <div className="mt-2 max-w-2xl text-sm text-gray-600">
+                            <p>
+                              Edit pledge points, coffee chats, thank you notes, and check off capstone progress boxes.
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={this.saveAllPledgeTrackerRows}
+                          disabled={
+                            this.state.pledgeTrackerLoading ||
+                            this.state.pledgeTrackerRows.length === 0 ||
+                            this.state.pledgeTrackerSavingUid === "ALL"
+                          }
+                          className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-5 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 transition-colors sm:text-sm"
+                        >
+                          {this.state.pledgeTrackerSavingUid === "ALL"
+                            ? "Saving All..."
+                            : "Save All"}
+                        </button>
+                      </div>
+
+                      {this.state.pledgeTrackerLoading ? (
+                        <div className="flex justify-center items-center py-8">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                          <p className="ml-2 text-gray-600">Loading pledge tracker entries...</p>
+                        </div>
+                      ) : this.state.pledgeTrackerRows.length === 0 ? (
+                        <p className="text-gray-600 py-8 text-center">
+                          No pledges found. Assign users the Pledge role first.
+                        </p>
+                      ) : (
+                        <div className="mt-4 space-y-3">
+                          {this.state.pledgeTrackerRows.map((row) => (
+                            <div
+                              key={row.uid}
+                              className="rounded-lg border border-gray-200 bg-white p-4"
+                            >
+                              <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-center">
+                                <div className="lg:col-span-3 flex items-center gap-3">
+                                  <img
+                                    className="h-12 w-12 rounded-full object-cover border border-gray-200"
+                                    src={row.pictureLink}
+                                    alt={row.name}
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = PLACEHOLDER_PFP_URL;
+                                    }}
+                                  />
+                                  <div>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                      {row.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">Pledge</p>
+                                  </div>
+                                </div>
+
+                                <div className="lg:col-span-9 grid grid-cols-1 gap-3 sm:grid-cols-4">
+                                  <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-blue-700">
+                                      Pledge Points
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={row.pledgePoints}
+                                      onChange={(e) =>
+                                        this.updatePledgeTrackerNumber(
+                                          row.uid,
+                                          "pledgePoints",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-blue-700">
+                                      Coffee Chats
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={row.coffeeChatsCompleted}
+                                      onChange={(e) =>
+                                        this.updatePledgeTrackerNumber(
+                                          row.uid,
+                                          "coffeeChatsCompleted",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-blue-700">
+                                      Thank You Notes Sent
+                                    </label>
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={row.thankYouNotesSent}
+                                      onChange={(e) =>
+                                        this.updatePledgeTrackerNumber(
+                                          row.uid,
+                                          "thankYouNotesSent",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                    />
+                                  </div>
+
+                                  <div>
+                                    <label className="block text-xs font-semibold uppercase tracking-wide text-blue-700">
+                                      Capstone Progress
+                                    </label>
+                                    <div className="mt-1 flex gap-2">
+                                      {([0, 1, 2] as const).map((boxIndex) => (
+                                        <button
+                                          key={`${row.uid}-capstone-${boxIndex}`}
+                                          type="button"
+                                          aria-pressed={row.capstoneProjectProgress[boxIndex]}
+                                          onClick={() =>
+                                            this.toggleCapstoneProgress(
+                                              row.uid,
+                                              boxIndex
+                                            )
+                                          }
+                                          className={`flex h-9 w-9 items-center justify-center rounded border text-sm font-semibold transition-colors ${
+                                            row.capstoneProjectProgress[boxIndex]
+                                              ? "border-blue-600 bg-blue-600 text-white"
+                                              : "border-blue-200 bg-white text-blue-500 hover:border-blue-400"
+                                          }`}
+                                        >
+                                          {row.capstoneProjectProgress[boxIndex]
+                                            ? "X"
+                                            : boxIndex + 1}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Tab.Panel>
+
+              {/* Tab 7: Quick Links */}
               <Tab.Panel>
                 <div className="mt-4 px-4 w-full">
           <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">

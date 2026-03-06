@@ -26,9 +26,115 @@ let publicRef = admin.database().ref("public_users");
 let announcementsRef = admin.database().ref("announcements");
 
 const LEETCODE_API_BASE_URL = "https://leetcode-stats-api.herokuapp.com/";
+const LEETCODE_UPDATE_MIN_INTERVAL_MS = 10 * 60 * 1000;
+const leetcodeUpdateMetaRef = admin
+  .database()
+  .ref("system/leetcode_update_meta");
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function formatDurationMs(ms) {
+  const safeMs = Math.max(0, Number(ms) || 0);
+  const totalSeconds = Math.ceil(safeMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes > 0) {
+    return minutes + "m " + seconds + "s";
+  }
+
+  return seconds + "s";
+}
+
+async function claimLeetCodeUpdateSlot(minIntervalMs) {
+  const now = Date.now();
+  const txResult = await leetcodeUpdateMetaRef
+    .child("lastRunStartedAt")
+    .transaction((currentValue) => {
+      if (
+        typeof currentValue === "number" &&
+        now - currentValue < minIntervalMs
+      ) {
+        return;
+      }
+
+      return now;
+    });
+
+  if (!txResult.committed) {
+    const lastRunStartedAt =
+      typeof txResult.snapshot.val() === "number"
+        ? txResult.snapshot.val()
+        : null;
+    const remainingMs = lastRunStartedAt
+      ? Math.max(0, minIntervalMs - (now - lastRunStartedAt))
+      : minIntervalMs;
+
+    return {
+      claimed: false,
+      lastRunStartedAt,
+      remainingMs,
+    };
+  }
+
+  return {
+    claimed: true,
+    lastRunStartedAt: now,
+    remainingMs: 0,
+  };
+}
+
+async function runLeetCodeUpdateWithThrottle(options = {}) {
+  const { clearOffsets = false, source = "unknown" } = options;
+
+  const slotResult = await claimLeetCodeUpdateSlot(
+    LEETCODE_UPDATE_MIN_INTERVAL_MS
+  );
+
+  if (!slotResult.claimed) {
+    return {
+      throttled: true,
+      remainingMs: slotResult.remainingMs,
+      lastRunStartedAt: slotResult.lastRunStartedAt,
+      summary: null,
+    };
+  }
+
+  await leetcodeUpdateMetaRef.update({
+    lastSource: source,
+    lastStatus: "running",
+    lastError: null,
+  });
+
+  try {
+    const summary = await runLeetCodeUpdate({ clearOffsets });
+
+    await leetcodeUpdateMetaRef.update({
+      lastStatus: "success",
+      lastRunFinishedAt: Date.now(),
+      lastSummary: {
+        updated: summary.updated,
+        failed: summary.failed.length,
+        skipped: summary.skipped,
+      },
+    });
+
+    return {
+      throttled: false,
+      remainingMs: 0,
+      lastRunStartedAt: slotResult.lastRunStartedAt,
+      summary,
+    };
+  } catch (error) {
+    await leetcodeUpdateMetaRef.update({
+      lastStatus: "error",
+      lastRunFinishedAt: Date.now(),
+      lastError: error && error.message ? error.message : String(error),
+    });
+    throw error;
+  }
 }
 
 async function fetchLeetCodeStats(username) {
@@ -153,7 +259,21 @@ exports.lcupdate = onSchedule("*/10 * * * *", async (event) => {
   logger.log("LeetCode update function starting...");
   
   try {
-    const summary = await runLeetCodeUpdate({ clearOffsets: false });
+    const runResult = await runLeetCodeUpdateWithThrottle({
+      clearOffsets: false,
+      source: "scheduled",
+    });
+
+    if (runResult.throttled) {
+      logger.log(
+        "LeetCode update skipped due to throttle. Retry in " +
+          formatDurationMs(runResult.remainingMs) +
+          "."
+      );
+      return;
+    }
+
+    const summary = runResult.summary;
     logger.log(
       "LeetCode update completed. updated=" +
         summary.updated +
@@ -184,7 +304,23 @@ exports.lcupdateNow = functions.https.onCall(async (data, context) => {
     }
     
     const initialScrape = !!(data && data.initialScrape);
-    const summary = await runLeetCodeUpdate({ clearOffsets: initialScrape });
+    const runResult = await runLeetCodeUpdateWithThrottle({
+      clearOffsets: initialScrape,
+      source: "manual-admin",
+    });
+
+    if (runResult.throttled) {
+      return {
+        status: "throttled",
+        message:
+          "LeetCode API updates are limited to once every 10 minutes. Try again in " +
+          formatDurationMs(runResult.remainingMs) +
+          ".",
+        retryAfterMs: runResult.remainingMs,
+      };
+    }
+
+    const summary = runResult.summary;
     logger.log("Manual update completed. Updated " + summary.updated + " users");
 
     return { 
