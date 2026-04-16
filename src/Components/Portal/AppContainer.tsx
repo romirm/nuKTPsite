@@ -314,9 +314,11 @@ export default function AppContainer(props: { firebase: any, database: any, stor
         </div>
 
         {/* Admin tab, only visible to users with entry in users/UID/admin set to true */}
-        <div className={currTab=="Admin" ? "" : "hidden"}>
-          <AdminPanel firebase={props.firebase} database={props.database} />
-        </div>
+        {admin && (
+          <div className={currTab=="Admin" ? "" : "hidden"}>
+            <AdminPanel firebase={props.firebase} database={props.database} />
+          </div>
+        )}
 
         {/* Leetcode Leaderboard tab */}
         <div className={currTab=="Leaderboard" ? "h-full" : "hidden"}>

@@ -407,6 +407,81 @@ exports.resetLcOffsets = functions.https.onCall(async (data, context) => {
   }
 });
 
+exports.setUserAdmin = functions.https.onCall(async (data, context) => {
+  try {
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        "unauthenticated",
+        "User not authenticated"
+      );
+    }
+
+    const callerSnapshot = await usersRef.child(context.auth.uid).once("value");
+    if (!callerSnapshot.exists() || callerSnapshot.val().admin !== true) {
+      throw new functions.https.HttpsError(
+        "permission-denied",
+        "Only admins can update admin access"
+      );
+    }
+
+    const targetUid =
+      data && typeof data.targetUid === "string" ? data.targetUid.trim() : "";
+    const nextAdmin = data && typeof data.admin === "boolean" ? data.admin : null;
+
+    if (!targetUid) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "targetUid is required"
+      );
+    }
+
+    if (nextAdmin === null) {
+      throw new functions.https.HttpsError(
+        "invalid-argument",
+        "admin must be a boolean"
+      );
+    }
+
+    if (targetUid === context.auth.uid && nextAdmin === false) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        "You cannot remove your own admin access"
+      );
+    }
+
+    const targetSnapshot = await usersRef.child(targetUid).once("value");
+    if (!targetSnapshot.exists()) {
+      throw new functions.https.HttpsError("not-found", "Target user not found");
+    }
+
+    await usersRef.child(targetUid).update({ admin: nextAdmin });
+
+    logger.log(
+      "Admin access updated by " +
+        context.auth.uid +
+        " for " +
+        targetUid +
+        " -> " +
+        String(nextAdmin)
+    );
+
+    return {
+      status: "success",
+      targetUid,
+      admin: nextAdmin,
+    };
+  } catch (error) {
+    logger.error("setUserAdmin error:", error);
+    if (error instanceof functions.https.HttpsError) {
+      throw error;
+    }
+    throw new functions.https.HttpsError(
+      "internal",
+      error && error.message ? error.message : "Unknown error"
+    );
+  }
+});
+
 // exports.sendText = functions.https.onCall(async (data, context) => {
 //   const prom = new Promise((resolve, reject) => {
 //     usersRef.child(context.auth.uid).once("value", (user_snapshot) => {

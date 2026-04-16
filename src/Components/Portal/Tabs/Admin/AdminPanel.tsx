@@ -52,11 +52,19 @@ interface PledgeTrackerUserRow {
   capstoneProjectProgress: [boolean, boolean, boolean];
 }
 
+interface AdminUserRow {
+  uid: string;
+  name: string;
+  currentRole: string;
+  currentAdmin: boolean;
+}
+
 interface AdminPanelState {
-  users: Array<{uid: string, name: string, currentRole: string}>;
+  users: AdminUserRow[];
   loading: boolean;
   searchTerm: string;
   roleSelections: {[uid: string]: string}; // Track whether user selected Exec or Custom
+  adminSavingByUid: {[uid: string]: boolean};
   selectedProfileUid: string;
   editYear: string;
   editMajor: string;
@@ -94,6 +102,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       loading: true,
       searchTerm: "",
       roleSelections: {},
+      adminSavingByUid: {},
       selectedProfileUid: "",
       editYear: "",
       editMajor: "",
@@ -119,6 +128,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     this.loadUsers = this.loadUsers.bind(this);
     this.updateUserRole = this.updateUserRole.bind(this);
     this.updateUserRoleCustom = this.updateUserRoleCustom.bind(this);
+    this.updateUserAdminAccess = this.updateUserAdminAccess.bind(this);
     this.loadUserAcademicInfo = this.loadUserAcademicInfo.bind(this);
     this.updateUserAcademicInfo = this.updateUserAcademicInfo.bind(this);
     this.addCalendarEvent = this.addCalendarEvent.bind(this);
@@ -143,19 +153,40 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     try {
       this.setState({ loading: true, pledgeTrackerLoading: true });
       const dbRef = ref(this.props.database);
-      const [publicSnapshot, allowedSnapshot] = await Promise.all([
+      const [publicResult, allowedResult] = await Promise.allSettled([
         get(child(dbRef, "public_users")),
         get(child(dbRef, "allowed_users"))
       ]);
 
-      const publicUsers = publicSnapshot.val() || {};
-      const allowedUsers = allowedSnapshot.val() || {};
+      if (publicResult.status !== "fulfilled") {
+        throw publicResult.reason;
+      }
 
-      const usersList = Object.keys(publicUsers)
+      const publicUsers = publicResult.value.val() || {};
+      const allowedUsers =
+        allowedResult.status === "fulfilled"
+          ? allowedResult.value.val() || {}
+          : {};
+      const adminByUid: {[uid: string]: boolean} = {};
+
+      // Reading /users directly is denied by rules. Read each admin flag separately.
+      await Promise.all(
+        Object.keys(publicUsers).map(async (uid) => {
+          try {
+            const adminSnapshot = await get(child(dbRef, `users/${uid}/admin`));
+            adminByUid[uid] = adminSnapshot.val() === true;
+          } catch (error) {
+            adminByUid[uid] = false;
+          }
+        })
+      );
+
+      const usersList: AdminUserRow[] = Object.keys(publicUsers)
         .map(uid => ({
           uid,
           name: publicUsers[uid].name || "Unknown",
-          currentRole: allowedUsers[uid]?.role || publicUsers[uid].role || "No Role"
+          currentRole: allowedUsers[uid]?.role || publicUsers[uid].role || "No Role",
+          currentAdmin: Boolean(adminByUid[uid])
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -250,6 +281,51 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       return;
     }
     this.updateUserRole(uid, customRole.trim());
+  }
+
+  updateUserAdminAccess(uid: string, nextAdminValue: boolean) {
+    this.setState((prevState) => ({
+      adminSavingByUid: {
+        ...prevState.adminSavingByUid,
+        [uid]: true,
+      },
+    }));
+
+    this.props.firebase
+      .functions()
+      .httpsCallable("setUserAdmin")({
+        targetUid: uid,
+        admin: nextAdminValue,
+      })
+      .then(() => {
+        this.setState((prevState) => ({
+          users: prevState.users.map((u) =>
+            u.uid === uid ? { ...u, currentAdmin: nextAdminValue } : u
+          ),
+        }));
+        Swal.fire({
+          icon: "success",
+          title: nextAdminValue ? "Admin granted" : "Admin removed",
+          text: nextAdminValue
+            ? "This user now has admin access."
+            : "This user no longer has admin access.",
+        });
+      })
+      .catch((error: any) => {
+        Swal.fire({
+          icon: "error",
+          title: "Admin update failed",
+          text: error?.message || "Could not update admin access.",
+        });
+      })
+      .finally(() => {
+        this.setState((prevState) => ({
+          adminSavingByUid: {
+            ...prevState.adminSavingByUid,
+            [uid]: false,
+          },
+        }));
+      });
   }
 
   async loadUserAcademicInfo(uid: string) {
@@ -895,12 +971,15 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                         <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
                           Update Role
                         </th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
+                          Admin Access
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {filteredUsers.length === 0 ? (
                         <tr>
-                          <td colSpan={3} className="px-4 py-4 text-center text-sm text-gray-500">
+                          <td colSpan={4} className="px-4 py-4 text-center text-sm text-gray-500">
                             No users found
                           </td>
                         </tr>
@@ -982,6 +1061,29 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                                   />
                                 )}
                               </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  this.updateUserAdminAccess(
+                                    user.uid,
+                                    !user.currentAdmin
+                                  )
+                                }
+                                disabled={Boolean(this.state.adminSavingByUid[user.uid])}
+                                className={`inline-flex items-center justify-center rounded-md px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors disabled:opacity-50 ${
+                                  user.currentAdmin
+                                    ? "bg-red-100 text-red-800 hover:bg-red-200"
+                                    : "bg-green-100 text-green-800 hover:bg-green-200"
+                                }`}
+                              >
+                                {this.state.adminSavingByUid[user.uid]
+                                  ? "Saving..."
+                                  : user.currentAdmin
+                                  ? "Revoke Admin"
+                                  : "Grant Admin"}
+                              </button>
                             </td>
                           </tr>
                         ))
