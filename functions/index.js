@@ -1,5 +1,5 @@
 const path = require("path");
-const functions = require("firebase-functions");
+const functions = require("firebase-functions/v1");
 const { logger } = require("firebase-functions");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const admin = require("firebase-admin");
@@ -20,16 +20,16 @@ const uuid = require("uuid");
 admin.initializeApp({
   databaseURL: "https://ktp-site-default-rtdb.firebaseio.com/",
 });
-let usersRef = admin.database().ref("users");
-let allowedRef = admin.database().ref("allowed_users");
-let publicRef = admin.database().ref("public_users");
-let announcementsRef = admin.database().ref("announcements");
+const getDatabase = () => admin.database();
+const usersRef = () => getDatabase().ref("users");
+const allowedRef = () => getDatabase().ref("allowed_users");
+const publicRef = () => getDatabase().ref("public_users");
+const announcementsRef = () => getDatabase().ref("announcements");
 
 const LEETCODE_API_BASE_URL = "https://leetcode-stats-api.herokuapp.com/";
 const LEETCODE_UPDATE_MIN_INTERVAL_MS = 10 * 60 * 1000;
-const leetcodeUpdateMetaRef = admin
-  .database()
-  .ref("system/leetcode_update_meta");
+const leetcodeUpdateMetaRef = () =>
+  getDatabase().ref("system/leetcode_update_meta");
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,7 +50,7 @@ function formatDurationMs(ms) {
 
 async function claimLeetCodeUpdateSlot(minIntervalMs) {
   const now = Date.now();
-  const txResult = await leetcodeUpdateMetaRef
+  const txResult = await leetcodeUpdateMetaRef()
     .child("lastRunStartedAt")
     .transaction((currentValue) => {
       if (
@@ -102,7 +102,7 @@ async function runLeetCodeUpdateWithThrottle(options = {}) {
     };
   }
 
-  await leetcodeUpdateMetaRef.update({
+  await leetcodeUpdateMetaRef().update({
     lastSource: source,
     lastStatus: "running",
     lastError: null,
@@ -111,7 +111,7 @@ async function runLeetCodeUpdateWithThrottle(options = {}) {
   try {
     const summary = await runLeetCodeUpdate({ clearOffsets });
 
-    await leetcodeUpdateMetaRef.update({
+    await leetcodeUpdateMetaRef().update({
       lastStatus: "success",
       lastRunFinishedAt: Date.now(),
       lastSummary: {
@@ -128,7 +128,7 @@ async function runLeetCodeUpdateWithThrottle(options = {}) {
       summary,
     };
   } catch (error) {
-    await leetcodeUpdateMetaRef.update({
+    await leetcodeUpdateMetaRef().update({
       lastStatus: "error",
       lastRunFinishedAt: Date.now(),
       lastError: error && error.message ? error.message : String(error),
@@ -172,7 +172,7 @@ async function fetchLeetCodeStats(username) {
 
 async function runLeetCodeUpdate(options = {}) {
   const { clearOffsets = false } = options;
-  const pubusersSnapshot = await publicRef.once("value");
+  const pubusersSnapshot = await publicRef().once("value");
   const pubusers = pubusersSnapshot.val();
 
   if (!pubusers) {
@@ -204,7 +204,7 @@ async function runLeetCodeUpdate(options = {}) {
       const hardSolved = Number(res.hardSolved) || 0;
       const weightedScore = easySolved * 2 + mediumSolved * 5 + hardSolved * 8;
 
-      await publicRef.child(user_uid + "/leetcode/answers").set({
+      await publicRef().child(user_uid + "/leetcode/answers").set({
         easySolved,
         mediumSolved,
         hardSolved,
@@ -215,7 +215,7 @@ async function runLeetCodeUpdate(options = {}) {
       });
 
       if (clearOffsets) {
-        await publicRef.child(user_uid + "/leetcode/offsets").set({
+        await publicRef().child(user_uid + "/leetcode/offsets").set({
           easySolved: 0,
           mediumSolved: 0,
           hardSolved: 0,
@@ -237,8 +237,8 @@ async function runLeetCodeUpdate(options = {}) {
 
     if (user.leetcode && !user.leetcode.username) {
       logger.log("Removing " + user_uid + "'s leetcode data (no username)");
-      await usersRef.child(user_uid + "/leetcode").remove();
-      await publicRef.child(user_uid + "/leetcode").remove();
+      await usersRef().child(user_uid + "/leetcode").remove();
+      await publicRef().child(user_uid + "/leetcode").remove();
       return false;
     }
 
@@ -298,7 +298,7 @@ exports.lcupdateNow = functions.https.onCall(async (data, context) => {
       throw new Error("User not authenticated");
     }
     
-    const userSnapshot = await usersRef.child(context.auth.uid).once("value");
+    const userSnapshot = await usersRef().child(context.auth.uid).once("value");
     if (!userSnapshot.val() || !userSnapshot.val().admin) {
       throw new Error("User is not an admin");
     }
@@ -349,7 +349,7 @@ exports.resetLcOffsets = functions.https.onCall(async (data, context) => {
       throw new Error("User not authenticated");
     }
     
-    const userSnapshot = await usersRef.child(context.auth.uid).once("value");
+    const userSnapshot = await usersRef().child(context.auth.uid).once("value");
     if (!userSnapshot.val() || !userSnapshot.val().admin) {
       throw new Error("User is not an admin");
     }
@@ -362,7 +362,7 @@ exports.resetLcOffsets = functions.https.onCall(async (data, context) => {
     logger.log("Admin attempting to reset offsets for: " + targetUsername);
     
     // Find the user with this username
-    const pubusersSnapshot = await publicRef.once("value");
+    const pubusersSnapshot = await publicRef().once("value");
     const pubusers = pubusersSnapshot.val();
     
     let targetUid = null;
@@ -390,7 +390,7 @@ exports.resetLcOffsets = functions.https.onCall(async (data, context) => {
       hardSolved: targetUser.leetcode.answers.hardSolved,
     };
     
-    await publicRef.child(targetUid + "/leetcode/offsets").set(newOffsets);
+    await publicRef().child(targetUid + "/leetcode/offsets").set(newOffsets);
     
     logger.log("Successfully reset offsets for " + targetUsername + ". New offsets: " + JSON.stringify(newOffsets));
     
@@ -416,7 +416,7 @@ exports.setUserAdmin = functions.https.onCall(async (data, context) => {
       );
     }
 
-    const callerSnapshot = await usersRef.child(context.auth.uid).once("value");
+    const callerSnapshot = await usersRef().child(context.auth.uid).once("value");
     if (!callerSnapshot.exists() || callerSnapshot.val().admin !== true) {
       throw new functions.https.HttpsError(
         "permission-denied",
@@ -449,12 +449,12 @@ exports.setUserAdmin = functions.https.onCall(async (data, context) => {
       );
     }
 
-    const targetSnapshot = await usersRef.child(targetUid).once("value");
+    const targetSnapshot = await usersRef().child(targetUid).once("value");
     if (!targetSnapshot.exists()) {
       throw new functions.https.HttpsError("not-found", "Target user not found");
     }
 
-    await usersRef.child(targetUid).update({ admin: nextAdmin });
+    await usersRef().child(targetUid).update({ admin: nextAdmin });
 
     logger.log(
       "Admin access updated by " +
@@ -651,24 +651,24 @@ exports.resizeCover = functions.storage.object().onFinalize(async (object) => {
           const metadata = data[0];
           //todo: delete original image
           if (size === 128) {
-            await usersRef.child(uid).update({
+            await usersRef().child(uid).update({
               pfp_thumb_link: metadata.mediaLink,
             });
-            await publicRef.child(uid).update({
+            await publicRef().child(uid).update({
               pfp_thumb_link: metadata.mediaLink,
             });
           } else if (size === 256) {
-            await usersRef.child(uid).update({
+            await usersRef().child(uid).update({
               pfp_large_link: metadata.mediaLink,
             });
-            await publicRef.child(uid).update({
+            await publicRef().child(uid).update({
               pfp_large_link: metadata.mediaLink,
             });
           } else if (size === 1400) {
-            await usersRef.child(uid).update({
+            await usersRef().child(uid).update({
               cover_resized_link: metadata.mediaLink,
             });
-            await publicRef.child(uid).update({
+            await publicRef().child(uid).update({
               cover_resized_link: metadata.mediaLink,
             });
           }
@@ -692,11 +692,11 @@ exports.resizeCover = functions.storage.object().onFinalize(async (object) => {
 
 exports.beforeSignIn = functions.auth.user().beforeSignIn(async (user) => {
   if (user.email.includes("northwestern.edu")) {
-    allowedRef
+    allowedRef()
       .child(user.email.substring(0, user.email.indexOf("@")))
       .once("value", (snapshot) => {
         if (snapshot.exists()) {
-          usersRef.child(user.uid).update({ allowed: true });
+          usersRef().child(user.uid).update({ allowed: true });
           admin.auth().setCustomUserClaims(user.uid, {
             member: true,
           });
@@ -707,24 +707,24 @@ exports.beforeSignIn = functions.auth.user().beforeSignIn(async (user) => {
 
 exports.beforeAcc = functions.auth.user().beforeCreate(async (user) => {
   if (!user.email.includes("northwestern.edu")) {
-    await usersRef.child(user.uid).set({
+    await usersRef().child(user.uid).set({
       allowed: false,
       signed_up: false,
     });
   }
   const prom = new Promise((resolve, reject) => {
-    allowedRef
+    allowedRef()
       .child(user.email.substring(0, user.email.indexOf("@")))
       .once("value", async (allowed_snapshot) => {
         if (allowed_snapshot.exists()) {
-          usersRef.child(user.uid).once("value", async (user_snapshot) => {
+          usersRef().child(user.uid).once("value", async (user_snapshot) => {
             if (!user_snapshot.exists()) {
               functions.logger.log("Adding user " + user.email);
               var newuser_role = "Member";
               if (allowed_snapshot.val() != "") {
                 newuser_role = allowed_snapshot.val();
               }
-              await usersRef.child(user.uid).set({
+              await usersRef().child(user.uid).set({
                 allowed: true,
                 signed_up: false,
                 role: newuser_role,
@@ -733,7 +733,7 @@ exports.beforeAcc = functions.auth.user().beforeCreate(async (user) => {
                   "https://images.ctfassets.net/7thvzrs93dvf/wpImage18643/2f45c72db7876d2f40623a8b09a88b17/linkedin-default-background-cover-photo-1.png?w=790&h=196&q=90&fm=png",
                 email: user.email,
               });
-              await publicRef.child(user.uid).set({
+              await publicRef().child(user.uid).set({
                 profile_pic_link: user.photoURL,
                 role: newuser_role,
                 cover_page_link:

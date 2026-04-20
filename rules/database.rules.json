@@ -53,6 +53,15 @@
       "$event_id": {
         ".write": "root.child('users').child(auth.uid).child('admin').val() == true"
       }
+    },
+    "map_pins": {
+      ".read": "auth.uid != null",
+      "$map_type": {
+        ".read": "$map_type === 'from' || $map_type === 'working'",
+        "$user_id": {
+          ".write": "($map_type === 'from' || $map_type === 'working') && ($user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true)"
+        }
+      }
     }
   }
 }
