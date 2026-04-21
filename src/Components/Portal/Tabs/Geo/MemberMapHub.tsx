@@ -16,6 +16,32 @@ import {
   TrashIcon,
 } from "@heroicons/react/24/outline";
 
+type MapTabKey = "working" | "from";
+
+type MapDraftState = {
+  latitude: string;
+  longitude: string;
+  city: string;
+  value: string;
+};
+
+type MapTabConfig = {
+  key: MapTabKey;
+  tabLabel: string;
+  title: string;
+  description: string;
+  storagePath: string;
+  geographyUrl: string;
+  projection: "geoAlbersUsa" | "geoNaturalEarth1";
+  projectionScale: number;
+  defaultCenter: [number, number];
+  fieldLabel: string;
+  fieldPlaceholder: string;
+  coordinateMessage: string;
+  emptyStateMessage: string;
+  coordinatesAllowed: (latitude: number, longitude: number) => boolean;
+};
+
 type MapPoint = {
   id: string;
   name: string;
@@ -24,6 +50,7 @@ type MapPoint = {
   subtitle: string;
   city?: string;
   company?: string;
+  country?: string;
   updatedAt?: number;
 };
 
@@ -42,6 +69,7 @@ type StoredPin = {
   lng?: number;
   city?: string;
   company?: string;
+  country?: string;
   subtitle?: string;
   label?: string;
   updatedAt?: number;
@@ -54,14 +82,16 @@ interface MemberMapHubProps {
 }
 
 const US_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+const WORLD_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 const US_MAP_WIDTH = 980;
 const US_MAP_HEIGHT = 610;
+const WORLD_MAP_WIDTH = 980;
+const WORLD_MAP_HEIGHT = 610;
 const OUTLINE_BLACK = "#000000";
 const KTP_BLUE_LIGHT = "#dbeafe";
 const KTP_BLUE_ACCENT = "#2563eb";
-const usProjection = geoAlbersUsa()
-  .scale(1250)
-  .translate([US_MAP_WIDTH / 2, US_MAP_HEIGHT / 2]);
+
+const usProjection = geoAlbersUsa().scale(1250).translate([US_MAP_WIDTH / 2, US_MAP_HEIGHT / 2]);
 
 const normalizeLongitude = (rawLongitude: number): number => {
   let normalized = rawLongitude;
@@ -101,6 +131,10 @@ const getStateFillColor = (_geo: any): string => {
   return "rgba(255, 255, 255, 0.001)";
 };
 
+const isWorldCoordinate = (latitude: number, longitude: number): boolean => {
+  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+};
+
 const truncateLabel = (value: string, maxChars = 34): string => {
   if (value.length <= maxChars) {
     return value;
@@ -125,34 +159,136 @@ const getPointCityText = (point: MapPoint): string => {
 
   return subtitle;
 };
+const getPointFieldText = (point: MapPoint, tab: MapTabKey): string => {
+  const primaryValue =
+    tab === "working"
+      ? typeof point.company === "string" && point.company.trim().length > 0
+        ? point.company.trim()
+        : ""
+      : typeof point.country === "string" && point.country.trim().length > 0
+        ? point.country.trim()
+        : "";
 
-const getPointCompanyText = (point: MapPoint): string => {
-  if (typeof point.company === "string" && point.company.trim().length > 0) {
-    return point.company.trim();
+  if (primaryValue.length > 0) {
+    return primaryValue;
   }
 
   const subtitle = typeof point.subtitle === "string" ? point.subtitle.trim() : "";
   if (subtitle.includes(" - ")) {
     const parts = subtitle
       .split(" - ")
-      .map((entry) => entry.trim())
-      .filter((entry) => entry.length > 0);
+      .map((entry: string) => entry.trim())
+      .filter((entry: string) => entry.length > 0);
 
     if (parts.length > 1) {
-      return parts.slice(0, parts.length - 1).join(" - ");
+      return tab === "working" ? parts.slice(0, parts.length - 1).join(" - ") : parts[0];
     }
   }
 
   return subtitle;
 };
 
+const getPinPath = (tab: MapTabKey): string => `map_pins/${tab}`;
+
 const isUsCoordinate = (latitude: number, longitude: number): boolean => {
   const projectedPoint = usProjection([longitude, latitude]);
   return projectedPoint !== null;
 };
 
-const convertStoredWorkingPinsToPoints = (
-  storedPins: Record<string, StoredPin>
+const getTabConfig = (tab: MapTabKey): MapTabConfig => {
+  if (tab === "working") {
+    return {
+      key: "working",
+      tabLabel: "Where We\'re Working",
+      title: "Where We\'re Working",
+      description: "Set one pin for yourself using coordinates, city, and company.",
+      storagePath: getPinPath("working"),
+      geographyUrl: US_GEOGRAPHY_URL,
+      projection: "geoAlbersUsa",
+      projectionScale: 1250,
+      defaultCenter: [-96, 38],
+      fieldLabel: "Company",
+      fieldPlaceholder: "Required, e.g. Google",
+      coordinateMessage: "Enter coordinates, city, and company above, then save your pin.",
+      emptyStateMessage:
+        "You have not set a working pin yet. Enter coordinates, city, and company above, then save.",
+      coordinatesAllowed: isUsCoordinate,
+    };
+  }
+
+  return {
+    key: "from",
+    tabLabel: "Where We\'re From",
+    title: "Where We\'re From",
+    description: "Set one pin for yourself using coordinates, city, and country.",
+    storagePath: getPinPath("from"),
+    geographyUrl: WORLD_GEOGRAPHY_URL,
+    projection: "geoNaturalEarth1",
+    projectionScale: 170,
+    defaultCenter: [0, 20],
+    fieldLabel: "Country",
+    fieldPlaceholder: "Required, e.g. Canada",
+    coordinateMessage: "Enter coordinates, city, and country above, then save your pin.",
+    emptyStateMessage:
+      "You have not set a from pin yet. Enter coordinates, city, and country above, then save.",
+    coordinatesAllowed: isWorldCoordinate,
+  };
+};
+
+const buildDisplayPoints = (points: MapPoint[], zoom: number): DisplayMapPoint[] => {
+  const groupedPoints = new Map<string, MapPoint[]>();
+
+  points.forEach((point) => {
+    const groupingKey = `${point.latitude.toFixed(4)}:${point.longitude.toFixed(4)}`;
+    const existingGroup = groupedPoints.get(groupingKey) || [];
+    existingGroup.push(point);
+    groupedPoints.set(groupingKey, existingGroup);
+  });
+
+  const displayPoints: DisplayMapPoint[] = [];
+
+  groupedPoints.forEach((group) => {
+    if (group.length === 1) {
+      const onlyPoint = group[0];
+      displayPoints.push({
+        ...onlyPoint,
+        displayLatitude: onlyPoint.latitude,
+        displayLongitude: onlyPoint.longitude,
+        stackSize: 1,
+        stackIndex: 0,
+      });
+      return;
+    }
+
+    const radialDistance = Math.max(
+      0.015,
+      (0.24 + 0.018 * Math.min(group.length, 8)) / Math.max(1, Math.sqrt(zoom))
+    );
+
+    group.forEach((point, index) => {
+      const angle = (Math.PI * 2 * index) / group.length;
+      const latOffset = Math.sin(angle) * radialDistance;
+      const lngScale = Math.max(Math.cos((point.latitude * Math.PI) / 180), 0.25);
+      const lngOffset = (Math.cos(angle) * radialDistance) / lngScale;
+      const displayLatitude = Math.max(-89.999, Math.min(89.999, point.latitude + latOffset));
+      const displayLongitude = normalizeLongitude(point.longitude + lngOffset);
+
+      displayPoints.push({
+        ...point,
+        displayLatitude,
+        displayLongitude,
+        stackSize: group.length,
+        stackIndex: index,
+      });
+    });
+  });
+
+  return displayPoints;
+};
+
+const convertStoredPinsToPoints = (
+  storedPins: Record<string, StoredPin>,
+  tab: MapTabKey
 ): MapPoint[] => {
   const points: MapPoint[] = [];
 
@@ -161,7 +297,11 @@ const convertStoredWorkingPinsToPoints = (
     const latitude = toLatitude(pinData.latitude ?? pinData.lat);
     const longitude = toLongitude(pinData.longitude ?? pinData.lng);
 
-    if (latitude === null || longitude === null || !isUsCoordinate(latitude, longitude)) {
+    if (latitude === null || longitude === null) {
+      return;
+    }
+
+    if (!getTabConfig(tab).coordinatesAllowed(latitude, longitude)) {
       return;
     }
 
@@ -175,6 +315,13 @@ const convertStoredWorkingPinsToPoints = (
         ? pinData.company.trim()
         : null;
 
+    const countryCandidate =
+      typeof pinData.country === "string" && pinData.country.trim().length > 0
+        ? pinData.country.trim()
+        : null;
+
+    const primaryValue = tab === "working" ? companyCandidate : countryCandidate;
+
     const subtitleCandidate =
       typeof pinData.subtitle === "string"
         ? pinData.subtitle.trim()
@@ -183,8 +330,8 @@ const convertStoredWorkingPinsToPoints = (
           : "";
 
     const subtitle =
-      cityCandidate || companyCandidate
-        ? [companyCandidate, cityCandidate].filter(Boolean).join(" - ")
+      cityCandidate || primaryValue
+        ? [primaryValue, cityCandidate].filter(Boolean).join(" - ")
         : subtitleCandidate.length > 0
           ? subtitleCandidate
           : `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
@@ -208,6 +355,10 @@ const convertStoredWorkingPinsToPoints = (
       point.company = companyCandidate;
     }
 
+    if (countryCandidate) {
+      point.country = countryCandidate;
+    }
+
     if (typeof pinData.updatedAt === "number" && Number.isFinite(pinData.updatedAt)) {
       point.updatedAt = pinData.updatedAt;
     }
@@ -221,24 +372,40 @@ const convertStoredWorkingPinsToPoints = (
 };
 
 const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }) => {
+  const [activeMapTab, setActiveMapTab] = useState<MapTabKey>("working");
   const [isSavingPin, setIsSavingPin] = useState(false);
   const [isDeletingPin, setIsDeletingPin] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
-  const [sharedWorkPins, setSharedWorkPins] = useState<Record<string, StoredPin>>({});
-  const [usMapZoom, setUsMapZoom] = useState(1);
-  const [usMapCenter, setUsMapCenter] = useState<[number, number]>([-96, 38]);
-  const [inputLatitude, setInputLatitude] = useState("");
-  const [inputLongitude, setInputLongitude] = useState("");
-  const [inputCity, setInputCity] = useState("");
-  const [inputCompany, setInputCompany] = useState("");
+  const [sharedWorkingPins, setSharedWorkingPins] = useState<Record<string, StoredPin>>({});
+  const [sharedFromPins, setSharedFromPins] = useState<Record<string, StoredPin>>({});
+  const [mapZoomByTab, setMapZoomByTab] = useState<Record<MapTabKey, number>>({
+    working: 1,
+    from: 1,
+  });
+  const [mapCenterByTab, setMapCenterByTab] = useState<Record<MapTabKey, [number, number]>>({
+    working: getTabConfig("working").defaultCenter,
+    from: getTabConfig("from").defaultCenter,
+  });
+  const [draftsByTab, setDraftsByTab] = useState<Record<MapTabKey, MapDraftState>>({
+    working: { latitude: "", longitude: "", city: "", value: "" },
+    from: { latitude: "", longitude: "", city: "", value: "" },
+  });
 
   useEffect(() => {
     if (!database) {
       return;
     }
 
-    const unsubscribeWorkPins = onValue(ref(database, "map_pins/working"), (snapshot) => {
-      setSharedWorkPins(
+    const unsubscribeWorkingPins = onValue(ref(database, getPinPath("working")), (snapshot) => {
+      setSharedWorkingPins(
+        snapshot.exists() && typeof snapshot.val() === "object"
+          ? (snapshot.val() as Record<string, StoredPin>)
+          : {}
+      );
+    });
+
+    const unsubscribeFromPins = onValue(ref(database, getPinPath("from")), (snapshot) => {
+      setSharedFromPins(
         snapshot.exists() && typeof snapshot.val() === "object"
           ? (snapshot.val() as Record<string, StoredPin>)
           : {}
@@ -246,7 +413,8 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
     });
 
     return () => {
-      unsubscribeWorkPins();
+      unsubscribeWorkingPins();
+      unsubscribeFromPins();
     };
   }, [database]);
 
@@ -269,137 +437,139 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
   }, [fullPubDir, uid]);
 
   const workingPoints = useMemo(() => {
-    return convertStoredWorkingPinsToPoints(sharedWorkPins);
-  }, [sharedWorkPins]);
+    return convertStoredPinsToPoints(sharedWorkingPins, "working");
+  }, [sharedWorkingPins]);
 
-  const currentUserPin = useMemo(() => {
-    if (!uid) {
-      return null;
-    }
+  const fromPoints = useMemo(() => {
+    return convertStoredPinsToPoints(sharedFromPins, "from");
+  }, [sharedFromPins]);
 
-    return workingPoints.find((point) => point.id === uid) || null;
-  }, [uid, workingPoints]);
+  const displayPointsByTab = useMemo<Record<MapTabKey, DisplayMapPoint[]>>(() => {
+    return {
+      working: buildDisplayPoints(workingPoints, mapZoomByTab.working),
+      from: buildDisplayPoints(fromPoints, mapZoomByTab.from),
+    };
+  }, [fromPoints, mapZoomByTab.from, mapZoomByTab.working, workingPoints]);
 
-  const displayWorkingPoints = useMemo<DisplayMapPoint[]>(() => {
-    const groupedPoints = new Map<string, MapPoint[]>();
+  const currentUserPinByTab = useMemo<Record<MapTabKey, MapPoint | null>>(() => {
+    const workingPin = uid ? workingPoints.find((point) => point.id === uid) || null : null;
+    const fromPin = uid ? fromPoints.find((point) => point.id === uid) || null : null;
 
-    workingPoints.forEach((point) => {
-      const groupingKey = `${point.latitude.toFixed(4)}:${point.longitude.toFixed(4)}`;
-      const existingGroup = groupedPoints.get(groupingKey) || [];
-      existingGroup.push(point);
-      groupedPoints.set(groupingKey, existingGroup);
-    });
+    return {
+      working: workingPin,
+      from: fromPin,
+    };
+  }, [fromPoints, uid, workingPoints]);
 
-    const displayPoints: DisplayMapPoint[] = [];
+  const activeConfig = getTabConfig(activeMapTab);
+  const activeDraft = draftsByTab[activeMapTab];
+  const activePoints = displayPointsByTab[activeMapTab];
+  const activeCurrentUserPin = currentUserPinByTab[activeMapTab];
+  const activeMapZoom = mapZoomByTab[activeMapTab];
+  const activeMapCenter = mapCenterByTab[activeMapTab];
+  const activePinLabel = activeConfig.fieldLabel.toLowerCase();
 
-    groupedPoints.forEach((group) => {
-      if (group.length === 1) {
-        const onlyPoint = group[0];
-        displayPoints.push({
-          ...onlyPoint,
-          displayLatitude: onlyPoint.latitude,
-          displayLongitude: onlyPoint.longitude,
-          stackSize: 1,
-          stackIndex: 0,
-        });
-        return;
-      }
+  const updateDraftValue = (tab: MapTabKey, field: keyof MapDraftState, value: string) => {
+    setDraftsByTab((currentDrafts) => ({
+      ...currentDrafts,
+      [tab]: {
+        ...currentDrafts[tab],
+        [field]: value,
+      },
+    }));
+  };
 
-      const radialDistance = Math.max(
-        0.015,
-        (0.24 + 0.018 * Math.min(group.length, 8)) / Math.max(1, Math.sqrt(usMapZoom))
-      );
+  const zoomMap = (direction: "in" | "out") => {
+    setMapZoomByTab((currentZooms) => {
+      const currentZoom = currentZooms[activeMapTab];
+      const nextZoom = direction === "in" ? Math.min(36, currentZoom * 1.5) : Math.max(1, currentZoom * 0.75);
 
-      group.forEach((point, index) => {
-        const angle = (Math.PI * 2 * index) / group.length;
-        const latOffset = Math.sin(angle) * radialDistance;
-        const lngScale = Math.max(Math.cos((point.latitude * Math.PI) / 180), 0.25);
-        const lngOffset = (Math.cos(angle) * radialDistance) / lngScale;
-        const displayLatitude = Math.max(-89.999, Math.min(89.999, point.latitude + latOffset));
-        const displayLongitude = normalizeLongitude(point.longitude + lngOffset);
-
-        displayPoints.push({
-          ...point,
-          displayLatitude,
-          displayLongitude,
-          stackSize: group.length,
-          stackIndex: index,
-        });
-      });
-    });
-
-    return displayPoints;
-  }, [workingPoints, usMapZoom]);
-
-  const zoomUsMap = (direction: "in" | "out") => {
-    setUsMapZoom((currentZoom) => {
-      if (direction === "in") {
-        return Math.min(36, currentZoom * 1.5);
-      }
-      return Math.max(1, currentZoom * 0.75);
+      return {
+        ...currentZooms,
+        [activeMapTab]: nextZoom,
+      };
     });
   };
 
-  const resetUsMapView = () => {
-    setUsMapCenter([-96, 38]);
-    setUsMapZoom(1);
+  const resetMapView = () => {
+    setMapCenterByTab((currentCenters) => ({
+      ...currentCenters,
+      [activeMapTab]: activeConfig.defaultCenter,
+    }));
+    setMapZoomByTab((currentZooms) => ({
+      ...currentZooms,
+      [activeMapTab]: 1,
+    }));
   };
 
-  const saveWorkingPinFromInputs = async () => {
+  const savePinFromInputs = async () => {
     if (!database || !uid) {
       setStatusMessage("Please sign in before saving your pin.");
       return;
     }
 
-    const city = inputCity.trim();
-    const company = inputCompany.trim();
-    if (!city || !company) {
-      setStatusMessage("Please enter city and company.");
+    const city = activeDraft.city.trim();
+    const primaryValue = activeDraft.value.trim();
+
+    if (!city || !primaryValue) {
+      setStatusMessage(`Please enter city and ${activePinLabel}.`);
       return;
     }
 
-    if (inputLatitude.trim().length === 0 || inputLongitude.trim().length === 0) {
+    if (activeDraft.latitude.trim().length === 0 || activeDraft.longitude.trim().length === 0) {
       setStatusMessage("Please enter both latitude and longitude.");
       return;
     }
 
-    const latitude = toLatitude(inputLatitude);
-    const longitude = toLongitude(inputLongitude);
+    const latitude = toLatitude(activeDraft.latitude);
+    const longitude = toLongitude(activeDraft.longitude);
     if (latitude === null || longitude === null) {
       setStatusMessage("Enter valid latitude and longitude values.");
       return;
     }
 
-    if (!isUsCoordinate(latitude, longitude)) {
-      setStatusMessage("Coordinates must be inside the US map.");
+    if (!activeConfig.coordinatesAllowed(latitude, longitude)) {
+      setStatusMessage(
+        activeMapTab === "working"
+          ? "Coordinates must be inside the US map."
+          : "Coordinates must be valid world coordinates."
+      );
       return;
     }
 
-    const subtitle = `${company} - ${city}`;
+    const subtitle = `${primaryValue} - ${city}`;
 
     setIsSavingPin(true);
     setStatusMessage("Saving your pin...");
 
     try {
-      await set(ref(database, `map_pins/working/${uid}`), {
+      await set(ref(database, activeConfig.storagePath + `/${uid}`), {
         name: currentUserName,
-        company,
         city,
-        subtitle,
         latitude,
         longitude,
+        subtitle,
         updatedAt: Date.now(),
+        ...(activeMapTab === "working"
+          ? { company: primaryValue }
+          : { country: primaryValue }),
       });
 
       setStatusMessage(
-        currentUserPin
+        activeCurrentUserPin
           ? "Your existing pin was updated."
           : "Your pin was created successfully."
       );
-      setUsMapCenter([longitude, latitude]);
-      setUsMapZoom((currentZoom) => Math.max(currentZoom, 12));
+      setMapCenterByTab((currentCenters) => ({
+        ...currentCenters,
+        [activeMapTab]: [longitude, latitude],
+      }));
+      setMapZoomByTab((currentZooms) => ({
+        ...currentZooms,
+        [activeMapTab]: Math.max(currentZooms[activeMapTab], 12),
+      }));
     } catch (error) {
-      console.error("Failed to save working map pin", error);
+      console.error("Failed to save map pin", error);
       setStatusMessage("Could not save your pin. Please try again.");
     } finally {
       setIsSavingPin(false);
@@ -412,7 +582,7 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
       return;
     }
 
-    if (!currentUserPin) {
+    if (!activeCurrentUserPin) {
       setStatusMessage("No pin found to delete.");
       return;
     }
@@ -423,19 +593,27 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
 
     setIsDeletingPin(true);
     try {
-      await remove(ref(database, `map_pins/working/${uid}`));
+      await remove(ref(database, `${activeConfig.storagePath}/${uid}`));
       setStatusMessage("Your pin was deleted.");
-      setInputLatitude("");
-      setInputLongitude("");
-      setInputCity("");
-      setInputCompany("");
+      setDraftsByTab((currentDrafts) => ({
+        ...currentDrafts,
+        [activeMapTab]: { latitude: "", longitude: "", city: "", value: "" },
+      }));
     } catch (error) {
-      console.error("Failed to delete working map pin", error);
+      console.error("Failed to delete map pin", error);
       setStatusMessage("Could not delete your pin. Please try again.");
     } finally {
       setIsDeletingPin(false);
     }
   };
+
+  const isPinFormComplete =
+    activeDraft.latitude.trim().length > 0 &&
+    activeDraft.longitude.trim().length > 0 &&
+    activeDraft.city.trim().length > 0 &&
+    activeDraft.value.trim().length > 0;
+
+  const isSavePinDisabled = isSavingPin || !isPinFormComplete;
 
   return (
     <div className="h-full overflow-y-auto bg-slate-50">
@@ -444,36 +622,42 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
           <div>
             <div className="flex items-center gap-2 text-slate-700">
               <GlobeAmericasIcon className="h-7 w-7" />
-              <h1 className="text-2xl font-bold sm:text-3xl">Member Map</h1>
+              <h1 className="text-2xl font-bold sm:text-3xl">Maps</h1>
             </div>
             <p className="mt-2 text-sm text-slate-600 sm:text-base">
-              Set one pin for yourself using coordinates, city, and company.
+              Toggle between where members are working in the US and where they are from around the world.
             </p>
           </div>
         </div>
 
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={saveWorkingPinFromInputs}
-            disabled={isSavingPin}
-            className={`inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 ${
-              isSavingPin ? "cursor-not-allowed opacity-60" : ""
-            }`}
-          >
-            <MapPinIcon className="h-4 w-4" />
-            {isSavingPin ? "Saving Pin..." : currentUserPin ? "Update My Pin" : "Save My Pin"}
-          </button>
+        <div className="mb-4 inline-flex rounded-lg border border-blue-100 bg-white p-1 shadow-sm">
+          {(["working", "from"] as MapTabKey[]).map((tab) => {
+            const tabConfig = getTabConfig(tab);
+            const isActive = activeMapTab === tab;
+
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveMapTab(tab)}
+                className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
+                  isActive ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:bg-blue-50"
+                }`}
+              >
+                {tabConfig.tabLabel}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="mb-4 grid grid-cols-1 gap-3 rounded-xl border border-blue-100 bg-white p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-4 grid grid-cols-1 gap-3 rounded-xl border border-blue-100 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
               Latitude
             </span>
             <input
-              value={inputLatitude}
-              onChange={(event) => setInputLatitude(event.target.value)}
+              value={activeDraft.latitude}
+              onChange={(event) => updateDraftValue(activeMapTab, "latitude", event.target.value)}
               type="number"
               step="0.00001"
               placeholder="Required, e.g. 42.0579"
@@ -486,8 +670,8 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
               Longitude
             </span>
             <input
-              value={inputLongitude}
-              onChange={(event) => setInputLongitude(event.target.value)}
+              value={activeDraft.longitude}
+              onChange={(event) => updateDraftValue(activeMapTab, "longitude", event.target.value)}
               type="number"
               step="0.00001"
               placeholder="Required, e.g. -87.6753"
@@ -500,8 +684,8 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
               City
             </span>
             <input
-              value={inputCity}
-              onChange={(event) => setInputCity(event.target.value)}
+              value={activeDraft.city}
+              onChange={(event) => updateDraftValue(activeMapTab, "city", event.target.value)}
               type="text"
               placeholder="Required, e.g. Evanston, IL"
               className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring"
@@ -510,16 +694,35 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
 
           <label className="flex flex-col gap-1">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-              Company
+              {activeConfig.fieldLabel}
             </span>
             <input
-              value={inputCompany}
-              onChange={(event) => setInputCompany(event.target.value)}
+              value={activeDraft.value}
+              onChange={(event) => updateDraftValue(activeMapTab, "value", event.target.value)}
               type="text"
-              placeholder="Required, e.g. Google"
+              placeholder={activeConfig.fieldPlaceholder}
               className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring"
             />
           </label>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-semibold uppercase tracking-wide text-transparent">
+              Save
+            </span>
+            <button
+              type="button"
+              onClick={savePinFromInputs}
+              disabled={isSavePinDisabled}
+              className={`inline-flex h-[42px] items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors ${
+                isSavePinDisabled
+                  ? "cursor-not-allowed bg-blue-300"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              <MapPinIcon className="h-4 w-4" />
+              {isSavingPin ? "Saving Pin..." : activeCurrentUserPin ? "Update My Pin" : "Save My Pin"}
+            </button>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm sm:p-6">
@@ -527,23 +730,23 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
             <div className="mb-3 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => zoomUsMap("in")}
+                onClick={() => zoomMap("in")}
                 className="rounded-md bg-white p-2 text-slate-700 shadow hover:bg-slate-100"
-                aria-label="Zoom in on US map"
+                aria-label={`Zoom in on ${activeMapTab} map`}
               >
                 <MagnifyingGlassPlusIcon className="h-5 w-5" />
               </button>
               <button
                 type="button"
-                onClick={() => zoomUsMap("out")}
+                onClick={() => zoomMap("out")}
                 className="rounded-md bg-white p-2 text-slate-700 shadow hover:bg-slate-100"
-                aria-label="Zoom out on US map"
+                aria-label={`Zoom out on ${activeMapTab} map`}
               >
                 <MagnifyingGlassMinusIcon className="h-5 w-5" />
               </button>
               <button
                 type="button"
-                onClick={resetUsMapView}
+                onClick={resetMapView}
                 className="rounded-md bg-slate-800 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
               >
                 Reset View
@@ -552,15 +755,15 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
 
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
               <ComposableMap
-                projection="geoAlbersUsa"
-                projectionConfig={{ scale: 1250 }}
-                width={US_MAP_WIDTH}
-                height={US_MAP_HEIGHT}
+                projection={activeConfig.projection}
+                projectionConfig={{ scale: activeConfig.projectionScale }}
+                width={activeMapTab === "working" ? US_MAP_WIDTH : WORLD_MAP_WIDTH}
+                height={activeMapTab === "working" ? US_MAP_HEIGHT : WORLD_MAP_HEIGHT}
                 className="h-full w-full"
               >
                 <ZoomableGroup
-                  center={usMapCenter}
-                  zoom={usMapZoom}
+                  center={activeMapCenter}
+                  zoom={activeMapZoom}
                   minZoom={1}
                   maxZoom={36}
                   onMoveEnd={(position: any) => {
@@ -573,15 +776,21 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                       typeof coordinates[0] === "number" &&
                       typeof coordinates[1] === "number"
                     ) {
-                      setUsMapCenter([coordinates[0], coordinates[1]]);
+                      setMapCenterByTab((currentCenters) => ({
+                        ...currentCenters,
+                        [activeMapTab]: [coordinates[0], coordinates[1]],
+                      }));
                     }
 
                     if (typeof zoom === "number" && Number.isFinite(zoom)) {
-                      setUsMapZoom(zoom);
+                      setMapZoomByTab((currentZooms) => ({
+                        ...currentZooms,
+                        [activeMapTab]: zoom,
+                      }));
                     }
                   }}
                 >
-                  <Geographies geography={US_GEOGRAPHY_URL}>
+                  <Geographies geography={activeConfig.geographyUrl}>
                     {({ geographies }) =>
                       geographies.map((geo) => (
                         <Geography
@@ -589,10 +798,8 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                           geography={geo}
                           onClick={() => {
                             const regionName =
-                              geo?.properties?.name || geo?.properties?.NAME || "that state";
-                            setStatusMessage(
-                              `Enter coordinates, city, and company above, then save your pin. (${regionName})`
-                            );
+                              geo?.properties?.name || geo?.properties?.NAME || "that region";
+                            setStatusMessage(`${activeConfig.coordinateMessage} (${regionName})`);
                           }}
                           stroke={OUTLINE_BLACK}
                           strokeWidth={1.1}
@@ -616,18 +823,18 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                     }
                   </Geographies>
 
-                  {displayWorkingPoints.map((point) => {
-                    const shouldShowLabel = usMapZoom >= 10;
-                    const zoomScale = Math.min(1, 1 / Math.pow(Math.max(1, usMapZoom), 0.42));
+                  {activePoints.map((point) => {
+                    const shouldShowLabel = activeMapZoom >= 10;
+                    const zoomScale = Math.min(1, 1 / Math.pow(Math.max(1, activeMapZoom), 0.42));
                     const baseRadius = 4.8;
                     const minRadius = 1.6;
                     const circleRadius = Math.max(minRadius, baseRadius * zoomScale);
                     const markerStrokeWidth = Math.max(0.7, 1.6 * zoomScale);
                     const labelXOffset = Math.max(5.5, 9 * zoomScale);
                     const labelYOffset = Math.min(-6.5, -8 * zoomScale);
-                    const companyLabel = getPointCompanyText(point);
+                    const fieldText = getPointFieldText(point, activeMapTab);
                     const cityLabel = getPointCityText(point);
-                    const pinLabel = `${point.name} | ${companyLabel}`;
+                    const pinLabel = `${point.name} | ${fieldText}`;
 
                     return (
                       <Marker
@@ -657,9 +864,7 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                             </text>
                           )}
 
-                          <title>{`${point.name} - ${companyLabel}${
-                            cityLabel ? ` (${cityLabel})` : ""
-                          }`}</title>
+                          <title>{`${point.name} - ${fieldText}${cityLabel ? ` (${cityLabel})` : ""}`}</title>
                         </g>
                       </Marker>
                     );
@@ -679,17 +884,21 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
         <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
           <h2 className="text-base font-semibold text-slate-900">My Pin</h2>
 
-          {currentUserPin ? (
+          {activeCurrentUserPin ? (
             <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-sm font-semibold text-slate-800">{currentUserPin.name}</p>
-                  <p className="text-sm text-slate-700">{getPointCompanyText(currentUserPin)}</p>
-                  {getPointCityText(currentUserPin).length > 0 && (
-                    <p className="text-sm text-slate-700">{getPointCityText(currentUserPin)}</p>
+                  <p className="text-sm font-semibold text-slate-800">{activeCurrentUserPin.name}</p>
+                  <p className="text-sm text-slate-700">
+                    {getPointFieldText(activeCurrentUserPin, activeMapTab)}
+                  </p>
+                  {getPointCityText(activeCurrentUserPin).length > 0 && (
+                    <p className="text-sm text-slate-700">
+                      {getPointCityText(activeCurrentUserPin)}
+                    </p>
                   )}
                   <p className="mt-1 text-xs text-slate-500">
-                    {currentUserPin.latitude.toFixed(5)}, {currentUserPin.longitude.toFixed(5)}
+                    {activeCurrentUserPin.latitude.toFixed(5)}, {activeCurrentUserPin.longitude.toFixed(5)}
                   </p>
                 </div>
 
@@ -707,14 +916,12 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
               </div>
             </div>
           ) : (
-            <p className="mt-2 text-sm text-slate-600">
-              You have not set a pin yet. Enter coordinates, city, and company above, then save.
-            </p>
+            <p className="mt-2 text-sm text-slate-600">{activeConfig.emptyStateMessage}</p>
           )}
         </div>
 
         <p className="mt-4 text-xs text-slate-500">
-          Each user can have one pin. Saving again updates your existing pin.
+          Each user can have one pin per tab. Saving again updates your existing pin.
         </p>
       </div>
     </div>
