@@ -3,10 +3,8 @@ import {
   UserPlusIcon,
   PaperAirplaneIcon,
   LinkIcon,
-  CalendarDaysIcon,
   UserGroupIcon,
   AcademicCapIcon,
-  TrashIcon,
   CheckBadgeIcon,
 } from "@heroicons/react/20/solid";
 import { ref, set, get, child, update, remove } from "firebase/database";
@@ -828,7 +826,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       user.currentRole.toLowerCase().includes(this.state.searchTerm.toLowerCase())
     );
 
-    const tabNames = ["Member Management", "User Roles", "Academic Info", "Calendar", "Messaging", "Pledge Tracker", "Quick Links"];
+    const tabNames = ["Member Management", "User Roles", "Academic Info", "Messaging", "Pledge Tracker", "Quick Links"];
 
     return (
       <div className="h-full flex flex-col">
@@ -1188,229 +1186,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         </div>
               </Tab.Panel>
 
-              {/* Tab 4: Calendar */}
-              <Tab.Panel>
-                <div className="mt-6 px-4 w-full">
-          <div className="flex items-center mb-4">
-            <CalendarDaysIcon className="h-6 w-6 text-blue-600 mr-2" />
-            <h2 className="text-xl font-bold text-gray-900">Calendar Tools</h2>
-          </div>
-        </div>
-
-        <div className="mt-2 px-4 w-full">
-          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-semibold leading-6 text-blue-900">
-                Create New Event
-              </h3>
-              <div className="mt-2 max-w-xl text-sm text-gray-600">
-                <p>Add events to the calendar that will be visible to all members.</p>
-              </div>
-              
-              <div className="mt-5 space-y-4">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  {/* Event Name */}
-                  <div className="sm:col-span-2">
-                    <label htmlFor="event-name" className="block text-sm font-medium text-gray-700">
-                      Event Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      ref={this.eventNameInput}
-                      type="text"
-                      id="event-name"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      placeholder="e.g., Weekly Meeting, Fundraiser"
-                      value={this.state.eventName}
-                      onChange={(e) => this.setState({ eventName: e.target.value })}
-                    />
-                  </div>
-
-                  {/* Event Date */}
-                  <div>
-                    <label htmlFor="event-date" className="block text-sm font-medium text-gray-700">
-                      Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      ref={this.eventDateInput}
-                      type="date"
-                      id="event-date"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={this.state.eventDate}
-                      onChange={(e) => this.setState({ eventDate: e.target.value })}
-                    />
-                  </div>
-
-                  {/* Event Type */}
-                  <div>
-                    <label htmlFor="event-type" className="block text-sm font-medium text-gray-700">
-                      Type
-                    </label>
-                    <select
-                      id="event-type"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={this.state.eventType}
-                      onChange={(e) => this.setState({ eventType: e.target.value })}
-                    >
-                      <option value="Social">Social</option>
-                      <option value="Professional">Professional</option>
-                      <option value="Rush">Rush</option>
-                      <option value="Pledge Task">Pledge Task</option>
-                      <option value="Briefing">Briefing</option>
-                      <option value="Capstone">Capstone</option>
-                    </select>
-                  </div>
-
-                  {/* Event Group */}
-                  <div>
-                    <label htmlFor="event-group" className="block text-sm font-medium text-gray-700">
-                      For
-                    </label>
-                    <select
-                      id="event-group"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={this.state.eventGroup}
-                      onChange={(e) => this.setState({ eventGroup: e.target.value })}
-                    >
-                      <option value="Everyone">Everyone</option>
-                      <option value="Members">Members Only</option>
-                      <option value="Pledges">Pledges Only</option>
-                      <option value="Exec">Exec Only</option>
-                    </select>
-                  </div>
-
-                  {/* Mandatory Checkbox */}
-                  <div className="flex items-center pt-6">
-                    <input
-                      type="checkbox"
-                      id="event-mandatory"
-                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      checked={this.state.eventMandatory}
-                      onChange={(e) => this.setState({ eventMandatory: e.target.checked })}
-                    />
-                    <label htmlFor="event-mandatory" className="ml-2 text-sm text-gray-700">
-                      Mandatory Event
-                    </label>
-                  </div>
-                </div>
-
-                {/* Event Description */}
-                <div>
-                  <label htmlFor="event-desc" className="block text-sm font-medium text-gray-700">
-                    Description
-                  </label>
-                  <textarea
-                    ref={this.eventDescInput}
-                    id="event-desc"
-                    rows={2}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                    placeholder="Location, time details, or additional info..."
-                    value={this.state.eventDescription}
-                    onChange={(e) => this.setState({ eventDescription: e.target.value })}
-                  />
-                </div>
-
-                {/* Submit Button */}
-                <div className="pt-2">
-                  <button
-                    type="button"
-                    onClick={this.addCalendarEvent}
-                    className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-6 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
-                  >
-                    <CalendarDaysIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Add to Calendar
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Existing Events Section */}
-        <div className="mt-6 px-4 w-full">
-          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-semibold leading-6 text-blue-900 mb-4">
-                Manage Events
-              </h3>
-              
-              {this.state.calendarLoading ? (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <p className="ml-2 text-gray-600">Loading events...</p>
-                </div>
-              ) : this.state.calendarEvents.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full divide-y divide-gray-200">
-                    <thead className="bg-blue-100">
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
-                          Date
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
-                          Required
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
-                          For
-                        </th>
-                        <th className="px-4 py-2 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider">
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {this.state.calendarEvents.map((event, index) => (
-                        <tr key={index} className="hover:bg-blue-50 transition-colors">
-                          <td className="px-4 py-2 text-sm text-gray-900 font-medium">
-                            {event.Name}
-                          </td>
-                          <td className="px-4 py-2 text-sm text-gray-700">
-                            {event.Date}
-                          </td>
-                          <td className="px-4 py-2 text-sm">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                              {event.Type}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-sm">
-                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                              event["Mandatory?"] 
-                                ? "bg-red-100 text-red-800" 
-                                : "bg-green-100 text-green-800"
-                            }`}>
-                              {event["Mandatory?"] ? "Yes" : "No"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2 text-sm text-gray-700">
-                            {event.Group}
-                          </td>
-                          <td className="px-4 py-2 text-sm">
-                            <button
-                              onClick={() => this.deleteCalendarEvent(event.id, event.Name)}
-                              className="inline-flex items-center justify-center rounded-md bg-red-100 text-red-800 p-2 hover:bg-red-200 transition-colors"
-                              title="Delete event"
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p className="text-gray-600 py-8 text-center">No calendar events yet. Create one using the form above.</p>
-              )}
-            </div>
-          </div>
-        </div>
-              </Tab.Panel>
-
               {/* Tab 5: Messaging */}
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
@@ -1709,15 +1484,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
-                  href="https://www.notion.so/97757d83c1bc42708c8a2cd51f96e9aa?v=542627b9c9d4412b8aec5711552f4bb9"
-                >
-                  <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
-                  Pledge Calendar
-                </a>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors sm:text-sm"
                   href="https://www.notion.so/d1fe9440ad2e489299f645134a2bf7a9?v=1909dd71e41f40c0b23c6be525c7a8a6"
                 >
                   <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
@@ -1736,7 +1502,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
   }
   componentDidMount() {
     this.loadUsers();
-    this.loadCalendarEvents();
   }
 }
 

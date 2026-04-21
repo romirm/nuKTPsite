@@ -54,12 +54,31 @@
         ".write": "root.child('users').child(auth.uid).child('admin').val() == true"
       }
     },
+    "portal_config": {
+      ".read": "auth.uid != null",
+      "google_calendar": {
+        ".write": "root.child('users').child(auth.uid).child('admin').val() == true"
+      }
+    },
     "map_pins": {
       ".read": "auth.uid != null",
       "$map_type": {
         ".read": "$map_type === 'from' || $map_type === 'working'",
         "$user_id": {
           ".write": "($map_type === 'from' || $map_type === 'working') && ($user_id === auth.uid || root.child('users').child(auth.uid).child('admin').val() === true)"
+        }
+      }
+    },
+    "feedback": {
+      ".read": "auth.uid != null",
+      "posts": {
+        "$post_id": {
+          ".write": "root.child('users').child(auth.uid).child('admin').val() === true || (!data.exists() && auth.uid != null && newData.child('authorUid').val() === auth.uid && newData.child('resolved').val() !== true)",
+          "replies": {
+            "$reply_id": {
+              ".write": "root.child('users').child(auth.uid).child('admin').val() === true"
+            }
+          }
         }
       }
     }

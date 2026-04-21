@@ -7,10 +7,8 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Calendar as BigCalendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import { ref, get, child, remove } from "firebase/database";
+import { ref, get, child, remove, onValue, set, update } from "firebase/database";
 import Swal from "sweetalert2";
-
-const tabNames = ["Upcoming Events", "Calendar View"];
 
 const localizer = momentLocalizer(moment);
 
@@ -75,6 +73,15 @@ class PledgeCalendar extends React.Component {
       // Hover tooltip state
       hoveredEvent: null,
       tooltipPosition: { x: 0, y: 0 },
+
+      // Linked Google Calendar configuration
+      googleCalendarLinkInput: "",
+      googleCalendarEmbedUrl: "",
+      googleCalendarPublicUrl: "",
+      googleCalendarStatusMessage: "",
+      isSavingGoogleCalendar: false,
+      googleCalendarUpdatedAt: null,
+      additionalCalendars: [],
     };
 
     // ID of notion page
@@ -82,6 +89,8 @@ class PledgeCalendar extends React.Component {
     this.GCAL_ID =
       "c82f1fdd31eb61e26a3646e34ebde02efff386dff751179c6733a9e372c61cda@group.calendar.google.com";
     this.API_KEY = "AIzaSyBj2UQzQuZJrqC4SI5MZ_tBL6jWD9z-sVE";
+    this.DEFAULT_GCAL_PUBLIC_URL =
+      "https://calendar.google.com/calendar/u/0?cid=0d50eaeb066499c78cb55207b8499ba6dbc9f06ab7e903f45c46eada3b947f5c@group.calendar.google.com";
     
     // Get admin status from props (defaults to false)
     this.isAdmin = props.admin || false;
@@ -179,7 +188,180 @@ class PledgeCalendar extends React.Component {
     this.loadNotionPage().then(() => {
       this.loadFirebaseEvents();
     });
+
+    this.subscribeToGoogleCalendarConfig();
   }
+
+  componentWillUnmount() {
+    if (typeof this.unsubscribeGoogleCalendarConfig === "function") {
+      this.unsubscribeGoogleCalendarConfig();
+    }
+  }
+
+  normalizeGoogleCalendarLink(rawValue) {
+    const trimmed = typeof rawValue === "string" ? rawValue.trim() : "";
+    if (!trimmed) {
+      return { embedUrl: "", publicUrl: "" };
+    }
+
+    const buildLinksFromId = (calendarId) => {
+      const decodedId = decodeURIComponent(calendarId);
+      const encodedId = encodeURIComponent(decodedId);
+
+      return {
+        embedUrl: `https://calendar.google.com/calendar/embed?src=${encodedId}&ctz=America%2FChicago`,
+        publicUrl: `https://calendar.google.com/calendar/u/0?cid=${encodedId}`,
+      };
+    };
+
+    if (trimmed.includes("@group.calendar.google.com")) {
+      return buildLinksFromId(trimmed);
+    }
+
+    try {
+      const parsedUrl = new URL(trimmed);
+      const calendarId = parsedUrl.searchParams.get("cid") || parsedUrl.searchParams.get("src");
+
+      if (calendarId) {
+        return buildLinksFromId(calendarId);
+      }
+
+      if (
+        parsedUrl.hostname.includes("calendar.google.com") &&
+        parsedUrl.pathname.includes("/calendar/embed")
+      ) {
+        return {
+          embedUrl: trimmed,
+          publicUrl: this.DEFAULT_GCAL_PUBLIC_URL,
+        };
+      }
+    } catch (error) {
+      return { embedUrl: "", publicUrl: "" };
+    }
+
+    return { embedUrl: "", publicUrl: "" };
+  }
+
+  subscribeToGoogleCalendarConfig() {
+    if (!this.props.database) {
+      return;
+    }
+
+    const configRef = ref(this.props.database, "portal_config/google_calendar");
+    this.unsubscribeGoogleCalendarConfig = onValue(configRef, (snapshot) => {
+      const config = snapshot.exists() ? snapshot.val() : null;
+      const savedLink =
+        config && typeof config.link === "string" && config.link.trim().length > 0
+          ? config.link.trim()
+          : this.DEFAULT_GCAL_PUBLIC_URL;
+
+      const normalizedLinks = this.normalizeGoogleCalendarLink(savedLink);
+      const embedUrl =
+        config && typeof config.embedUrl === "string" && config.embedUrl.trim().length > 0
+          ? config.embedUrl.trim()
+          : normalizedLinks.embedUrl;
+      const publicUrl =
+        config && typeof config.publicUrl === "string" && config.publicUrl.trim().length > 0
+          ? config.publicUrl.trim()
+          : normalizedLinks.publicUrl || this.DEFAULT_GCAL_PUBLIC_URL;
+
+      const additionalCalendars =
+        config && Array.isArray(config.additionalCalendars)
+          ? config.additionalCalendars
+              .map((calendarEntry, index) => {
+                if (!calendarEntry || typeof calendarEntry !== "object") {
+                  return null;
+                }
+
+                const rawName =
+                  typeof calendarEntry.name === "string" && calendarEntry.name.trim().length > 0
+                    ? calendarEntry.name.trim()
+                    : `Calendar ${index + 1}`;
+
+                const normalizedAdditional = this.normalizeGoogleCalendarLink(
+                  typeof calendarEntry.link === "string" ? calendarEntry.link : ""
+                );
+
+                const additionalEmbedUrl =
+                  typeof calendarEntry.embedUrl === "string" && calendarEntry.embedUrl.trim().length > 0
+                    ? calendarEntry.embedUrl.trim()
+                    : normalizedAdditional.embedUrl;
+                const additionalPublicUrl =
+                  typeof calendarEntry.publicUrl === "string" && calendarEntry.publicUrl.trim().length > 0
+                    ? calendarEntry.publicUrl.trim()
+                    : normalizedAdditional.publicUrl;
+
+                if (!additionalEmbedUrl) {
+                  return null;
+                }
+
+                return {
+                  name: rawName,
+                  embedUrl: additionalEmbedUrl,
+                  publicUrl: additionalPublicUrl || additionalEmbedUrl,
+                };
+              })
+              .filter(Boolean)
+          : [];
+
+      this.setState({
+        googleCalendarLinkInput: savedLink,
+        googleCalendarEmbedUrl: embedUrl,
+        googleCalendarPublicUrl: publicUrl,
+        googleCalendarUpdatedAt:
+          config && typeof config.updatedAt === "number" ? config.updatedAt : null,
+        additionalCalendars,
+      });
+    });
+  }
+
+  saveGoogleCalendarLink = async () => {
+    if (!this.props.database || !this.isAdmin) {
+      return;
+    }
+
+    const rawLink = this.state.googleCalendarLinkInput.trim();
+    if (!rawLink) {
+      this.setState({
+        googleCalendarStatusMessage: "Paste a Google Calendar link before saving.",
+      });
+      return;
+    }
+
+    const normalizedLinks = this.normalizeGoogleCalendarLink(rawLink);
+    if (!normalizedLinks.embedUrl || !normalizedLinks.publicUrl) {
+      this.setState({
+        googleCalendarStatusMessage:
+          "That link does not look like a valid Google Calendar share link.",
+      });
+      return;
+    }
+
+    this.setState({
+      isSavingGoogleCalendar: true,
+      googleCalendarStatusMessage: "Saving calendar link...",
+    });
+
+    try {
+      await update(ref(this.props.database, "portal_config/google_calendar"), {
+        link: rawLink,
+        embedUrl: normalizedLinks.embedUrl,
+        publicUrl: normalizedLinks.publicUrl,
+        updatedAt: Date.now(),
+      });
+
+      this.setState({
+        googleCalendarStatusMessage: "Calendar link updated for all members.",
+      });
+    } catch (error) {
+      console.error("Failed to save Google Calendar link", error);
+      this.setState({
+        googleCalendarStatusMessage: "Could not save calendar link. Please try again.",
+      });
+    } finally {
+      this.setState({ isSavingGoogleCalendar: false });
+    }
+  };
 
   onEventMouseEnter = (event, e) => {
     const rect = e.target.getBoundingClientRect();
@@ -527,34 +709,16 @@ class PledgeCalendar extends React.Component {
 
             {/* Subtitle */}
             <div className="mt-2 text-sm text-gray-600">
-              View upcoming events and add them to your Google Calendar
+              View the shared Google Calendar for KTP.
             </div>
           </div>
 
-          <Tab.Group>
-            <Tab.List className="flex flex-wrap gap-2 mb-6">
-              {/* Render tabs */}
-              {Object.values(tabNames).map((tabName) => (
-                <Tab
-                  key={tabName}
-                  className={({ selected }) =>
-                    this.classNames(
-                      "px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200",
-                      "focus:outline-none",
-                      selected
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-200"
-                        : "bg-white text-gray-700 border border-gray-200 hover:bg-blue-50 hover:text-blue-700"
-                    )
-                  }
-                >
-                  {tabName}
-                </Tab>
-              ))}
+          <div className="mb-6 flex justify-end">
               <a
-                href="https://calendar.google.com/calendar/u/0?cid=0d50eaeb066499c78cb55207b8499ba6dbc9f06ab7e903f45c46eada3b947f5c@group.calendar.google.com"
+                href={this.state.googleCalendarPublicUrl || this.DEFAULT_GCAL_PUBLIC_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-md hover:bg-blue-700 transition-colors duration-200 ml-auto"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold shadow-md hover:bg-blue-700 transition-colors duration-200"
               >
                 <span>Add to Google Calendar</span>
                 <ArrowTopRightOnSquareIcon
@@ -562,6 +726,14 @@ class PledgeCalendar extends React.Component {
                   aria-hidden="true"
                 />
               </a>
+
+          </div>
+
+          <Tab.Group defaultIndex={2}>
+            <Tab.List className="sr-only">
+              <Tab>Upcoming Events</Tab>
+              <Tab>Calendar View</Tab>
+              <Tab>Linked Google Calendar</Tab>
             </Tab.List>
             <Tab.Panels>
               <Tab.Panel>
@@ -748,6 +920,133 @@ class PledgeCalendar extends React.Component {
                     </div>
                   </div>
                 )}
+              </Tab.Panel>
+
+              <Tab.Panel>
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-semibold text-gray-900">Linked Google Calendar</h2>
+                      <p className="mt-1 text-sm text-gray-600">
+                        This is the shared Google Calendar shown to all members.
+                      </p>
+                    </div>
+
+                    <a
+                      href={this.state.googleCalendarPublicUrl || this.DEFAULT_GCAL_PUBLIC_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      <span>Open in Google Calendar</span>
+                      <ArrowTopRightOnSquareIcon className="h-4 w-4" aria-hidden="true" />
+                    </a>
+                  </div>
+
+                  {this.state.googleCalendarEmbedUrl ? (
+                    <div className="mt-4 h-[72vh] overflow-hidden rounded-lg border border-gray-200">
+                      <iframe
+                        title="KTP Google Calendar"
+                        src={this.state.googleCalendarEmbedUrl}
+                        className="h-full w-full"
+                        loading="lazy"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                      No Google Calendar link has been configured yet.
+                    </div>
+                  )}
+
+                  {this.isAdmin && (
+                    <div className="mt-5 rounded-md border border-blue-100 bg-blue-50/60 p-4">
+                      <label className="block text-sm font-semibold text-slate-900">
+                        Google Calendar Share Link
+                      </label>
+                      <input
+                        type="text"
+                        value={this.state.googleCalendarLinkInput}
+                        onChange={(event) =>
+                          this.setState({
+                            googleCalendarLinkInput: event.target.value,
+                          })
+                        }
+                        placeholder="https://calendar.google.com/calendar/u/0?cid=..."
+                        className="mt-2 w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring"
+                      />
+
+                      <p className="mt-2 text-xs text-slate-600">
+                        Paste a Google Calendar link containing cid=... or src=... and click save.
+                      </p>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={this.saveGoogleCalendarLink}
+                          disabled={this.state.isSavingGoogleCalendar}
+                          className={`rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 ${
+                            this.state.isSavingGoogleCalendar ? "cursor-not-allowed opacity-60" : ""
+                          }`}
+                        >
+                          {this.state.isSavingGoogleCalendar ? "Saving..." : "Save Calendar Link"}
+                        </button>
+
+                        {this.state.googleCalendarUpdatedAt && (
+                          <span className="text-xs text-slate-600">
+                            Last updated {new Date(this.state.googleCalendarUpdatedAt).toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+
+                      {this.state.googleCalendarStatusMessage.length > 0 && (
+                        <p className="mt-2 text-sm text-blue-700">
+                          {this.state.googleCalendarStatusMessage}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {this.state.additionalCalendars.length > 0 && (
+                    <div className="mt-8 space-y-6">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">Additional Calendars</h3>
+                        <p className="mt-1 text-sm text-gray-600">
+                          More shared KTP calendars available in the portal.
+                        </p>
+                      </div>
+
+                      {this.state.additionalCalendars.map((calendar, index) => (
+                        <div
+                          key={`${calendar.name}-${index}`}
+                          className="rounded-lg border border-gray-200 bg-slate-50 p-4"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <h4 className="text-base font-semibold text-gray-900">{calendar.name}</h4>
+
+                            <a
+                              href={calendar.publicUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                            >
+                              <span>Open in Google Calendar</span>
+                              <ArrowTopRightOnSquareIcon className="h-4 w-4" aria-hidden="true" />
+                            </a>
+                          </div>
+
+                          <div className="mt-4 h-[72vh] overflow-hidden rounded-lg border border-gray-200 bg-white">
+                            <iframe
+                              title={`${calendar.name} Google Calendar`}
+                              src={calendar.embedUrl}
+                              className="h-full w-full"
+                              loading="lazy"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </Tab.Panel>
             </Tab.Panels>
           </Tab.Group>

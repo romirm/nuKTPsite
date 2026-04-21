@@ -8,6 +8,7 @@ import RushEvents from "@landing/RushEvents";
 import PledgeCalendar from "@tabs/Calendar/PledgeCalendar";
 import PledgeResources from "@tabs/Resources/PledgeResources";
 import MemberMapHub from "./Tabs/Geo/MemberMapHub";
+import FeedbackHub from "./Tabs/Feedback/FeedbackHub";
 import Logo from "@/Assets/Images/Branding/Logo.png";
 import AdminPanel from "@tabs/Admin/AdminPanel";
 import DesktopSidebar from "@portal/Framework/DesktopSidebar";
@@ -24,6 +25,7 @@ import {
   BoltIcon,
   ClipboardDocumentListIcon,
   GlobeAltIcon,
+  ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/outline";
 
 //Default user to show while loading, replaced by real user after. Image data encoded in the code.
@@ -49,14 +51,6 @@ const navigation = {
     adminonly: false,
     pledgeonly: false,
   },
-  Leaderboard: {
-    name: "LC Leaderboard",
-    icon: BoltIcon,
-    current: false,
-    secondary: false,
-    adminonly: false,
-    pledgeonly: false,
-  },
   PledgeTracker: {
     name: "Pledge Tracker",
     icon: ClipboardDocumentListIcon,
@@ -65,13 +59,21 @@ const navigation = {
     adminonly: false,
     pledgeonly: true,
   },
-  Resources: {
-    name: "Resources",
-    icon: FolderIcon,
+  Feedback: {
+    name: "Feedback",
+    icon: ChatBubbleLeftRightIcon,
     current: false,
     secondary: false,
     adminonly: false,
-    pledgeonly: true,
+    pledgeonly: false,
+  },
+  Leaderboard: {
+    name: "LC Leaderboard",
+    icon: BoltIcon,
+    current: false,
+    secondary: false,
+    adminonly: false,
+    pledgeonly: false,
   },
   Maps: {
     name: "Maps",
@@ -80,6 +82,14 @@ const navigation = {
     secondary: false,
     adminonly: false,
     pledgeonly: false,
+  },
+  Resources: {
+    name: "Resources",
+    icon: FolderIcon,
+    current: false,
+    secondary: false,
+    adminonly: false,
+    pledgeonly: true,
   },
   Admin: {
     name: "Admin",
@@ -349,6 +359,16 @@ export default function AppContainer(props: { firebase: any, database: any, stor
             fullPubDir={fullPubDir}
             database={props.database}
             uid={currUserUid}
+          />
+        </div>
+
+        <div className={currTab=="Feedback" ? "h-full" : "hidden"}>
+          <FeedbackHub
+            database={props.database}
+            uid={currUserUid}
+            currentUserName={user.name}
+            currentUserImage={user.imageUrl}
+            isAdmin={admin}
           />
         </div>
       </div>
