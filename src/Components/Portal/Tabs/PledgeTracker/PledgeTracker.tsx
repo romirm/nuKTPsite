@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { CheckIcon } from "@heroicons/react/20/solid";
 
 const PLACEHOLDER_IMAGE_URL = "https://via.placeholder.com/200";
@@ -37,7 +37,11 @@ const parseCapstoneProgress = (rawValue: any): [boolean, boolean, boolean] => {
   ];
 };
 
+type SortMode = "alphabetical" | "pledgePoints" | "coffeeChats";
+
 const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
+  const [sortMode, setSortMode] = useState<SortMode>("alphabetical");
+
   const pledgeUsers = useMemo(() => {
     if (!fullPubDir || typeof fullPubDir !== "object") {
       return [] as PledgeTrackerUser[];
@@ -83,10 +87,28 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
       });
     });
 
-    return rows.sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-    );
-  }, [fullPubDir]);
+    const sortedRows = [...rows];
+
+    sortedRows.sort((a, b) => {
+      if (sortMode === "pledgePoints") {
+        if (b.pledgePoints !== a.pledgePoints) {
+          return b.pledgePoints - a.pledgePoints;
+        }
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      }
+
+      if (sortMode === "coffeeChats") {
+        if (b.coffeeChatsCompleted !== a.coffeeChatsCompleted) {
+          return b.coffeeChatsCompleted - a.coffeeChatsCompleted;
+        }
+        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      }
+
+      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+    });
+
+    return sortedRows;
+  }, [fullPubDir, sortMode]);
 
   return (
     <div className="bg-white h-screen overflow-y-scroll">
@@ -102,7 +124,37 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
                 and capstone milestones.
               </p>
             </div>
-            <p className="text-gray-500 italic">Pledges are listed alphabetically by name.</p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: "alphabetical", label: "Alphabetical" },
+                { key: "pledgePoints", label: "Pledge Points" },
+                { key: "coffeeChats", label: "Coffee Chats" },
+              ].map((tab) => {
+                const active = sortMode === tab.key;
+
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setSortMode(tab.key as SortMode)}
+                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                      active
+                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                        : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:text-blue-700"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-gray-500 italic">
+              {sortMode === "alphabetical"
+                ? "Pledges are listed alphabetically by name."
+                : sortMode === "pledgePoints"
+                  ? "Pledges are listed by pledge points, highest first."
+                  : "Pledges are listed by coffee chats completed, highest first."}
+            </p>
           </div>
 
           <div className="lg:col-span-2">
