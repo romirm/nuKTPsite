@@ -82,6 +82,7 @@ interface MemberMapHubProps {
 }
 
 const US_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
+const US_COUNTIES_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
 const WORLD_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 const US_MAP_WIDTH = 980;
 const US_MAP_HEIGHT = 610;
@@ -129,6 +130,17 @@ const toLongitude = (value: any): number | null => {
 
 const getStateFillColor = (_geo: any): string => {
   return "rgba(255, 255, 255, 0.001)";
+};
+
+const isAntarcticaGeography = (geo: any): boolean => {
+  const geographyName =
+    typeof geo?.properties?.name === "string"
+      ? geo.properties.name
+      : typeof geo?.properties?.NAME === "string"
+        ? geo.properties.NAME
+        : "";
+
+  return geographyName.trim().toLowerCase() === "antarctica";
 };
 
 const isWorldCoordinate = (latitude: number, longitude: number): boolean => {
@@ -186,6 +198,30 @@ const getPointFieldText = (point: MapPoint, tab: MapTabKey): string => {
   }
 
   return subtitle;
+};
+
+const getPointHoverLabel = (point: MapPoint, tab: MapTabKey): string => {
+  const cityText = getPointCityText(point);
+  const locationText =
+    tab === "from"
+      ? typeof point.country === "string" && point.country.trim().length > 0
+        ? point.country.trim()
+        : getPointFieldText(point, tab)
+      : "";
+
+  if (cityText && locationText) {
+    return `${point.name} - ${cityText}, ${locationText}`;
+  }
+
+  if (cityText) {
+    return `${point.name} - ${cityText}`;
+  }
+
+  if (locationText) {
+    return `${point.name} - ${locationText}`;
+  }
+
+  return point.name;
 };
 
 const getPinPath = (tab: MapTabKey): string => `map_pins/${tab}`;
@@ -482,7 +518,7 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
   const zoomMap = (direction: "in" | "out") => {
     setMapZoomByTab((currentZooms) => {
       const currentZoom = currentZooms[activeMapTab];
-      const nextZoom = direction === "in" ? Math.min(36, currentZoom * 1.5) : Math.max(1, currentZoom * 0.75);
+      const nextZoom = direction === "in" ? Math.min(64, currentZoom * 1.8) : Math.max(1, currentZoom * 0.7);
 
       return {
         ...currentZooms,
@@ -566,7 +602,7 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
       }));
       setMapZoomByTab((currentZooms) => ({
         ...currentZooms,
-        [activeMapTab]: Math.max(currentZooms[activeMapTab], 12),
+        [activeMapTab]: Math.max(currentZooms[activeMapTab], 18),
       }));
     } catch (error) {
       console.error("Failed to save map pin", error);
@@ -765,7 +801,7 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                   center={activeMapCenter}
                   zoom={activeMapZoom}
                   minZoom={1}
-                  maxZoom={36}
+                  maxZoom={64}
                   onMoveEnd={(position: any) => {
                     const coordinates = position?.coordinates;
                     const zoom = position?.zoom;
@@ -792,7 +828,9 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                 >
                   <Geographies geography={activeConfig.geographyUrl}>
                     {({ geographies }) =>
-                      geographies.map((geo) => (
+                      geographies
+                        .filter((geo) => (activeMapTab === "from" ? !isAntarcticaGeography(geo) : true))
+                        .map((geo) => (
                         <Geography
                           key={geo.rsmKey}
                           geography={geo}
@@ -819,9 +857,30 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                             },
                           }}
                         />
-                      ))
+                        ))
                     }
                   </Geographies>
+
+                  {activeMapTab === "working" && activeMapZoom >= 3.5 && (
+                    <Geographies geography={US_COUNTIES_GEOGRAPHY_URL}>
+                      {({ geographies }) =>
+                        geographies.map((geo) => (
+                          <Geography
+                            key={`county-${geo.rsmKey}`}
+                            geography={geo}
+                            stroke="rgba(15, 23, 42, 0.32)"
+                            strokeWidth={activeMapZoom >= 10 ? 0.45 : 0.22}
+                            fill="rgba(255, 255, 255, 0)"
+                            style={{
+                              default: { outline: "none" },
+                              hover: { outline: "none" },
+                              pressed: { outline: "none" },
+                            }}
+                          />
+                        ))
+                      }
+                    </Geographies>
+                  )}
 
                   {activePoints.map((point) => {
                     const shouldShowLabel = activeMapZoom >= 10;
@@ -833,8 +892,8 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                     const labelXOffset = Math.max(5.5, 9 * zoomScale);
                     const labelYOffset = Math.min(-6.5, -8 * zoomScale);
                     const fieldText = getPointFieldText(point, activeMapTab);
-                    const cityLabel = getPointCityText(point);
                     const pinLabel = `${point.name} | ${fieldText}`;
+                    const hoverLabel = getPointHoverLabel(point, activeMapTab);
 
                     return (
                       <Marker
@@ -864,7 +923,7 @@ const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }
                             </text>
                           )}
 
-                          <title>{`${point.name} - ${fieldText}${cityLabel ? ` (${cityLabel})` : ""}`}</title>
+                          <title>{hoverLabel}</title>
                         </g>
                       </Marker>
                     );
