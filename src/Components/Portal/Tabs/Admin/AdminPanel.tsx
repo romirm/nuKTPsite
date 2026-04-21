@@ -82,6 +82,7 @@ interface AdminPanelState {
   pledgeTrackerRows: PledgeTrackerUserRow[];
   pledgeTrackerLoading: boolean;
   pledgeTrackerSavingUid: string;
+  mapsClearing: boolean;
 }
 
 class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanelState> {
@@ -120,6 +121,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       pledgeTrackerRows: [],
       pledgeTrackerLoading: true,
       pledgeTrackerSavingUid: "",
+      mapsClearing: false,
     };
     this.addNewUser = this.addNewUser.bind(this);
     this.sendText = this.sendText.bind(this);
@@ -135,6 +137,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     this.updatePledgeTrackerNumber = this.updatePledgeTrackerNumber.bind(this);
     this.toggleCapstoneProgress = this.toggleCapstoneProgress.bind(this);
     this.saveAllPledgeTrackerRows = this.saveAllPledgeTrackerRows.bind(this);
+    this.clearAllMapPins = this.clearAllMapPins.bind(this);
     this.emailButton = React.createRef<HTMLInputElement>();
     this.sendTextButton = React.createRef<HTMLTextAreaElement>();
     this.whoToButton = React.createRef<HTMLSelectElement>();
@@ -727,6 +730,43 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     });
   }
 
+  clearAllMapPins() {
+    Swal.fire({
+      title: "Clear all map pins?",
+      text: "This will remove every member pin from the map.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, clear all",
+      cancelButtonText: "Cancel",
+    }).then((result) => {
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      this.setState({ mapsClearing: true });
+      remove(ref(this.props.database, "map_pins"))
+        .then(() => {
+          Swal.fire({
+            icon: "success",
+            title: "Map pins cleared",
+            text: "All map pins have been removed.",
+          });
+        })
+        .catch((error:any) => {
+          Swal.fire({
+            icon: "error",
+            title: "Clear failed",
+            text: error?.message || "Could not clear map pins.",
+          });
+        })
+        .finally(() => {
+          this.setState({ mapsClearing: false });
+        });
+    });
+  }
+
   updatePledgeTrackerNumber(
     uid: string,
     field: "pledgePoints" | "coffeeChatsCompleted" | "thankYouNotesSent",
@@ -826,7 +866,15 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       user.currentRole.toLowerCase().includes(this.state.searchTerm.toLowerCase())
     );
 
-    const tabNames = ["Member Management", "User Roles", "Academic Info", "Messaging", "Pledge Tracker", "Quick Links"];
+    const tabNames = [
+      "Member Management",
+      "User Roles",
+      "Academic Info",
+      "Messaging",
+      "Pledge Tracker",
+      "Maps",
+      "Quick Links",
+    ];
 
     return (
       <div className="h-full flex flex-col">
@@ -1468,7 +1516,42 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 </div>
               </Tab.Panel>
 
-              {/* Tab 7: Quick Links */}
+              {/* Tab 7: Maps */}
+              <Tab.Panel>
+                <div className="mt-6 px-4 w-full">
+                  <div className="flex items-center mb-4">
+                    <h2 className="text-xl font-bold text-gray-900">Maps</h2>
+                  </div>
+                </div>
+
+                <div className="mt-2 px-4 w-full">
+                  <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                      <h3 className="text-lg font-semibold leading-6 text-blue-900">
+                        Map Admin Tools
+                      </h3>
+                      <div className="mt-2 max-w-xl text-sm text-gray-600">
+                        <p>
+                          Remove all user pins from the map in one action.
+                        </p>
+                      </div>
+
+                      <div className="mt-5">
+                        <button
+                          type="button"
+                          onClick={this.clearAllMapPins}
+                          disabled={this.state.mapsClearing}
+                          className="inline-flex items-center justify-center rounded-md border border-transparent bg-red-600 px-5 py-2 font-semibold text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 transition-colors sm:text-sm"
+                        >
+                          {this.state.mapsClearing ? "Clearing Pins..." : "Clear All Pins"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </Tab.Panel>
+
+              {/* Tab 8: Quick Links */}
               <Tab.Panel>
                 <div className="mt-4 px-4 w-full">
           <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
