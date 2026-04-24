@@ -10,6 +10,14 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+function toSearchableString(value: unknown): string {
+  return typeof value === "string" ? value.toLowerCase() : "";
+}
+
+function toDisplayString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
 //dir vis but not loading: visible
 //no dir vis and not loading: invisible
 //no dir vis and loading: invisible
@@ -41,10 +49,8 @@ function Directory(props: any) {
       "year",
     ];
     for (var i = 0; i < searches.length; i++) {
-      if (
-        profile[searches[i]] &&
-        profile[searches[i]].toLowerCase().includes(search_val)
-      ) {
+      const searchableValue = toSearchableString(profile[searches[i]]);
+      if (searchableValue.includes(search_val)) {
         return true;
       }
     }
@@ -52,13 +58,14 @@ function Directory(props: any) {
   }
 
   function profMatchesShowType(elem: any): boolean {
+    const role = toDisplayString(elem?.role);
     if (showType === "Everyone") {
       return true;
     } else {
       return (
-        elem["role"] &&
-        (elem["role"] === showType ||
-          (showType === "Member" && elem["role"].includes("VP of")))
+        role.length > 0 &&
+        (role === showType ||
+          (showType === "Member" && role.includes("VP of")))
       );
     }
   }
@@ -279,14 +286,17 @@ function Directory(props: any) {
               {Object.keys(shownDirectory[0][letter]) //for each profile under the letter
                 .sort((uidA: string, uidB: string) => {
                   // Sort alphabetically by name
-                  const nameA = (shownDirectory[0][letter][uidA].name || "").toLowerCase();
-                  const nameB = (shownDirectory[0][letter][uidB].name || "").toLowerCase();
+                  const nameA = toDisplayString(shownDirectory[0][letter][uidA].name).toLowerCase();
+                  const nameB = toDisplayString(shownDirectory[0][letter][uidB].name).toLowerCase();
                   return nameA.localeCompare(nameB);
                 })
                 .map((uid: string) => {
                   const person = shownDirectory[0][letter][uid]; //individual profile
+                  const personName = toDisplayString(person?.name) || "Member";
+                  const personRole = toDisplayString(person?.role);
+                  const personImage = toDisplayString(person?.pfp_thumb_link) || toDisplayString(person?.profile_pic_link);
                   return (
-                    <li onClick={() => {props.setActiveProfile(uid);props.handler();}}>
+                    <li key={uid} onClick={() => {props.setActiveProfile(uid);props.handler();}}>
                       <div
                         className={classNames(
                           uid === props.activeProfile
@@ -298,9 +308,7 @@ function Directory(props: any) {
                         <div className="flex-shrink-0">
                           <img
                             className="h-10 w-10 rounded-full object-cover"
-                            src={
-                              person.pfp_thumb_link || person.profile_pic_link
-                            }
+                            src={personImage}
                             alt=""
                           />
                         </div>
@@ -312,10 +320,10 @@ function Directory(props: any) {
                               aria-hidden="true"
                             />
                             <p className="text-sm font-medium text-gray-900">
-                              {person.name}
+                              {personName}
                             </p>
                             <p className="truncate text-sm text-gray-500">
-                              {person.role}
+                              {personRole}
                             </p>
                           </a>
                         </div>

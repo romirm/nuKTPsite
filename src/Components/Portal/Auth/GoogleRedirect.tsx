@@ -42,8 +42,10 @@ class GoogleRedirect extends React.Component<{firebase:any,provider:any,database
         return;
       }
       if (user) {
+        const userEmail = typeof user.email === "string" ? user.email : "";
+
         //case 2
-        if (!user.email.includes("northwestern.edu")) {
+        if (!userEmail.includes("northwestern.edu")) {
           this.willRefresh = true;
           this.props.firebase.auth().signOut();
           Swal.fire({
@@ -62,19 +64,29 @@ class GoogleRedirect extends React.Component<{firebase:any,provider:any,database
         get(child(dbref, "users/" + user.uid))
           .then((snapshot) => {
             if (!snapshot.exists()) {
-              Swal.fire("What");
+              this.props.firebase.auth().signOut();
+              Swal.fire({
+                icon: "error",
+                title: "Account not in system",
+                text: "We could not find your user profile. If this seems wrong, contact support@ktpnu.com.",
+              }).then(() => {
+                window.location.href = "/signup";
+              });
+              return;
             }
 
             const data = snapshot.val();
-            if (data.allowed === true) {
+            const isAllowed = data?.allowed === true || data?.authorized === true;
+
+            if (isAllowed) {
               if (data.signed_up===true) {
                 document.getElementById("loadingtext")!.innerHTML =
                   "Redirecting to member page...";
                 window.location.href = "/member";
               } else {
-                sessionStorage.setItem("fullName", user.displayName);
-                sessionStorage.setItem("emailAddress", user.email);
-                sessionStorage.setItem("photoURL", user.photoURL);
+                sessionStorage.setItem("fullName", user.displayName || "");
+                sessionStorage.setItem("emailAddress", userEmail);
+                sessionStorage.setItem("photoURL", user.photoURL || "");
                 window.location.href = "/newuser";
               }
             } else {

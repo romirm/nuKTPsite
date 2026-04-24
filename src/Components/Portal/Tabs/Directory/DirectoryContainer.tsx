@@ -57,17 +57,32 @@ export default function DirectoryContainer(props: {
 
   //runs once when the full public directory is updated to a non empty dictionary
   function processFullDirectory() {
-    if (Object.keys(props.fullPubDir).length == 0) {
+    if (!props.fullPubDir || typeof props.fullPubDir !== "object") {
+      setDirectory({});
       return;
     }
+
+    if (Object.keys(props.fullPubDir).length === 0) {
+      setDirectory({});
+      return;
+    }
+
     var newDirectory: any = {};
     const dir = props.fullPubDir;
     for (var uid in dir) {
       const profile = dir[uid];
-      if (!profile.name) {
+      if (!profile || typeof profile !== "object") {
         continue;
       }
-      const first_letter = profile.name.charAt(0).toUpperCase();
+
+      const profileName =
+        typeof profile.name === "string" ? profile.name.trim() : "";
+
+      if (!profileName) {
+        continue;
+      }
+
+      const first_letter = profileName.charAt(0).toUpperCase();
       if (first_letter in newDirectory) {
         newDirectory[first_letter][uid] = profile;
       } else {
@@ -90,8 +105,22 @@ export default function DirectoryContainer(props: {
   }, [props.fullPubDir]);
   
   useEffect(() => {
-    setActiveProfile(props.uid);
-  }, [props.uid]);
+    if (props.uid && props.fullPubDir && typeof props.fullPubDir === "object" && props.uid in props.fullPubDir) {
+      setActiveProfile(props.uid);
+      return;
+    }
+
+    if (props.fullPubDir && typeof props.fullPubDir === "object") {
+      const firstProfileUid = Object.keys(props.fullPubDir).find((uid) => {
+        const profile = props.fullPubDir[uid];
+        return profile && typeof profile === "object";
+      });
+
+      if (firstProfileUid) {
+        setActiveProfile(firstProfileUid);
+      }
+    }
+  }, [props.uid, props.fullPubDir, setActiveProfile]);
 
   return (
     <div className="relative z-0 flex flex-1 h-screen">

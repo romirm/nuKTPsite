@@ -10,6 +10,10 @@ function classNames(...classes: string[]) {
   return classes.filter(Boolean).join(" ");
 }
 
+function asString(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
 //visible cases:
 //case 1: dir_vis false and not loading
 //case 2: xl size and not loading
@@ -21,15 +25,31 @@ function IndivProfile(props: {
   handler: MouseEventHandler<HTMLElement>;
   loading: boolean;
 }) {
-  const currProfile = props.directory[props.activeProfile];
+  const currProfile =
+    props.directory &&
+    typeof props.directory === "object" &&
+    props.directory[props.activeProfile] &&
+    typeof props.directory[props.activeProfile] === "object"
+      ? props.directory[props.activeProfile]
+      : null;
   if(!currProfile) {
     return <div></div>;
   }
+  const coverImage = asString(currProfile.cover_resized_link) || asString(currProfile.cover_page_link);
+  const profileImage = asString(currProfile.pfp_large_link) || asString(currProfile.profile_pic_link);
+  const profileName = asString(currProfile.name) || "Member";
+  const profileEmail = asString(currProfile.email);
+  const resumeLink = asString(currProfile.resume_link);
+  const aboutHtml = asString(currProfile.about);
+  const leetcodeUsername =
+    currProfile.leetcode && typeof currProfile.leetcode === "object"
+      ? asString(currProfile.leetcode.username)
+      : "";
   var socials: Array<{ name: string; href: string; icon: any; className: string }> = [];
-  if (currProfile.instagram) {
+  if (asString(currProfile.instagram)) {
     socials.push({
       name: "Instagram",
-      href: "https://instagram.com/" + currProfile.instagram,
+      href: "https://instagram.com/" + asString(currProfile.instagram),
       className: "text-[#E1306C] hover:text-[#C13584]",
       icon: (props:any) => (
         <svg fill="currentColor" viewBox="0 0 24 24" {...props}>
@@ -42,10 +62,10 @@ function IndivProfile(props: {
       ),
     });
   }
-  if (currProfile.leetcode?.username) {
+  if (leetcodeUsername) {
     socials.push({
       name: "Leetcode",
-      href: "https://leetcode.com/" + currProfile.leetcode.username,
+      href: "https://leetcode.com/" + leetcodeUsername,
       className: "text-yellow-400 hover:text-yellow-500",
       icon: (props:any) => (
         <svg
@@ -62,10 +82,10 @@ function IndivProfile(props: {
       ),
     });
   }
-  if (currProfile.linkedin) {
+  if (asString(currProfile.linkedin)) {
     socials.push({
       name: "LinkedIn",
-      href: "https://linkedin.com/in/" + currProfile.linkedin,
+      href: "https://linkedin.com/in/" + asString(currProfile.linkedin),
       className: "text-[#0A66C2] hover:text-[#084C8C]",
       icon: (props:any) => (
         <svg fill="currentColor" viewBox="0 -1.3 28 28" {...props}>
@@ -79,17 +99,17 @@ function IndivProfile(props: {
     });
   }
   var fields:any = {};
-    if (currProfile.year) {
-      fields["Class Standing"] = currProfile.year;
+    if (asString(currProfile.year)) {
+      fields["Class Standing"] = asString(currProfile.year);
     }
-    if (currProfile.major) {
-      fields["Major"] = currProfile.major;
+    if (asString(currProfile.major)) {
+      fields["Major"] = asString(currProfile.major);
     }
-    if (currProfile.internships) {
-      fields["Relevant Internships"] = currProfile.internships;
+    if (asString(currProfile.internships)) {
+      fields["Relevant Internships"] = asString(currProfile.internships);
     }
-    if (currProfile.role) {
-      fields["Role"] = currProfile.role;
+    if (asString(currProfile.role)) {
+      fields["Role"] = asString(currProfile.role);
     }
   return (
     <div
@@ -126,7 +146,7 @@ function IndivProfile(props: {
             <div>
               <img
                 className="h-32 w-full object-cover lg:h-48"
-                src={currProfile.cover_resized_link || currProfile.cover_page_link}
+                src={coverImage}
                 alt=""
               />
             </div>
@@ -135,24 +155,24 @@ function IndivProfile(props: {
                 <div className="flex">
                   <img
                     className="h-24 w-24 rounded-full ring-4 ring-white sm:h-32 sm:w-32 object-cover"
-                    src={currProfile.pfp_large_link || currProfile.profile_pic_link}
+                    src={profileImage}
                     alt=""
                   />
                 </div>
                 <div className="mt-6 sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:justify-end sm:space-x-6 sm:pb-1">
                   <div className="mt-6 min-w-0 flex-1 sm:hidden 2xl:block">
                         <h1 className="truncate text-2xl font-bold text-gray-900">
-                      {currProfile.name}
+                      {profileName}
                     </h1>
                   </div>
                   <div className="justify-stretch mt-6 flex space-y-3 flex-row space-y-0 space-x-4">
                     <button
                       onClick={() => {
-                        window.location.href = "mailto:" + currProfile.email;
+                        window.location.href = "mailto:" + profileEmail;
                       }}
                       type="button"
                       className={classNames(
-                        currProfile.email ? "" : "hidden",
+                        profileEmail ? "" : "hidden",
                         "inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                       )}
                     >
@@ -164,9 +184,10 @@ function IndivProfile(props: {
                     </button>
                     <a
                       target="_blank"
-                      href={currProfile.resume_link}
+                      rel="noreferrer"
+                      href={resumeLink}
                       className={classNames(
-                        currProfile.resume_link ? "" : "hidden",
+                        resumeLink ? "" : "hidden",
                         "inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-blue-50 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
                       )}
                     >
@@ -183,6 +204,7 @@ function IndivProfile(props: {
                             key={item.name}
                             href={item.href}
                             target="_blank"
+                            rel="noreferrer"
                             className={classNames(
                               "transition-colors",
                               item.className || "text-slate-400 hover:text-blue-600"
@@ -199,7 +221,7 @@ function IndivProfile(props: {
               </div>
               <div className="mt-6 hidden min-w-0 flex-1 sm:block 2xl:hidden">
                 <h1 className="truncate text-2xl font-bold text-gray-900">
-                  {currProfile.name}
+                  {profileName}
                 </h1>
               </div>
             </div>
@@ -251,7 +273,7 @@ function IndivProfile(props: {
                   <dd
                     className="mt-2 max-w-prose space-y-5 text-sm text-slate-900"
                     dangerouslySetInnerHTML={{
-                      __html: currProfile.about,
+                      __html: aboutHtml,
                     }}
                   />
                 </div>

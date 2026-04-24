@@ -4,7 +4,6 @@ import LcLeaderboard from "@tabs/LcLeaderboard/LcLeaderboard";
 import PledgeTracker from "@tabs/PledgeTracker/PledgeTracker";
 import DirectoryContainer from "@tabs/Directory/DirectoryContainer";
 import NewUser from "@auth/NewUser";
-import RushEvents from "@landing/RushEvents";
 import PledgeCalendar from "@tabs/Calendar/PledgeCalendar";
 import PledgeResources from "@tabs/Resources/PledgeResources";
 import MemberMapHub from "./Tabs/Geo/MemberMapHub";
@@ -149,27 +148,46 @@ export default function AppContainer(props: { firebase: any, database: any, stor
               throw new Error("public_users data not found");
             }
             dir = publicSnapshot.val();
+            if (!dir || typeof dir !== "object") {
+              throw new Error("public_users data is malformed");
+            }
             
             // Get allowed_users data if available
             if (allowedSnapshot.exists()) {
               allowedUsersData = allowedSnapshot.val();
-              
-              // Merge role from allowed_users into public_users
-              for (let uid in dir) {
-                if (allowedUsersData[uid] && allowedUsersData[uid].role) {
-                  dir[uid].role = allowedUsersData[uid].role;
+
+              if (allowedUsersData && typeof allowedUsersData === "object") {
+                // Merge role from allowed_users into public_users
+                for (let uid in dir) {
+                  const publicProfile = dir[uid];
+                  const allowedProfile = allowedUsersData[uid];
+
+                  if (
+                    publicProfile &&
+                    typeof publicProfile === "object" &&
+                    allowedProfile &&
+                    typeof allowedProfile === "object" &&
+                    typeof allowedProfile.role === "string"
+                  ) {
+                    publicProfile.role = allowedProfile.role;
+                  }
                 }
               }
             }
             
             const currProfile = dir[user.uid];
-            if (!currProfile) {
+            if (!currProfile || typeof currProfile !== "object") {
               throw new Error("User profile not found in public_users");
             }
-            newUser.name = currProfile["name"];
-            newUser.imageUrl = currProfile["pfp_thumb_link"]
-              ? currProfile["pfp_thumb_link"]
-              : currProfile["profile_pic_link"];
+            newUser.name =
+              typeof currProfile["name"] === "string" && currProfile["name"].trim().length > 0
+                ? currProfile["name"].trim()
+                : user.displayName || "Member";
+            newUser.imageUrl =
+              currProfile["pfp_thumb_link"] ||
+              currProfile["profile_pic_link"] ||
+              user.photoURL ||
+              defaultUser.imageUrl;
             
             setUser(newUser);
             setFullPubDir(dir);
@@ -262,6 +280,88 @@ export default function AppContainer(props: { firebase: any, database: any, stor
     onTabClick: onTabClick,
   };
 
+  function renderCurrentTab() {
+    switch (currTab) {
+      case "Members":
+        return (
+          <ActiveProfileContext.Provider value={value}>
+            <DirectoryContainer fullPubDir={fullPubDir} uid={currUserUid} />
+          </ActiveProfileContext.Provider>
+        );
+      case "Profile":
+        return (
+          <NewUser
+            firebase={props.firebase}
+            database={props.database}
+            storage={props.storage}
+            newuser={false}
+          />
+        );
+      case "Calendar":
+        return (
+          <div className="overflow-y-auto">
+            <PledgeCalendar
+              firebase={props.firebase}
+              database={props.database}
+              admin={admin}
+              role={pledge ? "Pledge" : "Member"}
+            />
+          </div>
+        );
+      case "Admin":
+        if (!admin) {
+          return null;
+        }
+        return <AdminPanel firebase={props.firebase} database={props.database} />;
+      case "Leaderboard":
+        return (
+          <div className="h-full">
+            <LcLeaderboard fullPubDir={fullPubDir} />
+          </div>
+        );
+      case "PledgeTracker":
+        return (
+          <div className="h-full">
+            <PledgeTracker fullPubDir={fullPubDir} />
+          </div>
+        );
+      case "Resources":
+        return (
+          <div className="overflow-y-auto">
+            <PledgeResources />
+          </div>
+        );
+      case "Maps":
+        return (
+          <div className="h-full">
+            <MemberMapHub
+              fullPubDir={fullPubDir}
+              database={props.database}
+              uid={currUserUid}
+            />
+          </div>
+        );
+      case "Feedback":
+        return (
+          <div className="h-full">
+            <FeedbackHub
+              database={props.database}
+              uid={currUserUid}
+              currentUserName={user.name}
+              currentUserImage={user.imageUrl}
+              isAdmin={admin}
+            />
+          </div>
+        );
+      default:
+        return (
+          <ActiveProfileContext.Provider value={value}>
+            <DirectoryContainer fullPubDir={fullPubDir} uid={currUserUid} />
+          </ActiveProfileContext.Provider>
+        );
+    }
+  }
+
   return (
     <div
       className={classNames(
@@ -308,69 +408,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
           </div>
         </div>
 
-        {/* Member directory tab */}
-        <div className={currTab=="Members" ? "" : "hidden"}>
-          <ActiveProfileContext.Provider value={value}>
-            <DirectoryContainer fullPubDir={fullPubDir} uid={currUserUid} />
-          </ActiveProfileContext.Provider>
-        </div>
-        {/* Edit profile tab */}
-        <div className={currTab=="Profile" ? "" : "hidden"}>
-          <NewUser
-            firebase={props.firebase}
-            database={props.database}
-            storage={props.storage}
-            newuser={false}
-          />
-        </div>
-        {/* Rush events tab */}
-        <div className={false ? "" : "hidden"}>
-          <RushEvents />
-        </div>
-
-        {/* Pledge calendar tab */}
-        <div className={currTab=="Calendar" ? "overflow-y-auto" : "hidden"}>
-          <PledgeCalendar firebase={props.firebase} database={props.database} admin={admin} role={pledge ? "Pledge" : "Member"} />
-        </div>
-
-        {/* Admin tab, only visible to users with entry in users/UID/admin set to true */}
-        {admin && (
-          <div className={currTab=="Admin" ? "" : "hidden"}>
-            <AdminPanel firebase={props.firebase} database={props.database} />
-          </div>
-        )}
-
-        {/* Leetcode Leaderboard tab */}
-        <div className={currTab=="Leaderboard" ? "h-full" : "hidden"}>
-          <LcLeaderboard fullPubDir={fullPubDir} />
-        </div>
-
-        {/* Pledge Tracker tab */}
-        <div className={currTab=="PledgeTracker" ? "h-full" : "hidden"}>
-          <PledgeTracker fullPubDir={fullPubDir} />
-        </div>
-
-        <div className={currTab=="Resources" ? "overflow-y-auto" : "hidden"}>
-          <PledgeResources />
-        </div>
-
-        <div className={currTab=="Maps" ? "h-full" : "hidden"}>
-          <MemberMapHub
-            fullPubDir={fullPubDir}
-            database={props.database}
-            uid={currUserUid}
-          />
-        </div>
-
-        <div className={currTab=="Feedback" ? "h-full" : "hidden"}>
-          <FeedbackHub
-            database={props.database}
-            uid={currUserUid}
-            currentUserName={user.name}
-            currentUserImage={user.imageUrl}
-            isAdmin={admin}
-          />
-        </div>
+        {renderCurrentTab()}
       </div>
     </div>
   );
