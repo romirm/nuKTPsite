@@ -50,20 +50,22 @@ class PledgeResources extends React.Component {
                   <a
                     target="_blank"
                     className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                    href="https://docs.google.com/document/d/1ZXdlhcBzCufGf24VOZgQrM_jnVCZ07xV1PWHokrmJNM/edit#heading=h.dbpghy82amqq"
+                    href="https://docs.google.com/document/d/1dmAw3l1YTzwhum482lDpPtURbrMaH_MRnOv8FM7u1Lk/edit?tab=t.0#heading=h.rohbx5vsxx1q"
+                    rel="noreferrer"
                   >
                     <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Coffee Chat Guidelines
+                    Pledge Guide
                   </a>
                 </form>
                 <form className="sm:mt-5 min-w-[85px] sm:flex sm:items-center">
                   <a
                     target="_blank"
                     className="mt-3 inline-flex w-full items-center justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:mt-0 sm:w-auto sm:text-sm"
-                    href="https://docs.google.com/document/d/1ZXdlhcBzCufGf24VOZgQrM_jnVCZ07xV1PWHokrmJNM/edit#heading=h.dbpghy82amqq"
+                    href="https://docs.google.com/document/d/1rhf1JD8yTImVycPt7HIEYfUMoLyPznAelSaXu4eoc9o/edit?tab=t.0"
+                    rel="noreferrer"
                   >
                     <LinkIcon className="-ml-1 mr-2 h-5 w-5" />
-                    Capstone Guidelines
+                    Points
                   </a>
                 </form>
               </div>

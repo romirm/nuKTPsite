@@ -1,14 +1,13 @@
 import React, { RefObject } from "react";
 import {
   UserPlusIcon,
-  PaperAirplaneIcon,
   LinkIcon,
   UserGroupIcon,
   AcademicCapIcon,
   CheckBadgeIcon,
 } from "@heroicons/react/20/solid";
 import { ref, set, get, child, update, remove } from "firebase/database";
-import Swal, { SweetAlertResult } from "sweetalert2";
+import Swal from "sweetalert2";
 import { Tab } from "@headlessui/react";
 
 const validateEmail = (email: string) => {
@@ -21,6 +20,10 @@ const validateEmail = (email: string) => {
 
 const PLACEHOLDER_PFP_URL = "https://via.placeholder.com/200";
 const DEFAULT_PLEDGE_POINTS = 100;
+
+const toDisplayString = (value: unknown, fallback = ""): string => {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
+};
 
 const toSafeNumber = (value: any): number => {
   const parsed = Number(value);
@@ -68,8 +71,6 @@ interface AdminPanelState {
   editMajor: string;
   editStandingViewable: boolean | null;
   editLoading: boolean;
-  messageRecipientType: string;
-  directMessageUid: string;
   eventName: string;
   eventDate: string;
   eventType: string;
@@ -87,9 +88,6 @@ interface AdminPanelState {
 
 class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanelState> {
   emailButton:RefObject<HTMLInputElement>;
-  sendTextButton:RefObject<HTMLTextAreaElement>;
-  whoToButton:RefObject<HTMLSelectElement>;
-  messageTypeButton:RefObject<HTMLSelectElement>;
   typeOfMember:RefObject<HTMLSelectElement>;
   eventNameInput:RefObject<HTMLInputElement>;
   eventDateInput:RefObject<HTMLInputElement>;
@@ -107,8 +105,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       editMajor: "",
       editStandingViewable: null,
       editLoading: false,
-      messageRecipientType: "Pledges",
-      directMessageUid: "",
       eventName: "",
       eventDate: "",
       eventType: "Social",
@@ -124,7 +120,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       mapsClearing: false,
     };
     this.addNewUser = this.addNewUser.bind(this);
-    this.sendText = this.sendText.bind(this);
     this.loadUsers = this.loadUsers.bind(this);
     this.updateUserRole = this.updateUserRole.bind(this);
     this.updateUserRoleCustom = this.updateUserRoleCustom.bind(this);
@@ -139,9 +134,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
     this.saveAllPledgeTrackerRows = this.saveAllPledgeTrackerRows.bind(this);
     this.clearAllMapPins = this.clearAllMapPins.bind(this);
     this.emailButton = React.createRef<HTMLInputElement>();
-    this.sendTextButton = React.createRef<HTMLTextAreaElement>();
-    this.whoToButton = React.createRef<HTMLSelectElement>();
-    this.messageTypeButton = React.createRef<HTMLSelectElement>();
     this.typeOfMember = React.createRef<HTMLSelectElement>();
     this.eventNameInput = React.createRef<HTMLInputElement>();
     this.eventDateInput = React.createRef<HTMLInputElement>();
@@ -185,8 +177,11 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       const usersList: AdminUserRow[] = Object.keys(publicUsers)
         .map(uid => ({
           uid,
-          name: publicUsers[uid].name || "Unknown",
-          currentRole: allowedUsers[uid]?.role || publicUsers[uid].role || "No Role",
+          name: toDisplayString(publicUsers[uid]?.name, "Unknown"),
+          currentRole: toDisplayString(
+            allowedUsers[uid]?.role ?? publicUsers[uid]?.role,
+            "No Role"
+          ),
           currentAdmin: Boolean(adminByUid[uid])
         }))
         .sort((a, b) => a.name.localeCompare(b.name));
@@ -424,98 +419,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       });
     } finally {
       this.setState({ editLoading: false });
-    }
-  }
-
-  sendText() {
-    if(!(this.sendTextButton.current)) { //TODO: make sure this works lol
-      return;
-    }
-    if(!(this.whoToButton.current)) {
-      return;
-    }
-    if(!(this.messageTypeButton.current)) {
-      return;
-    }
-    const text = this.sendTextButton.current.value;
-    if (text.length < 5) {
-      Swal.fire({
-        icon: "error",
-        text: "Message too short",
-      });
-    } else {
-      const whoTo = this.whoToButton.current.value;
-      const whatType = this.messageTypeButton.current.value;
-      let targetUid = "";
-      let targetName = "";
-
-      if (whoTo === "Individual") {
-        targetUid = this.state.directMessageUid;
-        if (!targetUid) {
-          Swal.fire({
-            icon: "error",
-            title: "Select a recipient",
-            text: "Please choose a member to message directly."
-          });
-          return;
-        }
-        const targetUser = this.state.users.find((user) => user.uid === targetUid);
-        targetName = targetUser ? targetUser.name : "Selected member";
-      }
-      Swal.fire({
-        title: "Is this correct?",
-        text: whoTo === "Individual" ? `${text} (Recipient: ${targetName})` : text,
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, send the text",
-      }).then((res:SweetAlertResult) => {
-        if (res["isConfirmed"]) {
-          Swal.fire({
-            title: "Are you sure?",
-            text: "Once you send this text, you can't unsend it." + (whoTo === "Individual" ? " Recipient: " + targetName + "." : "") + " Text: " + text,
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Yes, send the text",
-          }).then((res:SweetAlertResult) => {
-            if (res["isConfirmed"]) {
-              this.props.firebase
-                .functions()
-                .httpsCallable("sendText")({
-                  message: text,
-                  whoTo: whoTo,
-                  type: whatType,
-                  targetUid: whoTo === "Individual" ? targetUid : "",
-                })
-                .then((res:any) => {
-                  if (res["data"]["status"] === "Success") {
-                    Swal.fire({
-                      title: "Success!",
-                      icon: "success",
-                      text:
-                        whoTo === "Individual"
-                          ? "Sent message to " + targetName + "."
-                          : "Sent message to " +
-                            whoTo.toLowerCase() +
-                            " (total of " +
-                            String(res["data"]["amount"]) +
-                            " people).",
-                    });
-                  } else {
-                    Swal.fire({
-                      title: "Message send failure",
-                      text: "Do not attempt to resend the message. Contact Steve.",
-                      icon: "error",
-                    });
-                  }
-                });
-            }
-          });
-        }
-      });
     }
   }
 
@@ -861,16 +764,21 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
   render() {
     const execRoles = ["President", "VP of Technology", "VP of Programming", "VP of Recruitment", "VP of External Affairs", "VP of Internal Experience", "VP of Marketing", "VP of Finance", "VP of DEI", "VP of Pledge Experience"];
     
-    const filteredUsers = this.state.users.filter(user => 
-      user.name.toLowerCase().includes(this.state.searchTerm.toLowerCase()) ||
-      user.currentRole.toLowerCase().includes(this.state.searchTerm.toLowerCase())
-    );
+    const normalizedSearchTerm = this.state.searchTerm.toLowerCase();
+    const filteredUsers = this.state.users.filter(user => {
+      const userName = toDisplayString(user.name, "Unknown").toLowerCase();
+      const userRole = toDisplayString(user.currentRole, "No Role").toLowerCase();
+
+      return (
+        userName.includes(normalizedSearchTerm) ||
+        userRole.includes(normalizedSearchTerm)
+      );
+    });
 
     const tabNames = [
       "Member Management",
       "User Roles",
       "Academic Info",
-      "Messaging",
       "Pledge Tracker",
       "Maps",
       "Quick Links",
@@ -1033,11 +941,11 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                         filteredUsers.map((user) => (
                           <tr key={user.uid} className="hover:bg-blue-50 transition-colors duration-150">
                             <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                              {user.name}
+                              {toDisplayString(user.name, "Unknown")}
                             </td>
                             <td className="px-4 py-3 text-sm text-gray-600">
                               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                {user.currentRole}
+                                {toDisplayString(user.currentRole, "No Role")}
                               </span>
                             </td>
                             <td className="px-4 py-3 text-sm">
@@ -1234,118 +1142,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         </div>
               </Tab.Panel>
 
-              {/* Tab 5: Messaging */}
-              <Tab.Panel>
-                <div className="mt-6 px-4 w-full">
-          <div className="flex items-center mb-4">
-            <PaperAirplaneIcon className="h-6 w-6 text-blue-600 mr-2" />
-            <h2 className="text-xl font-bold text-gray-900">Messaging</h2>
-          </div>
-        </div>
-
-        {/* Send a text section */}
-        <div className="mt-2 px-4 w-full">
-          <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <h3 className="text-lg font-semibold leading-6 text-blue-900 mb-2">
-                Send a Message
-              </h3>
-              <div className="mb-5 text-sm text-gray-600">
-                <p>Send text messages or announcements to members.</p>
-              </div>
-              
-              {/* Message textarea - full width of container */}
-              <div className="mb-4">
-                <label htmlFor="message-text" className="block text-sm font-medium text-gray-700 mb-2">
-                  Message <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  name="text"
-                  id="message-text"
-                  className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm resize-none"
-                  placeholder="Pledge meeting tonight @ 7:00..."
-                  ref={this.sendTextButton}
-                  rows={5}
-                />
-              </div>
-
-              {/* Send To, Type fields (left) and Send Message button (right) on same line */}
-              <div className="flex items-end justify-between gap-4 flex-wrap">
-                <div className="flex gap-4 flex-wrap">
-                  <div>
-                    <label htmlFor="who-to-text" className="block text-sm font-medium text-gray-700 mb-2">
-                      Send To
-                    </label>
-                    <select
-                      id="who-to-text"
-                      name="who-to-text"
-                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      style={{ minWidth: "160px" }}
-                      value={this.state.messageRecipientType}
-                      onChange={(e) => this.setState({ messageRecipientType: e.target.value, directMessageUid: "" })}
-                      ref={this.whoToButton}
-                    >
-                      <option>Pledges</option>
-                      <option>Members</option>
-                      <option>Everyone</option>
-                      <option>Individual</option>
-                    </select>
-                  </div>
-
-                  {this.state.messageRecipientType === "Individual" && (
-                    <div>
-                      <label htmlFor="direct-recipient" className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Member
-                      </label>
-                      <select
-                        id="direct-recipient"
-                        name="direct-recipient"
-                        className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        style={{ minWidth: "200px" }}
-                        value={this.state.directMessageUid}
-                        onChange={(e) => this.setState({ directMessageUid: e.target.value })}
-                      >
-                        <option value="">Select member</option>
-                        {this.state.users.map((user) => (
-                          <option key={user.uid} value={user.uid}>{user.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  <div>
-                    <label htmlFor="message-type" className="block text-sm font-medium text-gray-700 mb-2">
-                      Type
-                    </label>
-                    <select
-                      id="message-type"
-                      name="message-type"
-                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      style={{ minWidth: "160px" }}
-                      defaultValue="Event"
-                      ref={this.messageTypeButton}
-                    >
-                      <option>Event</option>
-                      <option>Announcement</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={this.sendText}
-                  className="inline-flex items-center justify-center rounded-md bg-blue-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                >
-                  <PaperAirplaneIcon className="-ml-1 mr-2 h-5 w-5" />
-                  Send Message
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-              </Tab.Panel>
-
-              {/* Tab 6: Pledge Tracker */}
+              {/* Tab 4: Pledge Tracker */}
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
                   <div className="flex items-center mb-4">
@@ -1516,7 +1313,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 </div>
               </Tab.Panel>
 
-              {/* Tab 7: Maps */}
+              {/* Tab 5: Maps */}
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
                   <div className="flex items-center mb-4">
@@ -1551,7 +1348,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 </div>
               </Tab.Panel>
 
-              {/* Tab 8: Quick Links */}
+              {/* Tab 6: Quick Links */}
               <Tab.Panel>
                 <div className="mt-4 px-4 w-full">
           <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">

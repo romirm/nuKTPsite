@@ -46,11 +46,6 @@ class NewUser extends React.Component {
         icon: "error",
         title: "Phone input not filled in",
       });
-    } else if (config.linkedin.length == 0) {
-      Swal.fire({
-        icon: "error",
-        title: "LinkedIn username not filled in",
-      });
     } else if (config.about.length < 20) {
       Swal.fire({
         icon: "error",
@@ -179,12 +174,11 @@ class NewUser extends React.Component {
                         Primary email address
                       </label>
                       <input
-                        type="text"
-                        readOnly="true"
+                        type="email"
                         name="email-address"
                         id="email-address"
                         autoComplete="email"
-                        className="bg-gray-100 text-gray-500 mt-1 block w-full rounded-md border-gray-300 shadow-sm sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                       />
                     </div>
 
@@ -336,12 +330,20 @@ class NewUser extends React.Component {
                       </div>
                     </div>
                     <div className="col-span-3 sm:col-span-1">
-                      <label
-                        htmlFor="linkedin"
-                        className="block text-sm font-medium text-gray-700"
-                      >
-                        LinkedIn Username
-                      </label>
+                      <div>
+                        <label
+                          htmlFor="linkedin"
+                          className="inline-block text-sm font-medium text-gray-700"
+                        >
+                          LinkedIn Username&nbsp;
+                        </label>
+                        <label
+                          htmlFor="linkedin"
+                          className="inline-block text-sm font-medium font-light text-gray-500"
+                        >
+                          (Optional)
+                        </label>
+                      </div>
                       <div className="mt-1 flex rounded-md shadow-sm">
                         <span className="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500">
                           linkedin.com/in/
@@ -911,16 +913,16 @@ class NewUser extends React.Component {
                 onClick={() => {
                   var userConfig = {
                     uid: this.user.uid,
-                    email: document.getElementById("email-address").value,
-                    name: document.getElementById("last-name").value,
-                    phone: document.getElementById("phone-number").value,
-                    year: document.getElementById("year").value,
-                    major: document.getElementById("major").value,
-                    internships: document.getElementById("internships").value,
-                    insta: document.getElementById("instagram").value,
-                    leetcode: document.getElementById("leetcode").value,
-                    linkedin: document.getElementById("linkedin").value,
-                    about: document.getElementById("about").value,
+                    email: document.getElementById("email-address").value.trim(),
+                    name: document.getElementById("last-name").value.trim(),
+                    phone: document.getElementById("phone-number").value.trim(),
+                    year: document.getElementById("year").value.trim(),
+                    major: document.getElementById("major").value.trim(),
+                    internships: document.getElementById("internships").value.trim(),
+                    insta: document.getElementById("instagram").value.trim(),
+                    leetcode: document.getElementById("leetcode").value.trim(),
+                    linkedin: document.getElementById("linkedin").value.trim(),
+                    about: document.getElementById("about").value.trim(),
                     email_viewable:
                       document.getElementById("email-visible").checked,
                     standing_viewable:
