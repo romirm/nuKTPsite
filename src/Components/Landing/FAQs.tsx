@@ -10,11 +10,6 @@ const faqs: { question: string; answer: string }[] = [
       "Pledging for KTP typically requires a 2-5 hour per week commitment. After initiation, this time commitment decreases, but how much you get out of KTP depends on what you put into it, as is the case with all campus organizations.",
   },
   {
-    question: "What if I can't afford dues?",
-    answer:
-      "Although we aim to minimize quarterly costs, we offer financial aid for those unable to afford dues. For accomodation requests or more information, contact us.",
-  },
-  {
     question: "Which majors are represented in KTP?",
     answer:
       "Kappa Theta Pi's members come from many tech-related majors, including Computer Science, Economics, MatSci, Industrial Engienering, Biomedical Engineering, Computer Engineering, and more. We welcome all who are passionate about tech, regardless of major.",

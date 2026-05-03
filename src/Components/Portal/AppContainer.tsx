@@ -56,7 +56,7 @@ const navigation = {
     current: false,
     secondary: false,
     adminonly: false,
-    pledgeonly: true,
+    pledgeonly: false,
   },
   Feedback: {
     name: "Feedback",
@@ -88,7 +88,7 @@ const navigation = {
     current: false,
     secondary: false,
     adminonly: false,
-    pledgeonly: true,
+    pledgeonly: false,
   },
   Admin: {
     name: "Admin",
