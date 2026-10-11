@@ -22,8 +22,8 @@ const groups = [
   {
     id: "Trading & finance",
     rows: [
-      ["hrt", "janestreet", "citadel", "optiver", "imc"],
-      ["ctc", "bam", "virtu", "jpmorganchase", "goldmansachs"],
+      ["hrt", "janestreet", "citadelsecurities", "optiver", "imc"],
+      ["susquehanna", "bam", "virtu", "jpmorganchase", "goldmansachs"],
     ],
   },
   {
@@ -48,10 +48,10 @@ const companies: Record<string, { name: string; website: string }> = {
   stripe: { name: "Stripe", website: "https://stripe.com" },
   hrt: { name: "Hudson River Trading", website: "https://www.hudsonrivertrading.com" },
   janestreet: { name: "Jane Street", website: "https://www.janestreet.com" },
-  citadel: { name: "Citadel", website: "https://www.citadel.com" },
+  citadelsecurities: { name: "Citadel Securities", website: "https://www.citadelsecurities.com" },
   optiver: { name: "Optiver", website: "https://optiver.com" },
   imc: { name: "IMC", website: "https://www.imc.com" },
-  ctc: { name: "Chicago Trading Company", website: "https://www.chicagotrading.com" },
+  susquehanna: { name: "Susquehanna International Group", website: "https://sig.com" },
   bam: { name: "Balyasny Asset Management", website: "https://www.bamfunds.com" },
   virtu: { name: "Virtu", website: "https://www.virtu.com" },
   jpmorganchase: { name: "JPMorgan Chase", website: "https://www.jpmorganchase.com" },

@@ -107,10 +107,10 @@
   border-bottom: 3px solid #836eaa;
 }
 .ktp-landing .studio-nav {
-  width: min(100% - 80px, 1320px);
+  width: calc(100% - 80px);
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 28px;
   margin: auto;
@@ -121,7 +121,7 @@
 .ktp-landing .studio-links {
   display: flex;
   align-items: stretch;
-  justify-content: center;
+  justify-content: space-evenly;
   align-self: stretch;
   gap: 22px;
   flex: 1 1 auto;
