@@ -2,12 +2,12 @@ import WIKTP from "@images/Branding/WIKTP.jpg";
 import Pyramid from "@images/Branding/pyramid.jpg";
 import WinterPC from "@images/Branding/winterpc.jpg";
 import Awh from "@images/Branding/awh.jpg";
-import NorthwesternBackdrop from "./NorthwesternBackdrop";
+import PixelWorld from "./PixelWorld";
 
 export default function WhyKTP() {
   return (
     <section id="WhatIsKTP" className="studio-about studio-section">
-      <NorthwesternBackdrop scene="rock" />
+      <PixelWorld scene="grove" />
       <div className="studio-container studio-about-layout">
         <div className="studio-about-copy">
           <h2 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">

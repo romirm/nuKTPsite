@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import PixelWorld from "./PixelWorld";
 // @ts-ignore
 import RohanPic from "@images/Exec/rohan2026.jpeg";
 
@@ -67,6 +68,7 @@ function Greeting() {
 
   return (
     <div id="greeting" className="studio-greeting studio-section relative bg-slate-50 py-24 sm:py-32">
+      <PixelWorld scene="campus" />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-16 gap-y-16 lg:mx-0 lg:min-w-full lg:max-w-none lg:flex-none lg:grid-cols-2 lg:items-center">
           

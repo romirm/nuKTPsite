@@ -1,15 +1,22 @@
+/** Shared two-tone sprite for the scroll thumb and members in the landscape. */
+export function CompactNinjaArtwork() {
+  return <g fill="#cab0f3">
+    <path className="ninja-scarf" d="M12 6h4v2h-2v3h-2z" fill="#4e2a84" />
+    <path className="ninja-leg-left" d="M4 13h4v6H2v-2h2z" />
+    <path className="ninja-leg-right" d="M9 13h4v4h2v2H9z" />
+    <path className="ninja-arm-left" d="M2 10h3v5H1v-3h1z" />
+    <path className="ninja-arm-right" d="M12 10h3v2h1v3h-4z" />
+    <path d="M5 1h6v1h2v2h1v4h-1v2h-1v5H4v-5H3V8H2V4h1V2h2z" />
+    <path d="M5 2h6v1H5zM3 5h10v3H3zM4 12h8v2H4z" fill="#4e2a84" />
+    <path className="ninja-eyes" d="M5 5h1v2H5zM10 5h1v2h-1z" />
+  </g>;
+}
+
 /** A tiny, locally drawn mascot. Integer coordinates keep every pixel crisp. */
 export default function PixelNinja({ className = "", compact = false }: { className?: string; compact?: boolean }) {
   if (compact) return (
     <svg className={`pixel-ninja pixel-ninja-compact ${className}`} viewBox="0 0 16 20" fill="#cab0f3" shapeRendering="crispEdges" aria-hidden="true" focusable="false">
-      <path className="ninja-scarf" d="M12 6h4v2h-2v3h-2z" fill="#4e2a84" />
-      <path className="ninja-leg-left" d="M4 13h4v6H2v-2h2z" />
-      <path className="ninja-leg-right" d="M9 13h4v4h2v2H9z" />
-      <path className="ninja-arm-left" d="M2 10h3v5H1v-3h1z" />
-      <path className="ninja-arm-right" d="M12 10h3v2h1v3h-4z" />
-      <path d="M5 1h6v1h2v2h1v4h-1v2h-1v5H4v-5H3V8H2V4h1V2h2z" />
-      <path d="M5 2h6v1H5zM3 5h10v3H3zM4 12h8v2H4z" fill="#4e2a84" />
-      <path className="ninja-eyes" d="M5 5h1v2H5zM10 5h1v2h-1z" />
+      <CompactNinjaArtwork />
     </svg>
   );
   return (

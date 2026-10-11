@@ -327,7 +327,7 @@
 .ktp-landing .studio-recruitment img { width: 32%; max-width: none; height: auto; aspect-ratio: 4/5; border: 3px solid #b6acd1; border-radius: 0; box-shadow: 6px 6px 0 #30104e; }
 .ktp-landing .studio-recruitment p { font-size: 18px; line-height: 1.55; color: #e9e4ef; }
 .ktp-landing .studio-recruitment ul { font-size: 18px; line-height: 1.4; }
-.ktp-landing .studio-recruitment svg { width: 18px; color: var(--studio-accent); }
+.ktp-landing .studio-recruitment li svg { width: 18px; color: var(--studio-accent); }
 .ktp-landing .studio-recruitment a { color: var(--studio-accent); font-size: 18px; border-bottom: 2px solid var(--studio-accent); padding-bottom: 4px; }
 .ktp-landing .studio-recruitment .absolute { display: none; }
 .ktp-landing .studio-footer { border-top: 3px solid #836eaa; background: #211235; padding-block: 32px; }
@@ -335,18 +335,21 @@
 .ktp-landing .studio-footer a { color: #cab0f3; }
 
 /* The small ninja follows the page beside clickable section checkpoints. */
-.ktp-landing .arcade-journey { position: fixed; z-index: 35; right: 12px; top: 50%; transform: translateY(-50%); height: clamp(240px, 34vh, 320px); max-height: calc(100dvh - 180px); width: 24px; display: flex; align-items: center; flex-direction: column; gap: 12px; }
-.ktp-landing .arcade-journey-rail { position: relative; flex: 1; width: 2px; background: #836eaa77; --journey-progress: 0; }
-.ktp-landing .arcade-journey-fill { position: absolute; inset: 0; background: var(--studio-accent); transform: scaleY(var(--journey-progress)); transform-origin: top; }
-.ktp-landing .arcade-runner { position: absolute; top: -20px; left: -15px; width: 32px; height: 40px; z-index: 4; display: grid; place-items: center; padding: 0; border: 0; background: transparent; cursor: grab; touch-action: none; user-select: none; }
-.ktp-landing .arcade-runner .pixel-ninja { width: 20px; height: 25px; filter: drop-shadow(1px 1px 0 #cab0f3); }
+.ktp-landing .arcade-journey { position: fixed; z-index: 35; right: 10px; top: 50%; transform: translateY(-50%); height: clamp(240px, 34vh, 320px); max-height: calc(100dvh - 180px); width: 30px; padding: 19px 2px; border: 1px solid #a18aba80; border-radius: 999px; background: #160e27ed; box-shadow: 0 2px 12px #160e2733; display: flex; align-items: center; flex-direction: column; }
+/* The inset travel area keeps the entire ninja inside both rounded ends. */
+.ktp-landing .arcade-journey-rail { position: relative; flex: 1; min-height: 0; width: 100%; --journey-progress: 0; }
+.ktp-landing .arcade-journey-rail::before { content: ""; position: absolute; inset-block: 0; left: calc(50% - .5px); width: 1px; background: #a18aba40; }
+.ktp-landing .arcade-journey-fill { position: absolute; inset-block: 0; left: calc(50% - .5px); width: 1px; background: #d8c4ff70; transform: scaleY(var(--journey-progress)); transform-origin: top; }
+.ktp-landing .arcade-runner { position: absolute; top: -15px; left: calc(50% - 12px); width: 24px; height: 30px; z-index: 4; display: grid; place-items: center; padding: 0; border: 0; border-radius: 12px; background: #160e27; cursor: grab; touch-action: none; user-select: none; }
+.ktp-landing .arcade-runner .pixel-ninja { width: 16px; height: 20px; }
 .ktp-landing .arcade-runner.is-dragging { cursor: grabbing; }
-.ktp-landing .arcade-runner:focus-visible { outline-width: 2px; outline-offset: 0; }
+.ktp-landing .arcade-runner:focus-visible { outline-width: 2px; outline-offset: -2px; }
 .ktp-landing .arcade-runner[data-direction="up"] .pixel-ninja { scale: -1 1; }
 .ktp-landing .is-running .ninja-leg-left, .ktp-landing .is-running .ninja-arm-right { animation: arcade-run-left 0.24s steps(2, end) infinite; }
 .ktp-landing .is-running .ninja-leg-right, .ktp-landing .is-running .ninja-arm-left { animation: arcade-run-right 0.24s steps(2, end) infinite; }
-.ktp-landing .arcade-journey-rail > a { position: absolute; left: -31px; width: 28px; height: 28px; padding: 10px; transform: translateY(-50%); z-index: 3; touch-action: manipulation; }
-.ktp-landing .arcade-journey-rail > a::before { content: ""; display: block; width: 8px; height: 8px; background: #836eaa; border: 2px solid #211235; }
+.ktp-landing .arcade-journey-rail > a { position: absolute; left: calc(50% - 12px); width: 24px; height: 28px; padding: 0; display: grid; place-items: center; transform: translateY(-50%); z-index: 3; touch-action: manipulation; }
+.ktp-landing .arcade-journey-rail > a::before { content: ""; display: block; width: 6px; height: 6px; background: #836eaa; border: 1px solid #211235; }
+.ktp-landing .arcade-journey-rail > a:focus-visible { outline-offset: -3px; border-radius: 10px; }
 .ktp-landing .arcade-journey-rail > a.is-reached::before { background: var(--studio-accent); }
 .ktp-landing .arcade-journey-rail > a[aria-current="location"]::before { box-shadow: 0 0 0 2px var(--studio-accent); }
 .ktp-landing .arcade-skip-link { position: fixed; left: 16px; top: -100px; z-index: 60; color: #211235; background: var(--studio-accent); border: 3px solid #211235; padding: 12px 20px; }
@@ -390,7 +393,7 @@
 @media (max-width: 640px) {
   .ktp-landing { font-size: 18px; }
   .ktp-landing .studio-container, .ktp-landing .max-w-7xl, .ktp-landing .max-w-screen-2xl { width: calc(100% - 64px); margin-left: 20px; margin-right: 44px; }
-  .ktp-landing .arcade-journey { right: 2px; height: 240px; }
+  .ktp-landing .arcade-journey { right: 5px; height: 240px; }
   .ktp-landing .arcade-runner .pixel-ninja { width: 16px; height: 20px; }
   .ktp-landing .arcade-logo-marquee { margin-right: 44px; }
   .ktp-landing .studio-header { height: 72px; }

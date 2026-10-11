@@ -1,0 +1,320 @@
+/* One continuous pixel world, with readable content suspended inside it. */
+.ktp-landing { background: #211235; }
+.ktp-landing .studio-header {
+  background: #160e27ed;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #a18aba60;
+  box-shadow: 0 8px 28px #160e2733;
+}
+.ktp-landing .studio-portal { border-color: #a18aba80; background: #4e2a842b; }
+/* Keep all public-page text interactions within the Northwestern palette. */
+.ktp-landing a:not(.arcade-skip-link):is(:hover, :focus-visible),
+.ktp-landing .group:is(:hover, :focus-within) .studio-hover-title { color: var(--studio-accent); }
+.ktp-landing .studio-companies a:is(:hover, :focus-visible) { color: var(--studio-purple); }
+.ktp-landing .group:is(:hover, :focus-within) { --tw-ring-color: #d8c4ff55; }
+.ktp-landing .studio-person:is(:hover, :focus-within) a > div:first-child { --tw-ring-color: #d8c4ff80; }
+.ktp-landing .studio-section {
+  isolation: isolate;
+  border: 0;
+  overflow: clip;
+  padding-block: 120px 160px;
+  background: radial-gradient(ellipse at 50% 35%, var(--world-glow, #3d245d66), transparent 65%), #211235;
+}
+.ktp-landing .studio-greeting { --world-glow: #61457644; }
+.ktp-landing .studio-about { --world-glow: #5f3f7866; }
+.ktp-landing .studio-team { --world-glow: #3c345044; }
+.ktp-landing .studio-pillars { --world-glow: #68489055; }
+.ktp-landing .studio-rush { --world-glow: #68415f44; }
+.ktp-landing .studio-network { --world-glow: #474c8355; }
+.ktp-landing .studio-faq { --world-glow: #39234c66; }
+.ktp-landing .studio-recruitment { --world-glow: #47417855; }
+.ktp-landing .studio-section > div:not(.arcade-flight) { position: relative; z-index: 1; }
+.ktp-landing .pixel-world {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: max(100%, 1100px);
+  height: auto;
+  aspect-ratio: 1440 / 1000;
+  transform: translateX(-50%);
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  overflow: visible;
+}
+.ktp-landing .world-far { transform: translateY(calc(var(--world-drift, 0px) * -.6)); }
+.ktp-landing .pixel-canopy { position: absolute; top: 0; left: 0; width: 100%; height: 220px; pointer-events: none; user-select: none; z-index: 0; }
+.ktp-landing .studio-section::before,
+.ktp-landing .studio-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .25;
+  background-image: radial-gradient(#d8c4ff 1px, transparent 1px), radial-gradient(#a18aba 1px, transparent 1px);
+  background-size: 171px 213px, 293px 317px;
+  background-position: 46px 84px, 108px 162px;
+}
+.ktp-landing .world-near { transform: translateY(var(--world-drift, 0px)); }
+.ktp-landing .world-stars { animation: world-starlight 12s ease-in-out infinite alternate; }
+.ktp-landing .world-clouds { animation: world-clouds 38s steps(24, end) infinite alternate; }
+.ktp-landing .world-ripples { animation: world-ripples 7s steps(8, end) infinite alternate; }
+.ktp-landing .world-windows { animation: world-starlight 8s steps(4, end) infinite alternate; }
+.ktp-landing .world-fireflies { animation: world-fireflies 9s steps(8, end) infinite alternate; }
+.ktp-landing .world-ninja { animation: world-ninja-walk 18s steps(40, end) infinite alternate; }
+.ktp-landing .world-boat { animation: world-boat-bob 6s steps(6, end) infinite alternate; }
+.ktp-landing .pixel-members { opacity: .9; }
+.ktp-landing .member-working .ninja-arm-right { transform: translate(2px, -4px); animation: member-hands 1.4s steps(2, end) infinite alternate; }
+.ktp-landing .member-working .ninja-eyes { animation: member-blink 7s steps(1, end) infinite; }
+.ktp-landing .member-cursor { animation: member-cursor 1.8s steps(1, end) infinite; }
+.ktp-landing .member-bubbles { animation: member-bubbles 4s steps(8, end) infinite; }
+.ktp-landing .member-steam { animation: member-steam 5s steps(6, end) infinite; }
+.ktp-landing .member-dna { animation: world-starlight 5s steps(4, end) infinite alternate; }
+.ktp-landing .member-chart { transform-box: fill-box; transform-origin: bottom; animation: member-chart 6s steps(4, end) infinite alternate; }
+.ktp-landing .member-gear { animation: member-gear 10s steps(16, end) infinite; }
+.ktp-landing .member-gear-reverse { animation-direction: reverse; }
+.ktp-landing .member-robot-arm { animation: member-robot 7s steps(6, end) infinite alternate; }
+.ktp-landing .member-signal { animation: member-signal 3s steps(3, end) infinite alternate; }
+.ktp-landing .member-bulb { animation: world-starlight 4s steps(4, end) infinite alternate; }
+.ktp-landing .activity-ninja .ninja-eyes { animation: member-blink 7s steps(1, end) infinite; }
+.ktp-landing .activity-typing { animation: activity-typing 1.2s steps(2, end) infinite alternate; }
+.ktp-landing .activity-pointing-hand { animation: activity-point 4s steps(2, end) infinite alternate; }
+.ktp-landing .activity-flask-hand { animation: activity-inspect 5s steps(3, end) infinite alternate; }
+.ktp-landing .activity-wrench-hand { animation: activity-adjust 2.8s steps(2, end) infinite alternate; }
+.ktp-landing .activity-solder-hand { animation: activity-solder 2s steps(2, end) infinite alternate; }
+.ktp-landing .activity-solder-glow { animation: world-starlight 3s steps(3, end) infinite alternate; }
+.ktp-landing .crew-crane-cable { animation: crew-crane-cable 6s steps(6, end) infinite alternate; }
+.ktp-landing .crew-crane-load { animation: crew-crane-load 6s steps(6, end) infinite alternate; }
+.ktp-landing .crew-builder .ninja-arm-right { transform-origin: 14px 11px; animation: crew-hammer 2.4s steps(4, end) infinite alternate; }
+.ktp-landing .crew-builder .ninja-eyes { animation: member-blink 7s steps(1, end) infinite; }
+.ktp-landing .crew-hammer { animation: crew-hammer 2.4s steps(4, end) infinite alternate; }
+.ktp-landing .crew-building-dust { animation: crew-building-dust 2.4s steps(4, end) infinite; }
+.ktp-landing .crew-excavator-arm { animation: crew-excavator 7s steps(8, end) infinite alternate; }
+.ktp-landing .crew-focus-light { animation: world-starlight 4s steps(4, end) infinite alternate; }
+.ktp-landing .world-beam { transition: opacity .5s; }
+.ktp-landing .studio-pillars:has(.group:hover) .world-beam { opacity: .12; }
+.ktp-landing .pixel-world[data-world-active="false"] * { animation-play-state: paused; }
+@keyframes world-starlight { to { opacity: .45; } }
+@keyframes world-clouds { to { transform: translateX(56px); } }
+@keyframes world-ripples { to { transform: translateX(20px); opacity: .18; } }
+@keyframes world-fireflies { to { transform: translate(8px, -16px); opacity: .25; } }
+@keyframes world-ninja-walk { to { transform: translateX(-160px); } }
+@keyframes world-boat-bob { to { transform: translateY(-4px); } }
+@keyframes member-hands { to { transform: translate(3px, -3px); } }
+@keyframes member-blink { 0%, 94%, 98%, 100% { opacity: 1; } 96% { opacity: 0; } }
+@keyframes member-cursor { 50% { opacity: 0; } }
+@keyframes member-bubbles { 0% { transform: translateY(4px); opacity: 0; } 25%, 65% { opacity: .8; } 100% { transform: translateY(-12px); opacity: 0; } }
+@keyframes member-steam { 0% { transform: translateY(2px); opacity: 0; } 30% { opacity: .5; } 100% { transform: translateY(-8px); opacity: 0; } }
+@keyframes member-chart { to { transform: scaleY(.72); } }
+@keyframes member-gear { to { transform: rotate(360deg); } }
+@keyframes member-robot { from { transform: rotate(-8deg); } to { transform: rotate(12deg); } }
+@keyframes member-signal { to { transform: translateX(2px); opacity: .6; } }
+@keyframes activity-typing { to { transform: translate(1px, 1px); } }
+@keyframes activity-adjust { to { transform: translateX(1px); } }
+@keyframes activity-point { to { transform: translateY(-1px); } }
+@keyframes activity-inspect { to { transform: translateY(-2px); } }
+@keyframes activity-solder { to { transform: translateY(1px); } }
+@keyframes crew-crane-cable { to { transform: scaleY(.863636); } }
+@keyframes crew-crane-load { to { transform: translateY(-12px); } }
+@keyframes crew-hammer { from { transform: rotate(-22deg); } to { transform: rotate(12deg); } }
+@keyframes crew-building-dust { 0%, 30% { opacity: 0; } 50% { opacity: .6; } 100% { transform: translate(4px, -6px); opacity: 0; } }
+@keyframes crew-excavator { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+
+/* The opening is a lakefront scene; the original countdown is its glowing console. */
+.ktp-landing .studio-hero {
+  min-height: 100svh;
+  padding-bottom: 190px;
+  border: 0;
+  background: radial-gradient(ellipse at 65% 12%, #8360b75c, transparent 55%), linear-gradient(#4e2a84, #352052 78%, #211235);
+}
+.ktp-landing .studio-hero-grid { padding-block: 78px 58px; gap: 76px; }
+.ktp-landing .studio-hero-copy { position: relative; }
+.ktp-landing .studio-hero-copy::before {
+  content: "";
+  position: absolute;
+  inset: -38px -28px;
+  z-index: -1;
+  background: radial-gradient(ellipse, #352052c9 30%, #35205280 60%, transparent 76%);
+  pointer-events: none;
+}
+.ktp-landing .studio-hero h1 { text-shadow: 4px 4px 0 #160e2766; }
+.ktp-landing .studio-primary { background: #4e2a84; box-shadow: 5px 5px 0 #160e27, 0 0 28px #d8c4ff20; }
+.ktp-landing .studio-primary:hover { background: #654095; box-shadow: 5px 5px 0 #160e27, 0 0 32px #d8c4ff40; }
+.ktp-landing .studio-hero-rule { border-color: #cab0f344; font-family: "KTP Pixel", monospace; }
+.ktp-landing .rush-countdown {
+  border: 2px solid #bda6df;
+  background: #24143de8;
+  box-shadow: 8px 8px 0 #160e2766, 0 0 64px #cab0f31c;
+  position: relative;
+}
+.ktp-landing .rush-countdown::before,
+.ktp-landing .rush-countdown::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 3px solid var(--studio-accent);
+  pointer-events: none;
+}
+.ktp-landing .rush-countdown::before { top: -5px; left: -5px; border-right: 0; border-bottom: 0; }
+.ktp-landing .rush-countdown::after { bottom: -5px; right: -5px; border-top: 0; border-left: 0; }
+.ktp-landing .rush-countdown-body { background-color: #35205245; }
+.ktp-landing .rush-countdown-tile { background: linear-gradient(#533477 0 50%, #3e265d 50%); }
+.ktp-landing .studio-hero .pixel-world { opacity: .85; }
+
+/* Campus clearing: text rests on a dark translucent map panel. */
+.ktp-landing .studio-greeting { padding-bottom: 220px; }
+.ktp-landing .studio-greeting > div > div { gap: 60px; }
+.ktp-landing .studio-greeting > div > div > div:last-child,
+.ktp-landing .studio-about-copy,
+.ktp-landing .studio-network > div > div:first-child {
+  background: linear-gradient(135deg, #4e2a8475, #211235ed);
+  border: 1px solid #a18aba60;
+  padding: 36px;
+  box-shadow: 8px 8px 0 #160e2755;
+  position: relative;
+}
+.ktp-landing .studio-greeting > div > div > div:last-child::before,
+.ktp-landing .studio-about-copy::before,
+.ktp-landing .studio-network > div > div:first-child::before {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  top: -3px;
+  left: -3px;
+  border-top: 3px solid #cab0f3;
+  border-left: 3px solid #cab0f3;
+}
+.ktp-landing .studio-greeting h2 { font-size: clamp(20px, 2vw, 27px); }
+.ktp-landing .studio-greeting .group { border-color: #a18aba; box-shadow: 8px 8px 0 #160e27aa; }
+.ktp-landing .studio-greeting dl > div { background: #21123599; border-color: #a18aba66; }
+.ktp-landing .studio-greeting dt { min-height: 45px; }
+.ktp-landing .studio-about { padding-block: 100px 210px; }
+.ktp-landing .studio-about-photos { gap: 22px; }
+.ktp-landing .studio-about-photos img { border-color: #a18aba; box-shadow: 6px 6px 0 #160e27aa; }
+.ktp-landing .studio-about-photos img:nth-child(odd) { transform: rotate(-2deg); }
+.ktp-landing .studio-about-photos img:nth-child(even) { transform: translateY(20px) rotate(2deg); }
+
+/* Portraits and skills become stations along the same wooded path. */
+.ktp-landing .studio-team { padding-bottom: 190px; }
+.ktp-landing .studio-team > div > div:first-child,
+.ktp-landing .studio-pillars > div > div:first-child,
+.ktp-landing .studio-rush > div > div:first-child { padding: 24px 28px; border-left: 3px solid #a18aba; background: linear-gradient(90deg, #211235e8, transparent 85%); }
+.ktp-landing .studio-team-grid { gap: 38px 28px; }
+.ktp-landing .studio-person a > div:first-child { border: 2px solid #a18aba; box-shadow: 6px 6px 0 #160e27aa; }
+.ktp-landing .studio-person a > div:last-child { padding: 12px 14px 14px; margin-top: 0; background: #211235e8; border: 1px solid #a18aba55; border-top: 0; min-height: 96px; }
+.ktp-landing .studio-person h3 { font-size: 22px; }
+.ktp-landing .studio-pillars { padding-bottom: 210px; }
+.ktp-landing .studio-pillars .grid { gap: 28px; }
+.ktp-landing .studio-pillars .group {
+  background: linear-gradient(145deg, #4e2a84c9, #211235f2);
+  border: 1px solid #a18aba99;
+  box-shadow: 6px 6px 0 #160e2799, inset 0 3px #cab0f344;
+  padding: 30px;
+}
+.ktp-landing .studio-pillars .group:hover { background: linear-gradient(145deg, #654095, #30194d); box-shadow: 6px 6px 0 #160e2799, 0 0 32px #a18aba22; }
+.ktp-landing .studio-pillars .group > div:first-child > div { background: #211235a8; border: 1px solid #a18aba; box-shadow: 3px 3px 0 #160e27; }
+
+/* A pale skyline district keeps every company logo clear and recognisable. */
+.ktp-landing .studio-companies {
+  --world-floor: #211235;
+  background: linear-gradient(#d5c6e6, #e9e1f0 58%, #c0add6);
+  padding-block: 120px 200px;
+}
+.ktp-landing .studio-companies .pixel-world { opacity: .5; }
+.ktp-landing .studio-companies::before,
+.ktp-landing .studio-companies::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 54px;
+  background: #211235;
+  opacity: 1;
+  z-index: 2;
+  pointer-events: none;
+  clip-path: polygon(0 0, 100% 0, 100% 40%, 90% 40%, 90% 60%, 78% 60%, 78% 36%, 66% 36%, 66% 80%, 52% 80%, 52% 50%, 36% 50%, 36% 72%, 20% 72%, 20% 44%, 8% 44%, 8% 80%, 0 80%);
+}
+.ktp-landing .studio-companies::before { top: 0; }
+.ktp-landing .studio-companies::after { bottom: 0; transform: rotate(180deg); }
+.ktp-landing .studio-companies .world-stars,
+.ktp-landing .studio-companies .world-moon { display: none; }
+.ktp-landing .studio-companies-heading { background: #e9e1f0d9; padding: 28px 32px; border-left: 3px solid #705093; }
+.ktp-landing .studio-companies-heading p { color: #574364; }
+.ktp-landing .studio-companies .studio-section-mark { font-size: 18px; }
+.ktp-landing .studio-company { border-color: #aa92c2; background: #faf6fded; box-shadow: 4px 4px 0 #70509355; }
+.ktp-landing .arcade-logo-marquee { margin-top: 44px; }
+.ktp-landing .arcade-logo-row { margin-block: 20px; }
+.ktp-landing .arcade-logo-list { gap: 28px; padding-right: 28px; }
+
+/* Rush, portal and FAQ continue through the stadium and the glowing grotto. */
+.ktp-landing .studio-rush { padding-bottom: 260px; }
+.ktp-landing .studio-rush .grid { gap: 20px; }
+.ktp-landing .studio-rush .group { background: #211235e8; padding: 28px 18px 22px; border-top-color: #a18aba; }
+.ktp-landing .studio-rush .group p:first-of-type { font-size: 21px; }
+.ktp-landing .studio-rush .group p:last-of-type { font-size: 18px; }
+.ktp-landing .studio-network { padding-bottom: 190px; }
+.ktp-landing .studio-network > div { gap: 60px; }
+.ktp-landing .studio-network .overflow-hidden { border-color: #a18aba; box-shadow: 8px 8px 0 #160e27aa, 0 0 40px #a18aba22; }
+.ktp-landing .studio-network .overflow-hidden::before { background: #352052; }
+.ktp-landing .studio-faq { padding-bottom: 170px; }
+.ktp-landing .studio-faq > div > div { padding: 34px 38px; border: 1px solid #a18aba66; background: #211235e8; box-shadow: 8px 8px 0 #160e2755; }
+.ktp-landing .studio-faq dl > div { border-color: #a18aba55; }
+.ktp-landing .studio-recruitment { padding-bottom: 220px; }
+.ktp-landing .studio-recruitment > div > div > div { background: #211235db; padding: 36px; border: 1px solid #a18aba66; gap: 44px; }
+.ktp-landing .studio-recruitment img { border: 2px solid #a18aba; box-shadow: 6px 6px 0 #160e27; }
+.ktp-landing .studio-footer { border-top: 1px solid #a18aba40; background: #160e27; }
+
+@media (max-width: 1023px) {
+  .ktp-landing .studio-hero-grid { gap: 56px; }
+  .ktp-landing .studio-greeting > div > div { gap: 40px; }
+  .ktp-landing .studio-greeting > div > div > div:last-child { padding: 28px; }
+  .ktp-landing .studio-rush .grid { gap: 16px; }
+  .ktp-landing .studio-rush .group { border-left: 2px solid #a18aba; padding: 18px 24px; }
+  .ktp-landing .studio-rush .group::before { top: 24px; }
+  .ktp-landing .studio-recruitment > div > div > div { padding: 28px; }
+}
+@media (max-width: 640px) {
+  .ktp-landing .studio-section { padding-block: 76px 128px; }
+  .ktp-landing .pixel-world { width: 960px; opacity: .7; }
+  .ktp-landing .pixel-canopy { height: 150px; }
+  .ktp-landing .world-telescope { transform: translateX(-80px); }
+  .ktp-landing .studio-hero { padding-bottom: 152px; }
+  .ktp-landing .studio-hero .pixel-world { top: 60px; bottom: auto; opacity: .6; }
+  .ktp-landing .studio-hero-grid { padding-block: 50px 44px; gap: 42px; }
+  .ktp-landing .studio-hero-copy::before { inset: -24px -16px; }
+  .ktp-landing .studio-hero-rule { font-size: 13px; }
+  .ktp-landing .studio-greeting { padding-bottom: 160px; }
+  .ktp-landing .studio-greeting > div > div > div:last-child,
+  .ktp-landing .studio-about-copy,
+  .ktp-landing .studio-network > div > div:first-child { padding: 22px 18px; }
+  .ktp-landing .studio-greeting h2 { font-size: 19px; }
+  .ktp-landing .studio-greeting .group > img { height: 540px; }
+  .ktp-landing .studio-greeting dl { gap: 6px; }
+  .ktp-landing .studio-greeting dl > div { padding: 12px 6px; }
+  .ktp-landing .studio-greeting dt { font-size: 13px; }
+  .ktp-landing .studio-greeting dd { font-size: 16px; }
+  .ktp-landing .studio-about { padding-bottom: 170px; }
+  .ktp-landing .studio-about-photos { gap: 14px; }
+  .ktp-landing .studio-team > div > div:first-child,
+  .ktp-landing .studio-pillars > div > div:first-child,
+  .ktp-landing .studio-rush > div > div:first-child { padding: 16px 16px; }
+  .ktp-landing .studio-team-grid { gap: 28px 16px; }
+  .ktp-landing .studio-person a > div:last-child { padding: 10px 8px; min-height: 94px; }
+  .ktp-landing .studio-person h3 { font-size: 17px; }
+  .ktp-landing .studio-person p { font-size: 14px; }
+  .ktp-landing .studio-pillars .group { padding: 24px; }
+  .ktp-landing .studio-companies { padding-block: 80px 150px; }
+  .ktp-landing .studio-companies-heading { padding: 22px 18px; }
+  .ktp-landing .arcade-logo-list { gap: 20px; padding-right: 20px; }
+  .ktp-landing .studio-rush { padding-bottom: 180px; }
+  .ktp-landing .studio-faq > div > div { padding: 24px 20px; }
+  .ktp-landing .studio-faq dt { font-size: 21px; }
+  .ktp-landing .studio-recruitment > div > div > div { padding: 24px 18px; }
+  .ktp-landing .studio-recruitment img { height: 280px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ktp-landing .world-far, .ktp-landing .world-near { transform: none; }
+  .ktp-landing .pixel-world * { animation: none; }
+}

@@ -1,3 +1,5 @@
+import PixelWorld from "./PixelWorld";
+
 const allLogos: Record<string, string> = (() => {
   const context = (require as any).context("@/Assets/Vectors", false, /\.svg$/);
   const map: Record<string, string> = {};
@@ -69,6 +71,7 @@ const companies: Record<string, { name: string; website: string }> = {
 export default function LogoCloud() {
   return (
     <section id="logocloud" className="studio-companies studio-section" aria-labelledby="companies-heading">
+      <PixelWorld scene="city" />
       <div className="studio-container">
         <div className="studio-section-mark" aria-hidden="true">
           05 / Our network

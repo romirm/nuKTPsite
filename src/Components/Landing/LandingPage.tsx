@@ -11,11 +11,14 @@ import PortalAdvertisement from "./PortalAdvertisement";
 import FAQs from "./FAQs";
 import ReachOut from "./ReachOut";
 import Footer from "./Footer";
+import useWorldParallax from "./useWorldParallax";
 import "./arcade.css";
 import "./campus.css";
+import "./immersive.css";
 
 export default function LandingPage({ maintenance }: { maintenance: boolean }) {
   const paused = !!useReducedMotion();
+  useWorldParallax(paused);
   return (
     <MotionConfig reducedMotion={paused ? "always" : "user"}>
       <div className={`ktp-landing${paused ? " motion-paused" : ""}`}>

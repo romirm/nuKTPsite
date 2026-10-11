@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import ArcadeSky from "./ArcadeSky";
+import PixelWorld from "./PixelWorld";
 import AnjanaPic from "@images/Exec/anjana2026.jpeg";
 import ChloePic from "@images/Exec/chloe2026.jpeg";
 import KatiaPic from "@images/Exec/katia2026.jpeg";
@@ -63,7 +64,7 @@ function Team() {
         </div>
         
         <div className="mt-6 text-center">
-          <h3 className="text-lg font-bold leading-7 tracking-tight text-slate-900 group-hover:text-blue-700 transition-colors">
+          <h3 className="studio-hover-title text-lg font-bold leading-7 tracking-tight text-slate-900 transition-colors">
             {person.name}
           </h3>
           <p className="text-sm font-semibold leading-6 text-blue-600 uppercase tracking-wider">
@@ -77,6 +78,7 @@ function Team() {
   return (
     <div id="team" className="studio-team studio-section relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
       <ArcadeSky phase={1} />
+      <PixelWorld scene="forest" />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         
         <div className="mx-auto max-w-2xl text-center mb-20">

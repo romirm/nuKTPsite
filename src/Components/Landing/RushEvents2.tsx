@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import NorthwesternBackdrop from "./NorthwesternBackdrop";
+import PixelWorld from "./PixelWorld";
 
 const timeline = [
   {
@@ -44,7 +44,7 @@ export default function RushEvents2() {
 
   return (
     <div id="rushevents2" className="studio-rush studio-section relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
-      <NorthwesternBackdrop scene="stadium" />
+      <PixelWorld scene="stadium" />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center mb-16 sm:mb-20">
           <motion.h2 
@@ -85,7 +85,7 @@ export default function RushEvents2() {
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-600 mr-2" />
                   {item.date}
                 </time>
-                <p className="mt-4 text-xl font-bold tracking-tight text-slate-900 transition-colors group-hover:text-blue-700">
+                <p className="studio-hover-title mt-4 text-xl font-bold tracking-tight text-slate-900 transition-colors">
                   {item.name}
                 </p>
                 <p className="mt-4 text-base leading-7 text-slate-600">

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 import Logo from "@images/Branding/Logo.png";
 import RushCountdown from "./RushCountdown";
-import NorthwesternBackdrop from "./NorthwesternBackdrop";
+import PixelWorld from "./PixelWorld";
 import ArcadeSky from "./ArcadeSky";
 import { landingNavigation as navigation } from "./navigation";
 
@@ -74,7 +74,7 @@ export default function Hero(props: { maintenance: boolean }) {
   const portalHref = props.maintenance ? "/maintenance" : "/signup";
   return (
     <section className="studio-hero" id="top">
-      <NorthwesternBackdrop scene="lakefront" />
+      <PixelWorld scene="lake" />
       <ArcadeSky />
       <header className="studio-header">
         <nav className="studio-nav" aria-label="Global">
@@ -135,7 +135,6 @@ export default function Hero(props: { maintenance: boolean }) {
       </div>
       <div className="studio-hero-rule studio-container">
         <span><span className="arcade-status-dot" aria-hidden="true" /> NORTHWESTERN UNIVERSITY · KAPPA CHAPTER</span>
-        <a href="#greeting">SCROLL TO EXPLORE <span aria-hidden="true">↓</span></a>
       </div>
     </section>
   );

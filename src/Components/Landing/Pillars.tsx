@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import ArcadeSky from "./ArcadeSky";
+import PixelWorld from "./PixelWorld";
 import {
   AcademicCapIcon,
   ArrowTrendingUpIcon,
@@ -59,6 +60,7 @@ function Pillars() {
   return (
     <div id="pillars" className="studio-pillars studio-section relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
       <ArcadeSky phase={2} />
+      <PixelWorld scene="observatory" />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <motion.h2 
@@ -96,7 +98,7 @@ function Pillars() {
                   </div>
                 </div>
                 <div className="mt-8">
-                  <h3 className="text-xl font-bold tracking-tight text-slate-900 transition-colors group-hover:text-blue-700">
+                  <h3 className="studio-hover-title text-xl font-bold tracking-tight text-slate-900 transition-colors">
                     {feature.name}
                   </h3>
                   <p className="mt-4 text-base leading-7 text-slate-600">

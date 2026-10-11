@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import PixelWorld from "./PixelWorld";
 import PortalPic from "@images/Misc/Portal.jpeg";
 
 function PortalAdvertisement() {
@@ -11,6 +12,7 @@ function PortalAdvertisement() {
 
   return (
     <div id="network" className="studio-network studio-section relative overflow-hidden bg-slate-50 pt-24 sm:pt-32">
+      <PixelWorld scene="terminal" />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
           <motion.h2
