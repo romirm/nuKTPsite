@@ -16,15 +16,18 @@ const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, duration = 2000,
 
   useEffect(() => {
     if (!start) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setCount(numericValue); return; }
+    let frame: number;
     let startTimestamp: number | null = null;
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
       const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       const easeOutQuad = (t: number): number => t * (2 - t);
       setCount(Math.floor(easeOutQuad(progress) * numericValue));
-      if (progress < 1) window.requestAnimationFrame(step);
+      if (progress < 1) frame = window.requestAnimationFrame(step);
     };
-    window.requestAnimationFrame(step);
+    frame = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(frame);
   }, [numericValue, duration, start]);
 
   return <>{count}{suffix}</>;
@@ -63,7 +66,7 @@ function Greeting() {
   };
 
   return (
-    <div id="greeting" className="relative bg-slate-50 py-24 sm:py-32">
+    <div id="greeting" className="studio-greeting studio-section relative bg-slate-50 py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-16 gap-y-16 lg:mx-0 lg:min-w-full lg:max-w-none lg:flex-none lg:grid-cols-2 lg:items-center">
           
@@ -77,7 +80,7 @@ function Greeting() {
               transition={naturalSpring}
               // Hover physics are refined for a smooth lift and subtle scale
               whileHover={{ 
-                y: -12, 
+                y: -4,
                 scale: 1.015,
                 transition: { type: "spring", stiffness: 300, damping: 25 } 
               }}

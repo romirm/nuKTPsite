@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import ArcadeSky from "./ArcadeSky";
 import AnjanaPic from "@images/Exec/anjana2026.jpeg";
 import ChloePic from "@images/Exec/chloe2026.jpeg";
 import KatiaPic from "@images/Exec/katia2026.jpeg";
@@ -25,11 +26,6 @@ const people = [
   { name: "Rachel Li", role: "VP of Pledge Experience", imageUrl: RachelPic, linkedin: "https://www.linkedin.com/in/rachelnwk/" },
 ];
 
-// Helper to chunk the array for specific row counts
-const row1 = people.slice(0, 3);
-const row2 = people.slice(3, 7);
-const row3 = people.slice(7, 11);
-
 function Team() {
   const naturalSpring = {
     type: "spring",
@@ -46,10 +42,10 @@ function Team() {
       viewport={{ once: true }}
       transition={{ ...naturalSpring, delay: (rowIdx * 0.1) + (idx * 0.05) }}
       whileHover={{ 
-        y: -12, 
+        y: -4,
         transition: { type: "spring", stiffness: 300, damping: 25 } 
       }}
-      className="group relative w-full max-w-[240px] flex-none"
+      className="studio-person group"
     >
       <a 
         href={person.linkedin} 
@@ -60,7 +56,7 @@ function Team() {
         <div className="relative overflow-hidden rounded-3xl bg-slate-200 shadow-md ring-0 ring-blue-500/0 transition-all duration-300 group-hover:shadow-2xl group-hover:ring-4 group-hover:ring-blue-500/50">
           <img
             className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            src={person.imageUrl}
+            loading="lazy" src={person.imageUrl}
             alt={person.name}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
@@ -79,7 +75,8 @@ function Team() {
   );
 
   return (
-    <div id="team" className="relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
+    <div id="team" className="studio-team studio-section relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
+      <ArcadeSky phase={1} />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         
         <div className="mx-auto max-w-2xl text-center mb-20">
@@ -89,7 +86,7 @@ function Team() {
             viewport={{ once: true }}
             className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl"
           >
-            KTP <span className="bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">Exec</span>
+            <span className="bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">Leadership</span>
           </motion.h2>
           <p className="mt-6 text-lg leading-8 text-slate-600">
             Our leadership team supports an inclusive, 
@@ -97,22 +94,7 @@ function Team() {
           </p>
         </div>
 
-        <div className="space-y-16">
-          {/* Row 1: Centered 3 */}
-          <ul role="list" className="flex flex-wrap justify-center gap-x-8 gap-y-12">
-            {row1.map((p, i) => renderPerson(p, i, 0))}
-          </ul>
-
-          {/* Row 2: Centered 4 */}
-          <ul role="list" className="flex flex-wrap justify-center gap-x-8 gap-y-12">
-            {row2.map((p, i) => renderPerson(p, i, 1))}
-          </ul>
-
-          {/* Row 3: Centered 4 */}
-          <ul role="list" className="flex flex-wrap justify-center gap-x-8 gap-y-12">
-            {row3.map((p, i) => renderPerson(p, i, 2))}
-          </ul>
-        </div>
+        <ul role="list" className="studio-team-grid">{people.map((person, index) => renderPerson(person, index, 0))}</ul>
       </div>
     </div>
   );

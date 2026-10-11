@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import NorthwesternBackdrop from "./NorthwesternBackdrop";
 
 const timeline = [
   {
@@ -42,7 +43,8 @@ export default function RushEvents2() {
   };
 
   return (
-    <div id="rushevents2" className="relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
+    <div id="rushevents2" className="studio-rush studio-section relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
+      <NorthwesternBackdrop scene="stadium" />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center mb-16 sm:mb-20">
           <motion.h2 
@@ -69,7 +71,7 @@ export default function RushEvents2() {
               transition={{ ...naturalSpring, delay: idx * 0.1 }}
               // Natural hover physics
               whileHover={{ 
-                y: -10, 
+                y: -4,
                 scale: 1.01,
                 transition: { type: "spring", stiffness: 300, damping: 25 } 
               }}

@@ -66,7 +66,7 @@ const navigation: { name: string; href: string; icon: any }[] = [
 
 function Footer() {
   return (
-    <footer className="bg-indigo-800 w-screen">
+    <footer className="studio-footer">
       <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:flex lg:items-center lg:justify-between lg:px-8">
         <div className="flex justify-center space-x-6 lg:order-3">
           <p className="text-center text-base text-gray-50">Contact Us</p>

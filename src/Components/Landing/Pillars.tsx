@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import ArcadeSky from "./ArcadeSky";
 import {
   AcademicCapIcon,
   ArrowTrendingUpIcon,
@@ -56,7 +57,8 @@ function Pillars() {
   };
 
   return (
-    <div className="relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
+    <div id="pillars" className="studio-pillars studio-section relative bg-slate-50 py-24 sm:py-32 overflow-hidden">
+      <ArcadeSky phase={2} />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <motion.h2 
@@ -82,7 +84,7 @@ function Pillars() {
                 viewport={{ once: true }}
                 transition={{ ...naturalSpring, delay: idx * 0.1 }}
                 whileHover={{ 
-                  y: -12, 
+                  y: -4,
                   scale: 1.01,
                   transition: { type: "spring", stiffness: 300, damping: 25 } 
                 }}

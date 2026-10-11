@@ -7,25 +7,14 @@ import MemberPage from "@portal/AppContainer";
 import MemberLogin from "@auth/GoogleRedirect";
 import SignUp from "@auth/SignUp";
 import NewUserCont from "@auth/NewUserCont";
+import LandingPage from "@landing/LandingPage";
 import Maintenance from "@landing/Maintenance";
-
-import Hero from "@landing/Hero";
-import Team from "@landing/Team";
-import FAQs from "@landing/FAQs";
-import Footer from "@landing/Footer";
-import PortalAdvertisement from "@landing/PortalAdvertisement";
-import Pillars from "@landing/Pillars";
-import Greeting from "@landing/Greeting";
-import LogoCloud from "@landing/LogoCloud";
-import ReachOut from "@landing/ReachOut";
 
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/functions";
 import { getDatabase, connectDatabaseEmulator } from "firebase/database";
 // import RushEvents from "@landing/RushEvents";
-import WhyKTP from "@landing/WhyKTP";
-import RushEvents2 from "@landing/RushEvents2"
 import { getStorage, connectStorageEmulator } from "firebase/storage";
 
 const firebaseConfig = {
@@ -73,19 +62,7 @@ class Full extends React.Component {
           <Route
             path="/"
             element={
-              <div>
-                <Hero maintenance={maintenance}/>
-                <Greeting />
-                <WhyKTP />
-                <RushEvents2 />
-                <Pillars />
-                <LogoCloud />
-                <Team />
-                <PortalAdvertisement />
-                <FAQs />
-                <ReachOut />
-                <Footer />
-              </div>
+              <LandingPage maintenance={maintenance} />
             }
           ></Route>
           <Route

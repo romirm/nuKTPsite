@@ -1,0 +1,109 @@
+/* Decorative landscapes sit below the content, in the section's breathing room. */
+.ktp-landing .studio-about,
+.ktp-landing .studio-rush { isolation: isolate; overflow: clip; }
+.ktp-landing .studio-hero { padding-bottom: 224px; overflow: clip; }
+.ktp-landing .studio-about,
+.ktp-landing .studio-rush { padding-bottom: 272px; }
+.ktp-landing .studio-hero-grid,
+.ktp-landing .studio-hero-rule,
+.ktp-landing .studio-about-layout,
+.ktp-landing .studio-rush > div { position: relative; z-index: 1; }
+.ktp-landing .northwestern-backdrop {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max(100%, 760px);
+  height: 240px;
+  z-index: 0;
+  display: block;
+  overflow: visible;
+  pointer-events: none;
+  user-select: none;
+}
+.ktp-landing .northwestern-backdrop--lakefront { opacity: .8; }
+.ktp-landing .northwestern-backdrop--rock,
+.ktp-landing .northwestern-backdrop--stadium { opacity: .7; }
+.ktp-landing .campus-cloud { animation: campus-drift 28s steps(14, end) infinite alternate; }
+.ktp-landing .campus-water { animation: campus-ripple 8s steps(4, end) infinite alternate; }
+.ktp-landing .campus-stars,
+.ktp-landing .campus-windows { animation: campus-glimmer 9s steps(4, end) infinite alternate; }
+.ktp-landing .campus-fireflies { animation: campus-fireflies 6s steps(4, end) infinite alternate; }
+.ktp-landing .campus-flags { animation: campus-flags 5s steps(2, end) infinite alternate; }
+@keyframes campus-drift { to { transform: translateX(24px); } }
+@keyframes campus-ripple { to { transform: translateX(12px); opacity: .15; } }
+@keyframes campus-glimmer { to { opacity: .2; } }
+@keyframes campus-fireflies { to { transform: translateY(-8px); opacity: .15; } }
+@keyframes campus-flags { to { transform: translateY(2px); } }
+
+/* Flybys cross the section margins; their staggered timing leaves quiet gaps. */
+.ktp-landing .arcade-sky-section { overflow: clip; }
+.ktp-landing .arcade-flight {
+  position: absolute;
+  left: -64px;
+  width: 48px;
+  height: 24px;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0;
+  z-index: 0;
+}
+.ktp-landing .arcade-flight--scout {
+  top: 24px;
+  animation: arcade-scout-pass 18s linear infinite;
+  animation-delay: calc(-2s + var(--flyby-offset, 0s));
+}
+.ktp-landing .arcade-flight--saucer {
+  bottom: 24px;
+  width: 36px;
+  height: 18px;
+  animation: arcade-saucer-pass 27s linear infinite;
+  animation-delay: calc(-8s + var(--flyby-offset, 0s));
+}
+.ktp-landing .arcade-flight--meteor {
+  top: 48px;
+  left: 12%;
+  width: 30px;
+  height: 15px;
+  animation: arcade-meteor-pass 16s linear infinite;
+  animation-delay: calc(-5s + var(--flyby-offset, 0s));
+}
+.ktp-landing .studio-hero .arcade-flight--scout { top: 110px; }
+.ktp-landing .studio-hero .arcade-flight--saucer { bottom: 196px; }
+.ktp-landing .studio-hero .arcade-flight--meteor { top: auto; bottom: 184px; }
+.ktp-landing .arcade-thruster { animation: arcade-thrust .7s steps(2, end) infinite alternate; }
+@keyframes arcade-scout-pass {
+  0% { transform: translate(0, 0); opacity: 0; }
+  3% { opacity: .65; }
+  18% { transform: translate(calc(50vw + 64px), -8px); }
+  36% { transform: translate(calc(100vw + 128px), 4px); opacity: .65; }
+  37%, 100% { transform: translate(calc(100vw + 128px), 4px); opacity: 0; }
+}
+@keyframes arcade-saucer-pass {
+  0% { transform: translate(calc(100vw + 128px), 0); opacity: 0; }
+  3% { opacity: .5; }
+  24% { transform: translate(calc(50vw + 64px), -10px); }
+  48% { transform: translate(0, 0); opacity: .5; }
+  49%, 100% { transform: translate(0, 0); opacity: 0; }
+}
+@keyframes arcade-meteor-pass {
+  0%, 4% { transform: translate(0, -8px); opacity: 0; }
+  5% { opacity: .5; }
+  12% { transform: translate(28vw, 8px); opacity: 0; }
+  100% { transform: translate(28vw, 8px); opacity: 0; }
+}
+@keyframes arcade-thrust { to { opacity: .45; } }
+@media (max-width: 640px) {
+  .ktp-landing .studio-hero { padding-bottom: 148px; }
+  .ktp-landing .studio-about,
+  .ktp-landing .studio-rush { padding-bottom: 208px; }
+  .ktp-landing .northwestern-backdrop { width: 640px; height: 160px; }
+  .ktp-landing .arcade-flight--scout { width: 36px; height: 18px; }
+  .ktp-landing .arcade-flight--saucer { width: 28px; height: 14px; }
+  .ktp-landing .studio-hero .arcade-flight--saucer { bottom: 132px; }
+  .ktp-landing .studio-hero .arcade-flight--meteor { bottom: 124px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ktp-landing .northwestern-backdrop * { animation: none; }
+  .ktp-landing .arcade-flight { display: none; }
+}
