@@ -1,12 +1,9 @@
 import React from "react";
 import Swal from "sweetalert2";
-import { ref, child, get } from "firebase/database";
+import { ref, child, get } from "../../../localPortal/database";
 import PCGroup from "@images/Branding/groupPC-min.jpg";
 
 class SignUp extends React.Component {
-  constructor(props) {
-    super(props);
-  }
 
   componentDidMount() {
     this.props.firebase.auth().onAuthStateChanged((user) => {
@@ -42,19 +39,11 @@ class SignUp extends React.Component {
       });
       return;
     }
-    var credential = result.credential;
-    //var token = credential.accessToken;
 
     let timerInterval;
     sessionStorage.setItem("fullName", user.displayName);
     sessionStorage.setItem("emailAddress", user.email);
     sessionStorage.setItem("photoURL", user.photoURL);
-
-    /*
-    cases:
-    1. login from authorized nu email that has already been signed up
-    2. login from authorized nu email that has not been signed up (continue)
-    */
     const dbRef = ref(this.props.database);
     get(child(dbRef, "users/" + user.uid))
       .then((user_snapshot) => {
@@ -89,7 +78,6 @@ class SignUp extends React.Component {
             window.location.reload();
           });
         } else if (user_snapshot.val()["signed_up"]) {
-          //already_signed_up
           Swal.fire({
             title: "You are already signed up, " + user.displayName + ".",
             icon: "success",
@@ -134,7 +122,7 @@ class SignUp extends React.Component {
 
   render() {
     return (
-      <div className="flex min-h-full">
+      <div className="ktp-portal portal-auth flex min-h-full">
         <div className="flex flex-1 flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
           <div className="mx-auto w-full max-w-sm lg:w-96">
             <div>
@@ -166,13 +154,12 @@ class SignUp extends React.Component {
                             .auth()
                             .signInWithPopup(this.props.provider)
                             .then((data) => {
-                              console.log("Done with sign in");
                               this.completeSignin(data);
                             })
                             .catch((error) => {
                               const errorMessage = error.message;
                               if(String(errorMessage).includes("popup-closed")) {
-                                console.log("Tell steve that there's an issue with the popup. Reverting to redirect fallback...");
+                                console.warn("Popup sign-in failed; using redirect.");
                                 window.location.href = "/login"
                               } else if (String(errorMessage.includes("PERMISSION"))) {
                                 this.props.firebase.auth().signOut();

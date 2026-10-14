@@ -1,33 +1,37 @@
 import { useEffect, useState } from "react";
-import { ref, child, get } from "firebase/database";
+import { ref, child, get } from "../../localPortal/database";
+import { isLocalPortalDemo, isReadOnlyLivePortal } from "../../localPortal/config";
+import { localMemberCopyCount, resetDemoData } from "../../localPortal/runtime";
+import { subscribeMemberDirectory } from "../../localPortal/memberDirectory";
 import LcLeaderboard from "@tabs/LcLeaderboard/LcLeaderboard";
 import PledgeTracker from "@tabs/PledgeTracker/PledgeTracker";
 import DirectoryContainer from "@tabs/Directory/DirectoryContainer";
+import { isAlumniProfile } from "@tabs/Directory/directoryModel";
 import NewUser from "@auth/NewUser";
 import PledgeCalendar from "@tabs/Calendar/PledgeCalendar";
-import PledgeResources from "@tabs/Resources/PledgeResources";
-import MemberMapHub from "./Tabs/Geo/MemberMapHub";
-import FeedbackHub from "./Tabs/Feedback/FeedbackHub";
+import MemberMapHub from "@tabs/Geo/MemberMapHub";
+import SocialGraph from "@tabs/SocialGraph/SocialGraph";
 import Logo from "@/Assets/Images/Branding/Logo.png";
 import AdminPanel from "@tabs/Admin/AdminPanel";
 import DesktopSidebar from "@portal/Framework/DesktopSidebar";
 import MobileSidebar from "@portal/Framework/MobileSidebar";
+import PortalBackdrop from "@portal/Framework/PortalBackdrop";
 import Swal from "sweetalert2";
 import { ActiveProfileContext } from "@portal/Framework/ActiveProfileContext";
+import "./portal.css";
+import "./portal-world.css";
 import {
   Bars3Icon,
   CogIcon,
   MagnifyingGlassCircleIcon,
   WrenchScrewdriverIcon,
   CalendarIcon,
-  FolderIcon,
+  AcademicCapIcon,
   BoltIcon,
   ClipboardDocumentListIcon,
   GlobeAltIcon,
-  ChatBubbleLeftRightIcon,
+  ShareIcon,
 } from "@heroicons/react/24/outline";
-
-//Default user to show while loading, replaced by real user after. Image data encoded in the code.
 const defaultUser = {
   name: "Loading",
   imageUrl:
@@ -37,15 +41,17 @@ const navigation = {
   Members: {
     name: "Members",
     icon: MagnifyingGlassCircleIcon,
-    current: true,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
   },
+  Alumni: {
+    name: "Alumni", icon: AcademicCapIcon, current: false,
+    secondary: false, adminonly: false, pledgeonly: false,
+  },
   Calendar: {
     name: "Calendar",
     icon: CalendarIcon,
-    current: false,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
@@ -53,15 +59,6 @@ const navigation = {
   PledgeTracker: {
     name: "Pledge Tracker",
     icon: ClipboardDocumentListIcon,
-    current: false,
-    secondary: false,
-    adminonly: false,
-    pledgeonly: false,
-  },
-  Feedback: {
-    name: "Feedback",
-    icon: ChatBubbleLeftRightIcon,
-    current: false,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
@@ -69,7 +66,6 @@ const navigation = {
   Leaderboard: {
     name: "LC Leaderboard",
     icon: BoltIcon,
-    current: false,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
@@ -77,15 +73,13 @@ const navigation = {
   Maps: {
     name: "Maps",
     icon: GlobeAltIcon,
-    current: false,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
   },
-  Resources: {
-    name: "Resources",
-    icon: FolderIcon,
-    current: false,
+  SocialGraph: {
+    name: "Connections",
+    icon: ShareIcon,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
@@ -93,7 +87,6 @@ const navigation = {
   Admin: {
     name: "Admin",
     icon: WrenchScrewdriverIcon,
-    current: false,
     secondary: true,
     adminonly: true,
     pledgeonly: false,
@@ -101,16 +94,11 @@ const navigation = {
   Profile: {
     name: "Edit Profile",
     icon: CogIcon,
-    current: false,
     secondary: true,
     adminonly: false,
     pledgeonly: false,
   },
 };
-
-function classNames(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
-}
 
 export default function AppContainer(props: { firebase: any, database: any, storage: any }) {
   /* Used by App container/sidebars exclusively */
@@ -119,6 +107,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
   const [pledge, setPledge] = useState(false);
   const [user, setUser] = useState(defaultUser);
   const [currTab, setCurrTab] = useState("Members");
+  const [directoryTarget, setDirectoryTarget] = useState("");
 
   /* Used by tabs */
   const [currUserUid, setCurrUserUid] = useState("");
@@ -130,54 +119,32 @@ export default function AppContainer(props: { firebase: any, database: any, stor
     if (localStorage.getItem("justSetup") === "true") {
       localStorage.setItem("justSetup", "false");
     }
-    props.firebase.auth().onAuthStateChanged((user: any) => {
+    let stopDirectory = () => {};
+    const stopAuth = props.firebase.auth().onAuthStateChanged((user: any) => {
+      stopDirectory();
       if (user) {
         var newUser: any = {};
-        var dir: any = {};
-        var allowedUsersData: any = {};
         const dbRef = ref(props.database);
         setCurrUserUid(user.uid);
-        
-        // Load both public_users and allowed_users
-        Promise.all([
-          get(child(dbRef, "public_users")),
-          get(child(dbRef, "allowed_users"))
-        ])
-          .then(([publicSnapshot, allowedSnapshot]) => {
-            if (!publicSnapshot.exists()) {
-              throw new Error("public_users data not found");
-            }
-            dir = publicSnapshot.val();
-            if (!dir || typeof dir !== "object") {
-              throw new Error("public_users data is malformed");
-            }
-            
-            // Get allowed_users data if available
-            if (allowedSnapshot.exists()) {
-              allowedUsersData = allowedSnapshot.val();
 
-              if (allowedUsersData && typeof allowedUsersData === "object") {
-                // Merge role from allowed_users into public_users
-                for (let uid in dir) {
-                  const publicProfile = dir[uid];
-                  const allowedProfile = allowedUsersData[uid];
+        const handleDirectoryError = (error: Error) => {
+            console.error("Error loading user profile:", error);
 
-                  if (
-                    publicProfile &&
-                    typeof publicProfile === "object" &&
-                    allowedProfile &&
-                    typeof allowedProfile === "object" &&
-                    typeof allowedProfile.role === "string"
-                  ) {
-                    publicProfile.role = allowedProfile.role;
-                  }
-                }
-              }
-            }
-            
+            Swal.fire({
+              icon: "error",
+              title: "Error loading profile",
+              text: "There was an error loading your profile. Please try signing in again or contact support@ktpnu.com if the issue persists.",
+            }).then(() => {
+              props.firebase.auth().signOut();
+              window.location.href = "/signup";
+            });
+        };
+        let initialDirectory = true;
+        stopDirectory = subscribeMemberDirectory(props.database, (dir) => {
             const currProfile = dir[user.uid];
             if (!currProfile || typeof currProfile !== "object") {
-              throw new Error("User profile not found in public_users");
+              handleDirectoryError(new Error("User profile not found in public_users"));
+              return;
             }
             newUser.name =
               typeof currProfile["name"] === "string" && currProfile["name"].trim().length > 0
@@ -188,33 +155,13 @@ export default function AppContainer(props: { firebase: any, database: any, stor
               currProfile["profile_pic_link"] ||
               user.photoURL ||
               defaultUser.imageUrl;
-            
-            setUser(newUser);
+
+            setUser({ ...newUser });
             setFullPubDir(dir);
-          })
-          .catch((error) => {
-            console.error("Error loading user profile:", error);
-            
-            // Allow localhost to continue with mock data
-            if (window.location.hostname === "localhost") {
-              console.log("Localhost: Using mock profile data");
-              setUser({
-                name: user.displayName || "Dev User",
-                imageUrl: user.photoURL || defaultUser.imageUrl,
-              });
-              setFullPubDir({});
-              return;
-            }
-            
-            Swal.fire({
-              icon: "error",
-              title: "Error loading profile",
-              text: "There was an error loading your profile. Please try signing in again or contact support@ktpnu.com if the issue persists.",
-            }).then(() => {
-              props.firebase.auth().signOut();
-              window.location.href = "/signup";
-            });
-          });
+            setPledge(currProfile.role === "Pledge");
+            if (initialDirectory && isAlumniProfile(currProfile)) setCurrTab("Alumni");
+            initialDirectory = false;
+          }, handleDirectoryError);
         get(child(dbRef, "users/" + user.uid))
           .then((snapshot) => {
             if (!snapshot.exists()) {
@@ -222,29 +169,12 @@ export default function AppContainer(props: { firebase: any, database: any, stor
               return;
             }
             const prof = snapshot.val();
-            if (prof["admin"]) {
-              setAdmin(true);
-            }
-            if (prof["Role"] === "Pledge") {
-              setPledge(true);
-            }
+            setAdmin(Boolean(prof["admin"]));
           })
           .catch((error) => {
             console.error("Error loading user permissions:", error);
           });
       } else {
-        // Allow localhost access without authentication for development
-        if (window.location.hostname === "localhost") {
-          console.log("Localhost detected - bypassing authentication");
-          setUser({
-            name: "Dev User",
-            imageUrl: defaultUser.imageUrl,
-          });
-          setCurrUserUid("dev-user-id");
-          setAdmin(true); // Give admin access in dev mode
-          return;
-        }
-        
         let timerInterval: any;
         Swal.fire({
           title: "You are signed out. Redirecting to login...",
@@ -259,12 +189,14 @@ export default function AppContainer(props: { firebase: any, database: any, stor
         });
       }
     });
+    return () => { stopAuth(); stopDirectory(); };
   }, []);
 
   //When sidebar tab is clicked, change the navigation state to reflect the new tab
   function onTabClick(nextButton: string) {
-    console.log("Tab clicked: " + nextButton);
-    setCurrTab(nextButton);
+    setDirectoryTarget("");
+    setCurrTab(nextButton === "MyProfile" ? (isAlumniProfile((fullPubDir as any)[currUserUid]) ? "Alumni" : "Members") : nextButton);
+    if (nextButton === "MyProfile") { setDirectoryTarget(currUserUid); setActiveProfile(currUserUid); }
     setSidebarOpen(false);
   }
 
@@ -283,18 +215,27 @@ export default function AppContainer(props: { firebase: any, database: any, stor
   function renderCurrentTab() {
     switch (currTab) {
       case "Members":
+      case "Alumni":
         return (
           <ActiveProfileContext.Provider value={value}>
-            <DirectoryContainer fullPubDir={fullPubDir} uid={currUserUid} />
+            <DirectoryContainer key={currTab} population={currTab === "Alumni" ? "alumni" : "members"} fullPubDir={fullPubDir} uid={currUserUid} initialProfileUid={directoryTarget} />
           </ActiveProfileContext.Provider>
         );
+      case "SocialGraph":
+        return <SocialGraph fullPubDir={fullPubDir} uid={currUserUid} onOpenProfile={(id) => {
+          setDirectoryTarget(id);
+          setActiveProfile(id);
+          setCurrTab(isAlumniProfile((fullPubDir as any)[id]) ? "Alumni" : "Members");
+        }} />;
       case "Profile":
         return (
           <NewUser
+            key={isAlumniProfile((fullPubDir as any)[currUserUid]) ? "alumni-editor" : "member-editor"}
             firebase={props.firebase}
             database={props.database}
             storage={props.storage}
             newuser={false}
+            alumni={isAlumniProfile((fullPubDir as any)[currUserUid])}
           />
         );
       case "Calendar":
@@ -325,12 +266,6 @@ export default function AppContainer(props: { firebase: any, database: any, stor
             <PledgeTracker fullPubDir={fullPubDir} />
           </div>
         );
-      case "Resources":
-        return (
-          <div className="overflow-y-auto">
-            <PledgeResources />
-          </div>
-        );
       case "Maps":
         return (
           <div className="h-full">
@@ -338,18 +273,6 @@ export default function AppContainer(props: { firebase: any, database: any, stor
               fullPubDir={fullPubDir}
               database={props.database}
               uid={currUserUid}
-            />
-          </div>
-        );
-      case "Feedback":
-        return (
-          <div className="h-full">
-            <FeedbackHub
-              database={props.database}
-              uid={currUserUid}
-              currentUserName={user.name}
-              currentUserImage={user.imageUrl}
-              isAdmin={admin}
             />
           </div>
         );
@@ -363,52 +286,44 @@ export default function AppContainer(props: { firebase: any, database: any, stor
   }
 
   return (
-    <div
-      className={classNames(
-        currTab=="Profile" ? "h-full" : "h-screen",
-        "flex"
-      )}
-    >
+    <div className="ktp-portal portal-app">
       <ActiveProfileContext.Provider value={value}>
-        {/* Dynamic sidebar for mobile */}
+
         <MobileSidebar
           args={args}
           sideBarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
         />
 
-        {/* Static sidebar for desktop */}
         <DesktopSidebar args={args} />
       </ActiveProfileContext.Provider>
 
-      {/* Main content area */}
-      <div className="flex min-w-0 flex-1 flex-col ">
-        <div className="lg:hidden">
-          <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-1.5">
-            <div>
-              <img
-                className="cursor-pointer h-8 w-auto"
-                src="https://is5-ssl.mzstatic.com/image/thumb/Purple122/v4/f3/9b/6e/f39b6e96-766a-39cd-184b-2f5286f40c81/AppIcon-0-0-1x_U007emarketing-0-0-0-10-0-0-sRGB-0-0-0-GLES2_U002c0-512MB-85-220-0-0.png/246x0w.webp"
-                alt="Kappa Theta Pi"
-                onClick={() => {
-                  window.location.href = "/";
-                }}
-              />
-            </div>
-            <div>
-              <button
-                type="button"
-                className="-mr-3 inline-flex h-12 w-12 items-center justify-center rounded-md text-gray-500 hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-600"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <span className="sr-only">Open sidebar</span>
-                <Bars3Icon className="h-6 w-6" aria-hidden="true" />
-              </button>
-            </div>
+      <div className="portal-workspace" data-portal-view={currTab}>
+        <PortalBackdrop />
+        {isReadOnlyLivePortal && (
+          <div className="portal-preview-banner portal-preview-live">
+            <span><strong>Live Firebase · Read-only</strong> · Database edits, uploads, and admin actions are blocked</span>
+            <button type="button" className="font-semibold underline" onClick={() => props.firebase.auth().signOut()}>Sign out</button>
           </div>
-        </div>
-
-        {renderCurrentTab()}
+        )}
+        {isLocalPortalDemo && (
+          <div className="portal-preview-banner">
+            <span><strong>Local demo</strong> · Sample admin account{localMemberCopyCount() > 0 ? ` · ${localMemberCopyCount()} member profile copies` : ""} · Changes stay in this browser session</span>
+            <button type="button" className="font-semibold underline" onClick={resetDemoData}>Reset sample data</button>
+          </div>
+        )}
+        <header className="portal-topbar">
+          <div className="portal-topbar-title">
+            <button type="button" className="portal-menu-button lg:hidden" onClick={() => setSidebarOpen(true)}>
+              <span className="sr-only">Open sidebar</span><Bars3Icon aria-hidden="true" />
+            </button>
+            <h1>{navigation[currTab as keyof typeof navigation].name}</h1>
+          </div>
+          <button type="button" className="portal-topbar-profile" onClick={() => { onTabClick("MyProfile"); setActiveProfile(currUserUid); }}>
+            <span>{user.name}</span><img src={user.imageUrl} alt="" />
+          </button>
+        </header>
+        <div key={currTab} className="portal-tab-region" data-portal-tab={currTab}>{renderCurrentTab()}</div>
       </div>
     </div>
   );

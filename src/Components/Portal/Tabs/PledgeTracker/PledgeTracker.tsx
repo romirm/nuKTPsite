@@ -111,11 +111,11 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
   }, [fullPubDir, sortMode]);
 
   return (
-    <div className="bg-white h-screen overflow-y-scroll">
+    <div className="portal-page-scroll bg-white h-full overflow-y-auto">
       <div className="mx-auto max-w-7xl py-12 px-6">
         <div className="space-y-12">
           <div className="space-y-5 sm:space-y-4">
-            <div>
+            <div className="portal-page-heading">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 Pledge Tracker
               </h2>
@@ -148,7 +148,7 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
                 );
               })}
             </div>
-            <p className="text-gray-500 italic">
+            <p className="portal-page-note text-gray-500 italic">
               {sortMode === "alphabetical"
                 ? "Pledges are listed alphabetically by name."
                 : sortMode === "pledgePoints"
@@ -167,12 +167,12 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
             ) : (
               <ul
                 role="list"
-                className="space-y-12 sm:-mt-8 sm:space-y-0 sm:divide-y sm:divide-gray-200 lg:gap-x-8 lg:space-y-0"
+                className="portal-score-list space-y-12 sm:-mt-8 sm:space-y-0 sm:divide-y sm:divide-gray-200 lg:gap-x-8 lg:space-y-0"
               >
                 {pledgeUsers.map((pledgeUser) => (
                   <li key={pledgeUser.uid} className="sm:pt-5">
                     <div className="space-y-4 sm:grid sm:grid-cols-3 sm:items-start sm:gap-6 sm:space-y-0 max-w-4xl">
-                      <div className="max-w-[200px] max-h-[200px] mt-[0.335rem]">
+                      <div className="portal-score-avatar max-w-[200px] max-h-[200px] mt-[0.335rem]">
                         <div className="aspect-square overflow-hidden rounded-lg">
                           <img
                             className="rounded-lg shadow-lg object-cover min-w-full min-h-full"

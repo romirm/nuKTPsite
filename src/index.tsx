@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MemberPage from "@portal/AppContainer";
 import MemberLogin from "@auth/GoogleRedirect";
 import SignUp from "@auth/SignUp";
@@ -13,13 +13,15 @@ import Maintenance from "@landing/Maintenance";
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/functions";
-import { getDatabase, connectDatabaseEmulator } from "firebase/database";
-// import RushEvents from "@landing/RushEvents";
-import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { getDatabase, connectDatabaseEmulator } from "firebase/database";import { getStorage, connectStorageEmulator } from "firebase/storage";
+import { isLocalPortalDemo, isReadOnlyLivePortal } from "./localPortal/config";
+import { demoFirebase, demoDatabase, demoStorage, loadLocalMemberSnapshot } from "./localPortal/runtime";
+import { createReadOnlyFirebase } from "./localPortal/readOnly";
+import LivePortalGate from "./localPortal/LivePortalGate";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBY_olTq-IJkQs1-VXTCgxIUzlD7_-3MXQ",
-  authDomain: "www.ktpnu.com",
+  authDomain: isReadOnlyLivePortal ? "ktp-site.firebaseapp.com" : "www.ktpnu.com",
   projectId: "ktp-site",
   storageBucket: "ktp-site.appspot.com",
   messagingSenderId: "239929865580",
@@ -31,10 +33,14 @@ const firebaseConfig = {
 const app = firebase.initializeApp(firebaseConfig);
 var provider = new firebase.auth.GoogleAuthProvider();
 provider.addScope("https://www.googleapis.com/auth/userinfo.profile");
+if (isReadOnlyLivePortal) provider.setCustomParameters({ prompt: "select_account" });
 var database: any;
 var storage: any;
 
-if (window.location.hostname === "localhost") {
+if (isLocalPortalDemo) {
+  database = demoDatabase;
+  storage = demoStorage;
+} else if (!isReadOnlyLivePortal && ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
   database = getDatabase();
   storage = getStorage();
   connectDatabaseEmulator(database, "localhost", 9000);
@@ -53,6 +59,9 @@ if (window.location.hostname === "localhost") {
 }
 
 const maintenance = false;
+const portalFirebase = isLocalPortalDemo ? demoFirebase : isReadOnlyLivePortal ? createReadOnlyFirebase(firebase) : firebase;
+const localPortalAccess = isLocalPortalDemo || isReadOnlyLivePortal;
+const memberPage = <MemberPage firebase={portalFirebase} database={database} storage={storage} />;
 
 class Full extends React.Component {
   render() {
@@ -68,17 +77,17 @@ class Full extends React.Component {
           <Route
             path="/member"
             element={
-              <MemberPage
-                firebase={firebase}
-                database={database}
-                storage={storage}
-              />
+              isReadOnlyLivePortal ? (
+                <LivePortalGate firebase={portalFirebase} provider={provider} database={database}>
+                  {memberPage}
+                </LivePortalGate>
+              ) : memberPage
             }
           ></Route>
           <Route
             path="/login"
             element={
-              <MemberLogin
+              localPortalAccess ? <Navigate to="/member" replace /> : <MemberLogin
                 firebase={firebase}
                 provider={provider}
                 database={database}
@@ -88,7 +97,7 @@ class Full extends React.Component {
           <Route
             path="/signup"
             element={
-              <SignUp
+              localPortalAccess ? <Navigate to="/member" replace /> : <SignUp
                 firebase={firebase}
                 database={database}
                 provider={provider}
@@ -99,7 +108,7 @@ class Full extends React.Component {
           <Route
             path="/newuser"
             element={
-              <NewUserCont
+              localPortalAccess ? <Navigate to="/member" replace /> : <NewUserCont
                 firebase={firebase}
                 provider={provider}
                 database={database}
@@ -117,4 +126,8 @@ class Full extends React.Component {
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
-root.render(<Full />);
+async function renderApplication() {
+  if (isLocalPortalDemo) await loadLocalMemberSnapshot();
+  root.render(<Full />);
+}
+void renderApplication();

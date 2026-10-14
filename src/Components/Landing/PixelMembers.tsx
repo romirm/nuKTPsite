@@ -24,7 +24,7 @@ function Member({ activity }: { activity: Activity }) {
   const standing = activity === "biotech" || activity === "neuroscience";
   return <g transform={`translate(${x} ${y}) scale(2)`} fill="#cab0f3" className={`activity-ninja activity-ninja--${activity}${standing ? " member-working" : ""}`} data-member-pose={activity}>
     {activity === "software" && <>
-      {/* Cross-legged on the ground, typing on a laptop balanced on their lap. */}
+
       <path d="M6 9h9v9H6zM4 17h14v3h4v3H0v-3h4z" />
       <path fill={purple} d="M6 15h9v2H6zM5 20h6v2H5zM13 18h3v3h-3z" />
       <g className="activity-typing"><path d="M5 11h3v5h6v3H5zM13 11h3v4h5v3h-8z" /></g>
@@ -32,7 +32,7 @@ function Member({ activity }: { activity: Activity }) {
     </>}
     {activity === "biotech" && <CompactNinjaArtwork />}
     {activity === "quant" && <>
-      {/* Seated, one hand at the chin and the other pointing to a trading chart. */}
+
       <path d="M7 9h9v8H7zM7 16h7v5h-3v5H5v-2h3v-5H7zM14 17h5v6h4v3h-9z" />
       <path fill={purple} d="M7 15h9v2H7zM14 24h9v2h-9z" />
       <path d="M5 11h3V8h4v3h-2v4H5z" />
@@ -40,7 +40,7 @@ function Member({ activity }: { activity: Activity }) {
       <MemberHead x={4} />
     </>}
     {activity === "chemical" && <>
-      {/* Wide stance, lifting a specimen to eye level while reaching for the reactor. */}
+
       <path d="M4 9h9v8H4zM4 16h4v5H3v2H0v-4h4zM9 16h4v4h4v3H9zM12 11h4v2h2v3h-6z" />
       <path fill={purple} d="M4 15h9v2H4z" />
       <g className="activity-flask-hand">
@@ -51,7 +51,7 @@ function Member({ activity }: { activity: Activity }) {
       <MemberHead x={1} />
     </>}
     {activity === "mechanical" && <>
-      {/* One knee down, the other foot planted, wrench reaching into the robot base. */}
+
       <path d="M7 9h9v3h-3v3H5v-3h2zM6 14h5v2H6v2H0v-2h6zM11 14h5v2h6v2H11z" />
       <path fill={purple} d="M6 13h7v2H6zM16 16h4v2h-4z" />
       <path d="M4 11h4v4H3v-2h1z" />
@@ -62,7 +62,7 @@ function Member({ activity }: { activity: Activity }) {
       <MemberHead x={4} />
     </>}
     {activity === "electrical" && <>
-      {/* Low crouch, a steady hand soldering the circuit board at floor level. */}
+
       <path d="M8 9h8v5H6v-3h2zM3 14h7v5H0v-2h3zM10 13h6v4h4v2H10z" />
       <path fill={purple} d="M7 12h8v2H7zM12 17h6v2h-6z" />
       <path d="M6 10h3v5H3v-2h3z" />
@@ -110,7 +110,7 @@ function Gear({ x, y, small = false }: { x: number; y: number; small?: boolean }
 }
 
 /** Decorative dioramas share the scroll mascot; integer coordinates keep the art crisp. */
-export default function PixelMembers({ activity, x, y }: { activity: Activity; x: number; y: number }) {
+export default function PixelMembers({ activity, x, y, chartStyle = "trading" }: { activity: Activity; x: number; y: number; chartStyle?: "trading" | "data" }) {
   return <g transform={`translate(${x} ${y - 96})`} className={`pixel-members pixel-members--${activity}`} data-member-activity={activity}>
     <path fill={ink} opacity=".65" d="M8 90h130v6H8z" />
     <path fill={mid} opacity=".45" d="M0 94v-6h2v4h4v-8h2v10zM144 94v-8h2v6h4v-4h2v6z" />
@@ -119,7 +119,7 @@ export default function PixelMembers({ activity, x, y }: { activity: Activity; x
     {!["quant", "electrical", "neuroscience"].includes(activity) && <Member activity={activity} />}
 
     {activity === "software" && <>
-      {/* Laptop sits on the cross-legged coder's lap rather than another desk. */}
+
       <g transform="translate(-16 20)">
       <path fill={mid} d="M56 38h44v26H56zM50 62h58v4H50z" />
       <path fill={lilac} d="M56 38h44v2H56zM50 62h58v2H50z" />
@@ -137,7 +137,7 @@ export default function PixelMembers({ activity, x, y }: { activity: Activity; x
     </>}
 
     {activity === "biotech" && <>
-      {/* Stepped microscope, specimen rack and a glowing DNA helix. */}
+
       <path fill={mid} d="M54 62h40v4H54zM68 40h6v22h-6zM68 40v-8h8v-8h8v6h-4v8h-6v4zM78 20h14v6H78z" />
       <path fill={lilac} d="M54 60h40v2H54zM76 46h16v4H76zM84 26h4v8h-4z" />
       <path fill={light} d="M78 44h10v2H78z" />
@@ -148,22 +148,28 @@ export default function PixelMembers({ activity, x, y }: { activity: Activity; x
     </>}
 
     {activity === "quant" && <>
-      {/* Two trading displays and a keyboard. */}
+
       <Monitor x={52} y={26}>
         <path fill={purple} d="M6 18h26v2H6zM6 10h26v2H6z" />
         <path className="member-chart" fill={light} d="M6 20h6v-4h6v-6h6v4h6V6h2v10H22v-4h-2v6h-6v4H6z" />
       </Monitor>
       <Monitor x={96} y={26}>
+        {chartStyle === "data" ? <>
+          <path fill={mid} d="M8 6h2v16h20v2H8z" />
+          <g className="member-chart" fill={light}><path d="M12 16h4v6h-4zM18 12h4v10h-4zM24 8h4v14h-4z" /></g>
+          <path fill={lilac} d="M12 8h2v2h-2zM18 6h2v2h-2zM26 4h2v2h-2z"/>
+        </> : <>
         <path fill={lilac} d="M8 14h4v6H8zM16 8h4v8h-4zM24 10h4v10h-4z" />
         <path className="member-cursor" fill={light} d="M8 12h4v2H8zM16 6h4v2h-4zM24 8h4v2h-4z" />
         <path fill={mid} d="M9 10h2v12H9zM17 4h2v16h-2zM25 6h2v16h-2z" />
+        </>}
       </Monitor>
       <path fill={lilac} d="M56 62h32v4H56z" /><path fill={dark} d="M60 62h4v2h-4zM68 62h4v2h-4zM76 62h4v2h-4z" />
       <Member activity={activity} />
     </>}
 
     {activity === "chemical" && <>
-      {/* Process vessel and glass reactor with connecting pipes and bubbles. */}
+
       <path fill={mid} d="M58 28h24v6h4v28h-4v4H58v-4h-4V34h4z" />
       <path fill={lilac} d="M58 28h24v4H58zM58 34h4v26h-4zM64 22h12v6H64z" />
       <path fill={ink} d="M68 38h12v18H68z" /><path fill={purple} d="M68 48h12v8H68z" />
@@ -175,7 +181,7 @@ export default function PixelMembers({ activity, x, y }: { activity: Activity; x
     </>}
 
     {activity === "mechanical" && <>
-      {/* Articulated robotic arm, turning gears and an open toolbox. */}
+
       <g transform="translate(0 22)">
       <path fill={mid} d="M60 62h28v4H60zM70 50h8v12h-8z" />
       <g transform="translate(74 50)"><g className="member-robot-arm">
@@ -189,7 +195,7 @@ export default function PixelMembers({ activity, x, y }: { activity: Activity; x
     </>}
 
     {activity === "electrical" && <>
-      {/* Circuit board, oscilloscope and powered test bulb. */}
+
       <g transform="translate(0 22)">
       <Monitor x={92} y={24}>
         <path fill={purple} d="M6 14h26v2H6zM18 6h2v16h-2z" />
@@ -209,7 +215,7 @@ export default function PixelMembers({ activity, x, y }: { activity: Activity; x
     </>}
 
     {activity === "neuroscience" && <>
-      {/* Peaceful miniature operating room with a brain scan and ECG. */}
+
       <path fill={mid} d="M54 64h66v6H54zM58 70h6v20h-6zM110 70h6v20h-6z" />
       <path fill={lilac} d="M56 56h16v8H56z" /><path fill={purple} d="M72 56h40v8H72zM80 52h24v4H80z" />
       <path fill={light} d="M76 56h4v8h-4z" /><path fill={mid} d="M128 24h4v66h-4zM126 84h10v4h-10z" />

@@ -1,0 +1,78 @@
+.portal-tab-region[data-portal-tab=Maps] { padding: 20px 24px 26px; overflow: hidden; }
+.portal-tab-region[data-portal-tab=Maps] > div { height: 100%; }
+.member-globe { position: relative; height: 100%; min-height: 360px; overflow: hidden; border: 1px solid #a18aba90; border-radius: 3px; box-shadow: 6px 6px 0 #160e2780, inset 0 2px #cab0f333; background: radial-gradient(ellipse at 55% 40%, #65409566, transparent 65%), linear-gradient(145deg, #352052, #211235 75%); }
+.member-globe::before { content: ""; position: absolute; inset: 0; background-image: radial-gradient(#d8c4ff80 1px, transparent 1px), radial-gradient(#a18aba60 1px, transparent 1px); background-size: 171px 213px, 293px 317px; background-position: 46px 84px, 108px 162px; opacity: .22; pointer-events: none; }
+.member-globe::after { content: ""; position: absolute; z-index: 1; inset: 0 0 auto; height: 112px; background: linear-gradient(#211235f5 55%, transparent); pointer-events: none; }
+.globe-canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.globe-canvas:active { cursor: grabbing; }
+.globe-canvas.globe-placing { cursor: crosshair; }
+.globe-canvas:focus-visible { outline-offset: -4px; }
+.globe-heading { position: absolute; z-index: 2; top: 24px; left: 26px; padding-left: 14px; border-left: 2px solid #a18aba; pointer-events: none; }
+.ktp-portal .globe-heading h2 { color: #f6f1fc; font-size: 22px; font-weight: 650; text-shadow: 2px 2px 0 #160e2780; }
+.globe-heading p { margin-top: 6px; color: #c8b7dc; font-size: 12px; }
+.globe-mode { margin-left: 10px; font-size: 10px; color: #d8c4ff; }
+.globe-controls { position: absolute; z-index: 3; top: 24px; right: 26px; display: flex; align-items: center; gap: 10px; }
+.globe-controls button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px; padding: 8px 10px; font-size: 12px; font-weight: 600; background: #30194df2; color: #f6f1fc; border: 1px solid #a18aba80; border-radius: 3px; }
+.globe-controls .globe-my-pin { background: #4e2a84; box-shadow: 3px 3px 0 #160e27; }
+.globe-controls button:hover { background: #654095; border-color: #cab0f3; }
+.globe-controls button:disabled { opacity: .4; }
+.globe-controls svg, .globe-panel-header svg, .globe-message svg { width: 18px; height: 18px; }
+.globe-zoom-controls { display: flex; overflow: hidden; border: 1px solid #a18aba80; border-radius: 3px; box-shadow: 3px 3px 0 #160e27; }
+.globe-zoom-controls button { border: 0; border-radius: 0; }
+.globe-zoom-controls button + button { border-left: 1px solid #a18aba40; }
+.globe-pin { cursor: pointer; outline: none; }
+.globe-pin > circle:nth-child(2) { transition: fill-opacity .15s; }
+.globe-pin:focus > circle:nth-child(2), .globe-pin:hover > circle:nth-child(2) { fill-opacity: .4; stroke: #cab0f3; stroke-width: .8; }
+.globe-pin-tooltip { position: absolute; z-index: 6; width: 238px; max-width: calc(100% - 24px); max-height: min(280px, calc(100% - 24px)); overflow-y: auto; padding: 13px 14px; color: #f6f1fc; background: linear-gradient(145deg, #352052f5, #211235fa); border: 1px solid #a18aba90; border-radius: 3px; box-shadow: 4px 4px 0 #160e2780, inset 0 2px #cab0f326; pointer-events: auto; animation: globe-tooltip-in .12s ease-out; }
+.globe-tooltip-kicker { color: #b8abc9; font-size: 10px; margin-bottom: 9px; }
+.globe-tooltip-member { display: flex; align-items: center; gap: 10px; padding-block: 3px; }
+.globe-tooltip-avatar { display: grid; place-items: center; flex-shrink: 0; width: 30px; height: 30px; background: #4e2a8460; border: 1px solid #a18aba45; border-radius: 50%; color: #d8c4ff; font-size: 10px; font-weight: 650; }
+.globe-tooltip-member > div { min-width: 0; }
+.globe-tooltip-member strong { display: block; color: #f6f1fc; font-size: 13px; font-weight: 650; line-height: 1.4; overflow-wrap: anywhere; }
+.globe-tooltip-member > div > span { display: block; margin-top: 2px; color: #c3b5d5; font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+@keyframes globe-tooltip-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+.globe-floating-panel { position: absolute; z-index: 4; background: linear-gradient(145deg, #faf6fd, #e9e1f0); border: 1px solid #a18aba; box-shadow: 5px 5px 0 #160e2799; border-radius: 3px; padding: 18px; color: #302938; }
+.globe-editor { top: 82px; right: 26px; width: 300px; max-height: calc(100% - 104px); overflow-y: auto; }
+.globe-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: -18px -18px 16px; padding: 13px 18px; background: #30194d; border-bottom: 1px solid #a18aba; box-shadow: inset 0 2px #cab0f333; }
+.ktp-portal .globe-panel-header h3 { color: #f6f1fc; font-size: 15px; font-weight: 650; }
+.globe-panel-header > span { color: #d3c6e4; font-size: 11px; }
+.globe-panel-header button { padding: 3px; color: #d3c6e4; }
+.globe-panel-header button:hover { color: #fff; background: #4e2a84; }
+.globe-editor > p { color: #726a7b; font-size: 12px; line-height: 1.6; margin-bottom: 16px; }
+.globe-editor form { display: flex; flex-direction: column; gap: 12px; }
+.globe-editor label { display: flex; flex-direction: column; gap: 5px; font-size: 12px; }
+.globe-editor input { width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid var(--portal-line); font-size: 13px; }
+.ktp-portal.portal-app .globe-editor input { border-radius: 3px; border-color: #baa5ce; background: #fdfbff; }
+.globe-city-search { padding-bottom: 13px; border-bottom: 1px solid #ded5e9; }
+.globe-city-search-input { display: flex; gap: 5px; margin-top: 5px; }
+.globe-city-search-input input { flex: 1; }
+.globe-city-search-input button { display: grid; place-items: center; flex-shrink: 0; width: 35px; border-radius: 3px; border: 1px solid #79599e; background: #4e2a84; color: #fff; }
+.globe-city-search-input button:disabled { opacity: .45; }
+.globe-city-search-input svg { width: 17px; height: 17px; }
+.globe-search-status { margin-top: 7px; font-size: 11px; color: #726a7b; }
+.globe-city-results { max-height: 182px; overflow-y: auto; margin-top: 8px; border: 1px solid #baa5ce; border-radius: 3px; background: #fdfbff; }
+.globe-city-results li + li { border-top: 1px solid #eee8f3; }
+.globe-city-results button { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px; text-align: left; }
+.globe-city-results button:hover { background: #f0eaf7; }
+.globe-city-results svg { width: 15px; height: 15px; flex-shrink: 0; color: #795899; }
+.globe-city-results strong { display: block; font-size: 12px; font-weight: 650; color: #302938; }
+.globe-city-results small { display: block; font-size: 10px; color: #726a7b; }
+.globe-search-credit { display: block; margin-top: 7px; color: #726a7b; font-size: 9px; }
+.globe-search-credit:hover { color: #4e2a84; }
+.globe-coordinates { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.globe-editor summary { color: #726a7b; font-size: 11px; cursor: pointer; }
+.globe-save { padding: 9px 12px; border: 1px solid #79599e; border-radius: 3px; box-shadow: 3px 3px 0 #30194d33; color: #fff; background: #4e2a84; font-size: 12px; font-weight: 650; }
+.globe-save:hover, .globe-city-search-input button:hover { background: #654095; }
+.globe-save:disabled { opacity: .5; }
+.globe-remove { font-size: 11px; color: #9f3546; }
+.globe-message { position: absolute; z-index: 5; bottom: 26px; right: 26px; max-width: 290px; display: flex; align-items: center; gap: 12px; padding: 12px 14px; color: #f6f1fc; background: #4e2a84; border: 1px solid #a18aba80; border-radius: 3px; box-shadow: 3px 3px 0 #160e27; font-size: 12px; }
+@media(max-width:639px) {
+  .portal-tab-region[data-portal-tab=Maps] { padding: 12px 12px 18px; }
+  .globe-heading { top: 20px; left: 18px; }
+  .ktp-portal .globe-heading h2 { font-size: 19px; }
+  .globe-controls { top: 88px; right: 18px; left: 18px; justify-content: space-between; }
+  .globe-editor { top: auto; bottom: 14px; left: 18px; right: 18px; width: auto; max-height: 45%; }
+  .globe-message { bottom: 18px; right: 18px; }
+  .globe-canvas { width: 150%; margin-left: -25%; }
+  .globe-editing .globe-canvas { transform: translateY(-100px); }
+}

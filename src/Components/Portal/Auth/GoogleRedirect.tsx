@@ -1,5 +1,5 @@
 import React from "react";
-import { ref, get, child } from "firebase/database";
+import { ref, get, child } from "../../../localPortal/database";
 import Swal from "sweetalert2";
 
 class GoogleRedirect extends React.Component<{firebase:any,provider:any,database:any},{}> {
@@ -13,29 +13,6 @@ class GoogleRedirect extends React.Component<{firebase:any,provider:any,database
     return <h1 id="loadingtext">Loading...</h1>;
   }
 
-  accRetFailure() {
-    Swal.fire({
-      icon: "error",
-      title: "Account not in system",
-      text: "If you are a brother, close this popup to be redirected to the sign up page, and sign-in with your northwestern email.",
-    }).then(() => {
-      this.props.firebase
-        .auth()
-        .signOut()
-        .then(() => {
-          window.location.href = "/";
-        });
-    });
-  }
-
-  /*login cases:
-  1. login failure
-  2. login from non-nu email
-  3. login from unauthorized nu email
-  4. login from authorized nu email but not signed up
-  5. login from authorized nu email and signed up (continue)
-  */
-
   componentDidMount() {
     this.props.firebase.auth().onAuthStateChanged(async (user:any) => {
       if(this.willRefresh) {
@@ -43,8 +20,6 @@ class GoogleRedirect extends React.Component<{firebase:any,provider:any,database
       }
       if (user) {
         const userEmail = typeof user.email === "string" ? user.email : "";
-
-        //case 2
         if (!userEmail.includes("northwestern.edu")) {
           this.willRefresh = true;
           this.props.firebase.auth().signOut();
@@ -101,9 +76,7 @@ class GoogleRedirect extends React.Component<{firebase:any,provider:any,database
             }
           })
           .catch((err) => {
-            //case 1
             if (String(err).includes("Permission")) {
-              //case 3
               this.props.firebase.auth().signOut();
               Swal.fire({
                 icon: "error",

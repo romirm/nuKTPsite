@@ -1,990 +1,238 @@
-import React, { useEffect, useMemo, useState } from "react";
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-  Marker,
-  ZoomableGroup,
-} from "react-simple-maps";
-import { geoAlbersUsa } from "d3-geo";
-import { onValue, ref, remove, set } from "firebase/database";
-import {
-  GlobeAmericasIcon,
-  MagnifyingGlassMinusIcon,
-  MagnifyingGlassPlusIcon,
-  MapPinIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
+import React, { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { geoContains, geoDistance, geoGraticule10, geoOrthographic, geoPath } from "d3-geo";
+import { ArrowPathIcon, MagnifyingGlassIcon, MapPinIcon, MinusIcon, PlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import countries from "../../../../Assets/Geo/countries.json";
+import { onValue, ref, remove, set } from "../../../../localPortal/database";
+import { isReadOnlyLivePortal } from "../../../../localPortal/config";
+import { clusterPins, coordinate, readHometownPins } from "./globePins";
+import GlobePinTooltip from "./GlobePinTooltip";
+import { CityResult, searchCities } from "./citySearch";
+import "./globe.css";
 
-type MapTabKey = "working" | "from";
+const WIDTH = 1000, HEIGHT = 680, RADIUS = 252;
+const INITIAL_ROTATION: [number, number] = [35, -25];
+const normalize = (longitude: number) => ((longitude + 180) % 360 + 360) % 360 - 180;
+type Draft = { latitude: string; longitude: string; city: string; country: string };
+const blankDraft: Draft = { latitude: "", longitude: "", city: "", country: "" };
 
-type MapDraftState = {
-  latitude: string;
-  longitude: string;
-  city: string;
-  value: string;
-};
-
-type MapTabConfig = {
-  key: MapTabKey;
-  tabLabel: string;
-  title: string;
-  description: string;
-  storagePath: string;
-  geographyUrl: string;
-  projection: "geoAlbersUsa" | "geoNaturalEarth1";
-  projectionScale: number;
-  defaultCenter: [number, number];
-  fieldLabel: string;
-  fieldPlaceholder: string;
-  coordinateMessage: string;
-  emptyStateMessage: string;
-  coordinatesAllowed: (latitude: number, longitude: number) => boolean;
-};
-
-type MapPoint = {
-  id: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  subtitle: string;
-  city?: string;
-  company?: string;
-  country?: string;
-  updatedAt?: number;
-};
-
-type DisplayMapPoint = MapPoint & {
-  displayLatitude: number;
-  displayLongitude: number;
-  stackSize: number;
-  stackIndex: number;
-};
-
-type StoredPin = {
-  name?: string;
-  latitude?: number;
-  longitude?: number;
-  lat?: number;
-  lng?: number;
-  city?: string;
-  company?: string;
-  country?: string;
-  subtitle?: string;
-  label?: string;
-  updatedAt?: number;
-};
-
-interface MemberMapHubProps {
-  fullPubDir: any;
-  database: any;
-  uid: string;
-}
-
-const US_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json";
-const US_COUNTIES_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/us-atlas@3/counties-10m.json";
-const WORLD_GEOGRAPHY_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
-const US_MAP_WIDTH = 980;
-const US_MAP_HEIGHT = 610;
-const WORLD_MAP_WIDTH = 980;
-const WORLD_MAP_HEIGHT = 610;
-const OUTLINE_BLACK = "#000000";
-const KTP_BLUE_LIGHT = "#dbeafe";
-const KTP_BLUE_ACCENT = "#2563eb";
-
-const usProjection = geoAlbersUsa().scale(1250).translate([US_MAP_WIDTH / 2, US_MAP_HEIGHT / 2]);
-
-const normalizeLongitude = (rawLongitude: number): number => {
-  let normalized = rawLongitude;
-  while (normalized < -180) {
-    normalized += 360;
-  }
-  while (normalized > 180) {
-    normalized -= 360;
-  }
-  return normalized;
-};
-
-const toLatitude = (value: any): number | null => {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return null;
-  }
-  if (parsed < -90 || parsed > 90) {
-    return null;
-  }
-  return Number(parsed.toFixed(5));
-};
-
-const toLongitude = (value: any): number | null => {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) {
-    return null;
-  }
-  const normalized = normalizeLongitude(parsed);
-  if (normalized < -180 || normalized > 180) {
-    return null;
-  }
-  return Number(normalized.toFixed(5));
-};
-
-const getStateFillColor = (_geo: any): string => {
-  return "rgba(255, 255, 255, 0.001)";
-};
-
-const isAntarcticaGeography = (geo: any): boolean => {
-  const geographyName =
-    typeof geo?.properties?.name === "string"
-      ? geo.properties.name
-      : typeof geo?.properties?.NAME === "string"
-        ? geo.properties.NAME
-        : "";
-
-  return geographyName.trim().toLowerCase() === "antarctica";
-};
-
-const isWorldCoordinate = (latitude: number, longitude: number): boolean => {
-  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
-};
-
-const truncateLabel = (value: string, maxChars = 34): string => {
-  if (value.length <= maxChars) {
-    return value;
-  }
-  return `${value.slice(0, Math.max(0, maxChars - 3)).trimEnd()}...`;
-};
-
-const getPointCityText = (point: MapPoint): string => {
-  if (typeof point.city === "string" && point.city.trim().length > 0) {
-    return point.city.trim();
-  }
-
-  const subtitle = typeof point.subtitle === "string" ? point.subtitle.trim() : "";
-  if (!subtitle) {
-    return "";
-  }
-
-  if (subtitle.includes(" - ")) {
-    const maybeCity = subtitle.split(" - ").slice(-1)[0].trim();
-    return maybeCity;
-  }
-
-  return subtitle;
-};
-const getPointFieldText = (point: MapPoint, tab: MapTabKey): string => {
-  const primaryValue =
-    tab === "working"
-      ? typeof point.company === "string" && point.company.trim().length > 0
-        ? point.company.trim()
-        : ""
-      : typeof point.country === "string" && point.country.trim().length > 0
-        ? point.country.trim()
-        : "";
-
-  if (primaryValue.length > 0) {
-    return primaryValue;
-  }
-
-  const subtitle = typeof point.subtitle === "string" ? point.subtitle.trim() : "";
-  if (subtitle.includes(" - ")) {
-    const parts = subtitle
-      .split(" - ")
-      .map((entry: string) => entry.trim())
-      .filter((entry: string) => entry.length > 0);
-
-    if (parts.length > 1) {
-      return tab === "working" ? parts.slice(0, parts.length - 1).join(" - ") : parts[0];
-    }
-  }
-
-  return subtitle;
-};
-
-const getPointHoverLabel = (point: MapPoint, tab: MapTabKey): string => {
-  const cityText = getPointCityText(point);
-  const locationText =
-    tab === "from"
-      ? typeof point.country === "string" && point.country.trim().length > 0
-        ? point.country.trim()
-        : getPointFieldText(point, tab)
-      : "";
-
-  if (cityText && locationText) {
-    return `${point.name} - ${cityText}, ${locationText}`;
-  }
-
-  if (cityText) {
-    return `${point.name} - ${cityText}`;
-  }
-
-  if (locationText) {
-    return `${point.name} - ${locationText}`;
-  }
-
-  return point.name;
-};
-
-const getPinPath = (tab: MapTabKey): string => `map_pins/${tab}`;
-
-const isUsCoordinate = (latitude: number, longitude: number): boolean => {
-  const projectedPoint = usProjection([longitude, latitude]);
-  return projectedPoint !== null;
-};
-
-const getTabConfig = (tab: MapTabKey): MapTabConfig => {
-  if (tab === "working") {
-    return {
-      key: "working",
-      tabLabel: "Where We\'re Working",
-      title: "Where We\'re Working",
-      description: "Set one pin for yourself using coordinates, city, and company.",
-      storagePath: getPinPath("working"),
-      geographyUrl: US_GEOGRAPHY_URL,
-      projection: "geoAlbersUsa",
-      projectionScale: 1250,
-      defaultCenter: [-96, 38],
-      fieldLabel: "Company",
-      fieldPlaceholder: "Required, e.g. Google",
-      coordinateMessage: "Enter coordinates, city, and company above, then save your pin.",
-      emptyStateMessage:
-        "You have not set a working pin yet. Enter coordinates, city, and company above, then save.",
-      coordinatesAllowed: isUsCoordinate,
-    };
-  }
-
-  return {
-    key: "from",
-    tabLabel: "Where We\'re From",
-    title: "Where We\'re From",
-    description: "Set one pin for yourself using coordinates, city, and country.",
-    storagePath: getPinPath("from"),
-    geographyUrl: WORLD_GEOGRAPHY_URL,
-    projection: "geoNaturalEarth1",
-    projectionScale: 170,
-    defaultCenter: [0, 20],
-    fieldLabel: "Country",
-    fieldPlaceholder: "Required, e.g. Canada",
-    coordinateMessage: "Enter coordinates, city, and country above, then save your pin.",
-    emptyStateMessage:
-      "You have not set a from pin yet. Enter coordinates, city, and country above, then save.",
-    coordinatesAllowed: isWorldCoordinate,
-  };
-};
-
-const buildDisplayPoints = (points: MapPoint[], zoom: number): DisplayMapPoint[] => {
-  const groupedPoints = new Map<string, MapPoint[]>();
-
-  points.forEach((point) => {
-    const groupingKey = `${point.latitude.toFixed(4)}:${point.longitude.toFixed(4)}`;
-    const existingGroup = groupedPoints.get(groupingKey) || [];
-    existingGroup.push(point);
-    groupedPoints.set(groupingKey, existingGroup);
-  });
-
-  const displayPoints: DisplayMapPoint[] = [];
-
-  groupedPoints.forEach((group) => {
-    if (group.length === 1) {
-      const onlyPoint = group[0];
-      displayPoints.push({
-        ...onlyPoint,
-        displayLatitude: onlyPoint.latitude,
-        displayLongitude: onlyPoint.longitude,
-        stackSize: 1,
-        stackIndex: 0,
-      });
-      return;
-    }
-
-    const radialDistance = Math.max(
-      0.015,
-      (0.24 + 0.018 * Math.min(group.length, 8)) / Math.max(1, Math.sqrt(zoom))
-    );
-
-    group.forEach((point, index) => {
-      const angle = (Math.PI * 2 * index) / group.length;
-      const latOffset = Math.sin(angle) * radialDistance;
-      const lngScale = Math.max(Math.cos((point.latitude * Math.PI) / 180), 0.25);
-      const lngOffset = (Math.cos(angle) * radialDistance) / lngScale;
-      const displayLatitude = Math.max(-89.999, Math.min(89.999, point.latitude + latOffset));
-      const displayLongitude = normalizeLongitude(point.longitude + lngOffset);
-
-      displayPoints.push({
-        ...point,
-        displayLatitude,
-        displayLongitude,
-        stackSize: group.length,
-        stackIndex: index,
-      });
-    });
-  });
-
-  return displayPoints;
-};
-
-const convertStoredPinsToPoints = (
-  storedPins: Record<string, StoredPin>,
-  tab: MapTabKey
-): MapPoint[] => {
-  const points: MapPoint[] = [];
-
-  Object.keys(storedPins || {}).forEach((pinUid) => {
-    const pinData = storedPins[pinUid] || {};
-    const latitude = toLatitude(pinData.latitude ?? pinData.lat);
-    const longitude = toLongitude(pinData.longitude ?? pinData.lng);
-
-    if (latitude === null || longitude === null) {
-      return;
-    }
-
-    if (!getTabConfig(tab).coordinatesAllowed(latitude, longitude)) {
-      return;
-    }
-
-    const cityCandidate =
-      typeof pinData.city === "string" && pinData.city.trim().length > 0
-        ? pinData.city.trim()
-        : null;
-
-    const companyCandidate =
-      typeof pinData.company === "string" && pinData.company.trim().length > 0
-        ? pinData.company.trim()
-        : null;
-
-    const countryCandidate =
-      typeof pinData.country === "string" && pinData.country.trim().length > 0
-        ? pinData.country.trim()
-        : null;
-
-    const primaryValue = tab === "working" ? companyCandidate : countryCandidate;
-
-    const subtitleCandidate =
-      typeof pinData.subtitle === "string"
-        ? pinData.subtitle.trim()
-        : typeof pinData.label === "string"
-          ? pinData.label.trim()
-          : "";
-
-    const subtitle =
-      cityCandidate || primaryValue
-        ? [primaryValue, cityCandidate].filter(Boolean).join(" - ")
-        : subtitleCandidate.length > 0
-          ? subtitleCandidate
-          : `${latitude.toFixed(2)}, ${longitude.toFixed(2)}`;
-
-    const point: MapPoint = {
-      id: pinUid,
-      name:
-        typeof pinData.name === "string" && pinData.name.trim().length > 0
-          ? pinData.name.trim()
-          : "Member",
-      latitude,
-      longitude,
-      subtitle,
-    };
-
-    if (cityCandidate) {
-      point.city = cityCandidate;
-    }
-
-    if (companyCandidate) {
-      point.company = companyCandidate;
-    }
-
-    if (countryCandidate) {
-      point.country = countryCandidate;
-    }
-
-    if (typeof pinData.updatedAt === "number" && Number.isFinite(pinData.updatedAt)) {
-      point.updatedAt = pinData.updatedAt;
-    }
-
-    points.push(point);
-  });
-
-  return points.sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
-  );
-};
-
-const MemberMapHub: React.FC<MemberMapHubProps> = ({ fullPubDir, database, uid }) => {
-  const [activeMapTab, setActiveMapTab] = useState<MapTabKey>("working");
-  const [isSavingPin, setIsSavingPin] = useState(false);
-  const [isDeletingPin, setIsDeletingPin] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [sharedWorkingPins, setSharedWorkingPins] = useState<Record<string, StoredPin>>({});
-  const [sharedFromPins, setSharedFromPins] = useState<Record<string, StoredPin>>({});
-  const [mapZoomByTab, setMapZoomByTab] = useState<Record<MapTabKey, number>>({
-    working: 1,
-    from: 1,
-  });
-  const [mapCenterByTab, setMapCenterByTab] = useState<Record<MapTabKey, [number, number]>>({
-    working: getTabConfig("working").defaultCenter,
-    from: getTabConfig("from").defaultCenter,
-  });
-  const [draftsByTab, setDraftsByTab] = useState<Record<MapTabKey, MapDraftState>>({
-    working: { latitude: "", longitude: "", city: "", value: "" },
-    from: { latitude: "", longitude: "", city: "", value: "" },
-  });
+export default function MemberMapHub({ fullPubDir, database, uid }: { fullPubDir: any; database: any; uid: string }) {
+  const [storedPins, setStoredPins] = useState<unknown>({});
+  const [rotation, setRotation] = useState<[number, number]>(INITIAL_ROTATION);
+  const [zoom, setZoom] = useState(1);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Draft>(blankDraft);
+  const [busy, setBusy] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [message, setMessage] = useState("");
+  const [pinHover, setPinHover] = useState<{ ids: string[]; anchor: SVGGElement } | null>(null);
+  const hoverDismiss = useRef<number>();
+  const [cityQuery, setCityQuery] = useState("");
+  const [cityResults, setCityResults] = useState<CityResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchMessage, setSearchMessage] = useState("");
+  const cityRequest = useRef<AbortController | null>(null);
+  const cityDebounce = useRef<number>();
+  const cityQueryEdited = useRef(false);
+  const svgRef = useRef<SVGSVGElement>(null);
+  const drag = useRef<{ x: number; y: number; rotation: [number, number]; moved: boolean; pointerId: number } | null>(null);
+  const id = useId().replace(/:/g, "");
 
   useEffect(() => {
-    if (!database) {
-      return;
-    }
-
-    const unsubscribeWorkingPins = onValue(ref(database, getPinPath("working")), (snapshot) => {
-      setSharedWorkingPins(
-        snapshot.exists() && typeof snapshot.val() === "object"
-          ? (snapshot.val() as Record<string, StoredPin>)
-          : {}
-      );
-    });
-
-    const unsubscribeFromPins = onValue(ref(database, getPinPath("from")), (snapshot) => {
-      setSharedFromPins(
-        snapshot.exists() && typeof snapshot.val() === "object"
-          ? (snapshot.val() as Record<string, StoredPin>)
-          : {}
-      );
-    });
-
-    return () => {
-      unsubscribeWorkingPins();
-      unsubscribeFromPins();
-    };
+    if (!database) return;
+    return onValue(ref(database, "map_pins/from"), snapshot => setStoredPins(snapshot.val() || {}));
   }, [database]);
+  const pins = useMemo(() => readHometownPins(storedPins, fullPubDir), [storedPins, fullPubDir]);
+  const myPin = pins.find(pin => pin.id === uid);
+  const projection = useMemo(() => geoOrthographic().translate([WIDTH / 2, HEIGHT / 2]).scale(RADIUS * zoom).rotate([...rotation, 0]).clipAngle(90), [rotation, zoom]);
+  const path = geoPath(projection);
+  const countryPaths = useMemo(() => countries.features.map(country => ({ country, path: geoPath(projection)(country as any) || "" })), [projection]);
+  const visiblePins = pins.flatMap(pin => {
+    if (editing && pin.id === uid) return [];
+    if (geoDistance([pin.longitude, pin.latitude], [-rotation[0], -rotation[1]]) >= Math.PI / 2) return [];
+    const location = projection([pin.longitude, pin.latitude]);
+    return location ? [{ ...pin, x: location[0], y: location[1] }] : [];
+  });
+  const clusters = clusterPins(visiblePins);
+  const hoverPins = useMemo(() => pins.filter(pin => pinHover?.ids.includes(pin.id)), [pins, pinHover]);
+  useEffect(() => { window.clearTimeout(hoverDismiss.current); setPinHover(null); }, [rotation, zoom, editing]);
+  useEffect(() => () => window.clearTimeout(hoverDismiss.current), []);
+  useEffect(() => {
+    if (!editing) { cityRequest.current?.abort(); cityRequest.current = null; setSearching(false); }
+  }, [editing]);
+  useEffect(() => () => { cityRequest.current?.abort(); cityRequest.current = null; }, []);
+  const draftLat = coordinate(draft.latitude, 90), draftLng = coordinate(draft.longitude, 180);
+  const draftLocation = draftLat !== null && draftLng !== null && geoDistance([draftLng, draftLat], [-rotation[0], -rotation[1]]) < Math.PI / 2 ? projection([draftLng, draftLat]) : null;
 
-  const currentUserName = useMemo(() => {
-    if (!fullPubDir || typeof fullPubDir !== "object" || !uid) {
-      return "Member";
-    }
-
-    const currentProfile = fullPubDir[uid];
-    if (!currentProfile || typeof currentProfile !== "object") {
-      return "Member";
-    }
-
-    if (typeof currentProfile.name !== "string") {
-      return "Member";
-    }
-
-    const trimmedName = currentProfile.name.trim();
-    return trimmedName.length > 0 ? trimmedName : "Member";
-  }, [fullPubDir, uid]);
-
-  const workingPoints = useMemo(() => {
-    return convertStoredPinsToPoints(sharedWorkingPins, "working");
-  }, [sharedWorkingPins]);
-
-  const fromPoints = useMemo(() => {
-    return convertStoredPinsToPoints(sharedFromPins, "from");
-  }, [sharedFromPins]);
-
-  const displayPointsByTab = useMemo<Record<MapTabKey, DisplayMapPoint[]>>(() => {
-    return {
-      working: buildDisplayPoints(workingPoints, mapZoomByTab.working),
-      from: buildDisplayPoints(fromPoints, mapZoomByTab.from),
-    };
-  }, [fromPoints, mapZoomByTab.from, mapZoomByTab.working, workingPoints]);
-
-  const currentUserPinByTab = useMemo<Record<MapTabKey, MapPoint | null>>(() => {
-    const workingPin = uid ? workingPoints.find((point) => point.id === uid) || null : null;
-    const fromPin = uid ? fromPoints.find((point) => point.id === uid) || null : null;
-
-    return {
-      working: workingPin,
-      from: fromPin,
-    };
-  }, [fromPoints, uid, workingPoints]);
-
-  const activeConfig = getTabConfig(activeMapTab);
-  const activeDraft = draftsByTab[activeMapTab];
-  const activePoints = displayPointsByTab[activeMapTab];
-  const activeCurrentUserPin = currentUserPinByTab[activeMapTab];
-  const activeMapZoom = mapZoomByTab[activeMapTab];
-  const activeMapCenter = mapCenterByTab[activeMapTab];
-  const activePinLabel = activeConfig.fieldLabel.toLowerCase();
-
-  const updateDraftValue = (tab: MapTabKey, field: keyof MapDraftState, value: string) => {
-    setDraftsByTab((currentDrafts) => ({
-      ...currentDrafts,
-      [tab]: {
-        ...currentDrafts[tab],
-        [field]: value,
-      },
-    }));
-  };
-
-  const zoomMap = (direction: "in" | "out") => {
-    setMapZoomByTab((currentZooms) => {
-      const currentZoom = currentZooms[activeMapTab];
-      const nextZoom = direction === "in" ? Math.min(64, currentZoom * 1.8) : Math.max(1, currentZoom * 0.7);
-
-      return {
-        ...currentZooms,
-        [activeMapTab]: nextZoom,
-      };
-    });
-  };
-
-  const resetMapView = () => {
-    setMapCenterByTab((currentCenters) => ({
-      ...currentCenters,
-      [activeMapTab]: activeConfig.defaultCenter,
-    }));
-    setMapZoomByTab((currentZooms) => ({
-      ...currentZooms,
-      [activeMapTab]: 1,
-    }));
-  };
-
-  const savePinFromInputs = async () => {
-    if (!database || !uid) {
-      setStatusMessage("Please sign in before saving your pin.");
-      return;
-    }
-
-    const city = activeDraft.city.trim();
-    const primaryValue = activeDraft.value.trim();
-
-    if (!city || !primaryValue) {
-      setStatusMessage(`Please enter city and ${activePinLabel}.`);
-      return;
-    }
-
-    if (activeDraft.latitude.trim().length === 0 || activeDraft.longitude.trim().length === 0) {
-      setStatusMessage("Please enter both latitude and longitude.");
-      return;
-    }
-
-    const latitude = toLatitude(activeDraft.latitude);
-    const longitude = toLongitude(activeDraft.longitude);
-    if (latitude === null || longitude === null) {
-      setStatusMessage("Enter valid latitude and longitude values.");
-      return;
-    }
-
-    if (!activeConfig.coordinatesAllowed(latitude, longitude)) {
-      setStatusMessage(
-        activeMapTab === "working"
-          ? "Coordinates must be inside the US map."
-          : "Coordinates must be valid world coordinates."
-      );
-      return;
-    }
-
-    const subtitle = `${primaryValue} - ${city}`;
-
-    setIsSavingPin(true);
-    setStatusMessage("Saving your pin...");
-
+  function keepHover() { window.clearTimeout(hoverDismiss.current); }
+  function dismissHover() { keepHover(); hoverDismiss.current = window.setTimeout(() => setPinHover(null), 140); }
+  function showPinDetails(ids: string[], anchor: SVGGElement) { keepHover(); if (!editing) setPinHover({ ids, anchor }); }
+  function changeZoom(factor: number) { setZoom(value => Math.min(6, Math.max(1, value * factor))); }
+  function resetView() { setRotation(INITIAL_ROTATION); setZoom(1); }
+  function openEditor() {
+    setDraft(myPin ? { latitude: String(myPin.latitude), longitude: String(myPin.longitude), city: myPin.city, country: myPin.country } : blankDraft);
+    if (myPin) { setRotation([-myPin.longitude, -myPin.latitude]); setZoom(1.5); }
+    setMessage(""); setConfirmRemove(false); setEditing(true);
+    cityQueryEdited.current = false;
+    setCityQuery(myPin?.city || ""); setCityResults([]); setSearchMessage("");
+  }
+  const findCity = useCallback(async () => {
+    window.clearTimeout(cityDebounce.current);
+    if (cityQuery.trim().length < 2 || busy) return;
+    cityRequest.current?.abort();
+    const request = new AbortController(); cityRequest.current = request;
+    setSearching(true); setCityResults([]); setSearchMessage("");
+    const timeout = window.setTimeout(() => request.abort(), 12000);
     try {
-      await set(ref(database, activeConfig.storagePath + `/${uid}`), {
-        name: currentUserName,
-        city,
-        latitude,
-        longitude,
-        subtitle,
-        updatedAt: Date.now(),
-        ...(activeMapTab === "working"
-          ? { company: primaryValue }
-          : { country: primaryValue }),
-      });
-
-      setStatusMessage(
-        activeCurrentUserPin
-          ? "Your existing pin was updated."
-          : "Your pin was created successfully."
-      );
-      setMapCenterByTab((currentCenters) => ({
-        ...currentCenters,
-        [activeMapTab]: [longitude, latitude],
-      }));
-      setMapZoomByTab((currentZooms) => ({
-        ...currentZooms,
-        [activeMapTab]: Math.max(currentZooms[activeMapTab], 18),
-      }));
-    } catch (error) {
-      console.error("Failed to save map pin", error);
-      setStatusMessage("Could not save your pin. Please try again.");
+      const results = await searchCities(cityQuery, request.signal);
+      if (cityRequest.current !== request || request.signal.aborted) return;
+      setCityResults(results);
+      if (!results.length) setSearchMessage("No matching cities in the city list. Try another spelling, state or country.");
+    } catch {
+      if (cityRequest.current === request) setSearchMessage("The city list could not be loaded. Please try again.");
     } finally {
-      setIsSavingPin(false);
+      window.clearTimeout(timeout);
+      if (cityRequest.current === request) setSearching(false);
     }
-  };
-
-  const deleteMyPin = async () => {
-    if (!database || !uid) {
-      setStatusMessage("Please sign in before deleting your pin.");
-      return;
-    }
-
-    if (!activeCurrentUserPin) {
-      setStatusMessage("No pin found to delete.");
-      return;
-    }
-
-    if (!window.confirm("Delete your map pin?")) {
-      return;
-    }
-
-    setIsDeletingPin(true);
+  }, [cityQuery, busy]);
+  useEffect(() => {
+    if (!editing || busy || !cityQueryEdited.current || cityQuery.trim().length < 2) return;
+    cityDebounce.current = window.setTimeout(() => { void findCity(); }, 180);
+    return () => window.clearTimeout(cityDebounce.current);
+  }, [editing, cityQuery, busy, findCity]);
+  function selectCity(city: CityResult) {
+    cityQueryEdited.current = false; window.clearTimeout(cityDebounce.current);
+    setDraft({ latitude: String(city.latitude), longitude: String(city.longitude), city: city.city, country: city.country });
+    setRotation([-city.longitude, -city.latitude]); setZoom(1.5);
+    setCityQuery([city.city, city.region, city.country].filter(Boolean).join(", "));
+    setCityResults([]); setSearchMessage(""); setMessage("");
+  }
+  function chooseLocation(x: number, y: number) {
+    if (!editing || busy || Math.hypot(x - WIDTH / 2, y - HEIGHT / 2) > RADIUS * zoom) return;
+    const location = projection.invert?.([x, y]);
+    if (!location || !location.every(Number.isFinite)) return;
+    const longitude = normalize(location[0]), latitude = Math.max(-90, Math.min(90, location[1]));
+    const country = countries.features.find(feature => geoContains(feature as any, [longitude, latitude]));
+    setDraft(value => ({ ...value, latitude: latitude.toFixed(4), longitude: longitude.toFixed(4), country: country?.properties.name || "" })); setMessage("");
+  }
+  function svgPosition(event: React.PointerEvent<SVGSVGElement>): [number, number] {
+    const point = event.currentTarget.createSVGPoint(); point.x = event.clientX; point.y = event.clientY;
+    const matrix = event.currentTarget.getScreenCTM(); const position = matrix ? point.matrixTransform(matrix.inverse()) : point;
+    return [position.x, position.y];
+  }
+  function startDrag(event: React.PointerEvent<SVGSVGElement>) {
+    if (event.button !== 0) return;
+    setPinHover(null);
+    event.currentTarget.focus(); event.currentTarget.setPointerCapture(event.pointerId);
+    const [x, y] = svgPosition(event); drag.current = { x, y, rotation, moved: false, pointerId: event.pointerId };
+  }
+  function moveDrag(event: React.PointerEvent<SVGSVGElement>) {
+    if (!drag.current || drag.current.pointerId !== event.pointerId) return;
+    const [x, y] = svgPosition(event), movement = drag.current;
+    if (Math.hypot(x - movement.x, y - movement.y) > 4) movement.moved = true;
+    if (movement.moved) setRotation([normalize(movement.rotation[0] + (x - movement.x) * .28 / zoom), Math.max(-85, Math.min(85, movement.rotation[1] - (y - movement.y) * .28 / zoom))]);
+  }
+  function endDrag(event: React.PointerEvent<SVGSVGElement>) {
+    const movement = drag.current; drag.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    if (movement && !movement.moved) chooseLocation(...svgPosition(event));
+  }
+  useEffect(() => {
+    const svg = svgRef.current;
+    const wheel = (event: WheelEvent) => { event.preventDefault(); changeZoom(event.deltaY < 0 ? 1.12 : 1 / 1.12); };
+    svg?.addEventListener("wheel", wheel, { passive: false }); return () => svg?.removeEventListener("wheel", wheel);
+  }, []);
+  useEffect(() => {
+    if (!editing) return;
+    const escape = (event: KeyboardEvent) => { if (event.key === "Escape" && !busy) setEditing(false); };
+    document.addEventListener("keydown", escape); return () => document.removeEventListener("keydown", escape);
+  }, [editing, busy]);
+  async function savePin(event: React.FormEvent) {
+    event.preventDefault(); if (!uid || !database || isReadOnlyLivePortal) return;
+    if (draftLat === null || draftLng === null || !draft.city.trim() || !draft.country.trim()) { setMessage("Choose a spot on the globe and enter your city and country."); return; }
+    setBusy(true); setMessage("");
     try {
-      await remove(ref(database, `${activeConfig.storagePath}/${uid}`));
-      setStatusMessage("Your pin was deleted.");
-      setDraftsByTab((currentDrafts) => ({
-        ...currentDrafts,
-        [activeMapTab]: { latitude: "", longitude: "", city: "", value: "" },
-      }));
-    } catch (error) {
-      console.error("Failed to delete map pin", error);
-      setStatusMessage("Could not delete your pin. Please try again.");
-    } finally {
-      setIsDeletingPin(false);
-    }
-  };
-
-  const isPinFormComplete =
-    activeDraft.latitude.trim().length > 0 &&
-    activeDraft.longitude.trim().length > 0 &&
-    activeDraft.city.trim().length > 0 &&
-    activeDraft.value.trim().length > 0;
-
-  const isSavePinDisabled = isSavingPin || !isPinFormComplete;
+      await set(ref(database, `map_pins/from/${uid}`), { name: fullPubDir?.[uid]?.name || "Member", latitude: draftLat, longitude: draftLng, city: draft.city.trim(), country: draft.country.trim(), subtitle: `${draft.country.trim()} - ${draft.city.trim()}`, updatedAt: Date.now() });
+      setRotation([-draftLng, -draftLat]); setZoom(2.2); setEditing(false); setMessage("Your hometown pin was saved.");
+    } catch { setMessage("Could not save your pin. Please try again."); } finally { setBusy(false); }
+  }
+  async function deleteMyPin() {
+    if (!uid || !database || isReadOnlyLivePortal) return;
+    setBusy(true);
+    try { await remove(ref(database, `map_pins/from/${uid}`)); setEditing(false); setMessage("Your hometown pin was removed."); }
+    catch { setMessage("Could not remove your pin. Please try again."); } finally { setBusy(false); }
+  }
 
   return (
-    <div className="h-full overflow-y-auto bg-slate-50">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2 text-slate-700">
-              <GlobeAmericasIcon className="h-7 w-7" />
-              <h1 className="text-2xl font-bold sm:text-3xl">Maps</h1>
-            </div>
-            <p className="mt-2 text-sm text-slate-600 sm:text-base">
-              Toggle between where members are working in the US and where they are from around the world.
-            </p>
-          </div>
-        </div>
-
-        <div className="mb-4 inline-flex rounded-lg border border-blue-100 bg-white p-1 shadow-sm">
-          {(["working", "from"] as MapTabKey[]).map((tab) => {
-            const tabConfig = getTabConfig(tab);
-            const isActive = activeMapTab === tab;
-
-            return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setActiveMapTab(tab)}
-                className={`rounded-md px-4 py-2 text-sm font-semibold transition-colors ${
-                  isActive ? "bg-blue-600 text-white shadow" : "text-slate-700 hover:bg-blue-50"
-                }`}
-              >
-                {tabConfig.tabLabel}
-              </button>
-            );
+    <section className={`member-globe${editing ? " globe-editing" : ""}`} aria-label="Member hometown globe">
+      <div className="globe-heading"><h2>Where We're From</h2><p>{pins.length} {pins.length === 1 ? "member" : "members"} around the world{isReadOnlyLivePortal && <span className="globe-mode">Read-only</span>}</p></div>
+      <svg ref={svgRef} className={`globe-canvas${editing ? " globe-placing" : ""}`} viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="region" aria-label="Interactive hometown globe. Use arrow keys to rotate and plus or minus to zoom." tabIndex={0}
+        onPointerDown={startDrag} onPointerMove={moveDrag} onPointerUp={endDrag} onPointerCancel={() => { drag.current = null; }}
+        onKeyDown={event => {
+          if (event.target !== event.currentTarget) return;
+          const steps: Record<string, [number, number]> = { ArrowLeft: [-12, 0], ArrowRight: [12, 0], ArrowUp: [0, 10], ArrowDown: [0, -10] };
+          if (steps[event.key]) { event.preventDefault(); const [x,y] = steps[event.key]; setRotation(value => [normalize(value[0]+x), Math.max(-85,Math.min(85,value[1]+y))]); }
+          if (event.key === "+" || event.key === "=") { event.preventDefault(); changeZoom(1.4); }
+          if (event.key === "-") { event.preventDefault(); changeZoom(1/1.4); }
+        }}>
+        <defs>
+          <radialGradient id={`${id}-ocean`} cx="35%" cy="28%"><stop offset="0" stopColor="#543e78"/><stop offset=".7" stopColor="#302546"/><stop offset="1" stopColor="#1b162d"/></radialGradient>
+          <radialGradient id={`${id}-shade`} cx="35%" cy="28%"><stop offset=".5" stopColor="#080514" stopOpacity="0"/><stop offset="1" stopColor="#080514" stopOpacity=".65"/></radialGradient>
+          <clipPath id={`${id}-sphere`}><circle cx={WIDTH/2} cy={HEIGHT/2} r={RADIUS*zoom}/></clipPath>
+        </defs>
+        <circle cx={WIDTH/2} cy={HEIGHT/2} r={RADIUS*zoom+3} fill="none" stroke="#b8a0df" strokeOpacity=".25" strokeWidth="4"/>
+        <circle cx={WIDTH/2} cy={HEIGHT/2} r={RADIUS*zoom} fill={`url(#${id}-ocean)`}/>
+        <g clipPath={`url(#${id}-sphere)`}>
+          <g aria-hidden="true">
+          <path d={path(geoGraticule10()) || ""} fill="none" stroke="#cab0f3" strokeOpacity=".12" strokeWidth=".65"/>
+          {countryPaths.map(({country, path: countryPath}) => <path key={country.properties.name} d={countryPath} fill="#a996c7" stroke="#56436f" strokeWidth=".65"><title>{country.properties.name}</title></path>)}
+          <circle cx={WIDTH/2} cy={HEIGHT/2} r={RADIUS*zoom} fill={`url(#${id}-shade)`} pointerEvents="none"/>
+          </g>
+          {clusters.map(group => {
+            const pin = group[0], active = group.some(pin => pinHover?.ids.includes(pin.id));
+            return <g key={group.map(pin=>pin.id).join("-")} className="globe-pin" transform={`translate(${pin.x},${pin.y})`} role="button" tabIndex={0} aria-label={group.length > 1 ? `${group.length} members near ${pin.city || pin.country}` : `${pin.name}, ${[pin.city,pin.country].filter(Boolean).join(", ")}`}
+              aria-describedby={pinHover?.ids.includes(pin.id) ? `${id}-pin-tooltip` : undefined}
+              onPointerEnter={event=>{if(event.pointerType!=="touch" && !drag.current) showPinDetails(group.map(pin=>pin.id),event.currentTarget);}}
+              onPointerLeave={dismissHover}
+              onFocus={event=>showPinDetails(group.map(pin=>pin.id),event.currentTarget)}
+              onBlur={dismissHover}
+              onPointerDown={event=>event.stopPropagation()} onClick={event=>{event.stopPropagation(); showPinDetails(group.map(pin=>pin.id),event.currentTarget);}}
+              onKeyDown={event=>{if(event.key==="Escape"){keepHover();setPinHover(null);}if(event.key==="Enter"||event.key===" "){event.preventDefault();showPinDetails(group.map(pin=>pin.id),event.currentTarget);}}}>
+              <circle r={group.length>1?14:12} fill="transparent"/><circle r={active?11:8} fill="#cab0f3" fillOpacity=".2"/>
+              <circle r={group.length>1?10:5} fill={pin.id===uid?"#f2d491":"#ede4ff"} stroke="#4e2a84" strokeWidth="2"/>
+              {group.length>1 && <text textAnchor="middle" dy=".35em" fontSize="10" fontWeight="700" fill="#30194d">{group.length}</text>}
+            </g>;
           })}
-        </div>
-
-        <div className="mb-4 grid grid-cols-1 gap-3 rounded-xl border border-blue-100 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-              Latitude
-            </span>
-            <input
-              value={activeDraft.latitude}
-              onChange={(event) => updateDraftValue(activeMapTab, "latitude", event.target.value)}
-              type="number"
-              step="0.00001"
-              placeholder="Required, e.g. 42.0579"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-              Longitude
-            </span>
-            <input
-              value={activeDraft.longitude}
-              onChange={(event) => updateDraftValue(activeMapTab, "longitude", event.target.value)}
-              type="number"
-              step="0.00001"
-              placeholder="Required, e.g. -87.6753"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-              City
-            </span>
-            <input
-              value={activeDraft.city}
-              onChange={(event) => updateDraftValue(activeMapTab, "city", event.target.value)}
-              type="text"
-              placeholder="Required, e.g. Evanston, IL"
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-600">
-              {activeConfig.fieldLabel}
-            </span>
-            <input
-              value={activeDraft.value}
-              onChange={(event) => updateDraftValue(activeMapTab, "value", event.target.value)}
-              type="text"
-              placeholder={activeConfig.fieldPlaceholder}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-blue-500 focus:ring"
-            />
-          </label>
-
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold uppercase tracking-wide text-transparent">
-              Save
-            </span>
-            <button
-              type="button"
-              onClick={savePinFromInputs}
-              disabled={isSavePinDisabled}
-              className={`inline-flex h-[42px] items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-white transition-colors ${
-                isSavePinDisabled
-                  ? "cursor-not-allowed bg-blue-300"
-                  : "bg-blue-600 hover:bg-blue-700"
-              }`}
-            >
-              <MapPinIcon className="h-4 w-4" />
-              {isSavingPin ? "Saving Pin..." : activeCurrentUserPin ? "Update My Pin" : "Save My Pin"}
-            </button>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-blue-100 bg-white p-4 shadow-sm sm:p-6">
-          <div className="mx-auto w-full max-w-[900px]">
-            <div className="mb-3 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => zoomMap("in")}
-                className="rounded-md bg-white p-2 text-slate-700 shadow hover:bg-slate-100"
-                aria-label={`Zoom in on ${activeMapTab} map`}
-              >
-                <MagnifyingGlassPlusIcon className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => zoomMap("out")}
-                className="rounded-md bg-white p-2 text-slate-700 shadow hover:bg-slate-100"
-                aria-label={`Zoom out on ${activeMapTab} map`}
-              >
-                <MagnifyingGlassMinusIcon className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                onClick={resetMapView}
-                className="rounded-md bg-slate-800 px-3 py-2 text-xs font-semibold text-white hover:bg-slate-700"
-              >
-                Reset View
-              </button>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <ComposableMap
-                projection={activeConfig.projection}
-                projectionConfig={{ scale: activeConfig.projectionScale }}
-                width={activeMapTab === "working" ? US_MAP_WIDTH : WORLD_MAP_WIDTH}
-                height={activeMapTab === "working" ? US_MAP_HEIGHT : WORLD_MAP_HEIGHT}
-                className="h-full w-full"
-              >
-                <ZoomableGroup
-                  center={activeMapCenter}
-                  zoom={activeMapZoom}
-                  minZoom={1}
-                  maxZoom={64}
-                  onMoveEnd={(position: any) => {
-                    const coordinates = position?.coordinates;
-                    const zoom = position?.zoom;
-
-                    if (
-                      Array.isArray(coordinates) &&
-                      coordinates.length === 2 &&
-                      typeof coordinates[0] === "number" &&
-                      typeof coordinates[1] === "number"
-                    ) {
-                      setMapCenterByTab((currentCenters) => ({
-                        ...currentCenters,
-                        [activeMapTab]: [coordinates[0], coordinates[1]],
-                      }));
-                    }
-
-                    if (typeof zoom === "number" && Number.isFinite(zoom)) {
-                      setMapZoomByTab((currentZooms) => ({
-                        ...currentZooms,
-                        [activeMapTab]: zoom,
-                      }));
-                    }
-                  }}
-                >
-                  <Geographies geography={activeConfig.geographyUrl}>
-                    {({ geographies }) =>
-                      geographies
-                        .filter((geo) => (activeMapTab === "from" ? !isAntarcticaGeography(geo) : true))
-                        .map((geo) => (
-                        <Geography
-                          key={geo.rsmKey}
-                          geography={geo}
-                          onClick={() => {
-                            const regionName =
-                              geo?.properties?.name || geo?.properties?.NAME || "that region";
-                            setStatusMessage(`${activeConfig.coordinateMessage} (${regionName})`);
-                          }}
-                          stroke={OUTLINE_BLACK}
-                          strokeWidth={1.1}
-                          fill={getStateFillColor(geo)}
-                          className="cursor-pointer"
-                          style={{
-                            default: { outline: "none", fill: "rgba(255, 255, 255, 0.001)" },
-                            hover: {
-                              outline: "none",
-                              fill: "rgba(255, 255, 255, 0.001)",
-                              stroke: OUTLINE_BLACK,
-                            },
-                            pressed: {
-                              outline: "none",
-                              fill: "rgba(255, 255, 255, 0.001)",
-                              stroke: OUTLINE_BLACK,
-                            },
-                          }}
-                        />
-                        ))
-                    }
-                  </Geographies>
-
-                  {activeMapTab === "working" && activeMapZoom >= 3.5 && (
-                    <Geographies geography={US_COUNTIES_GEOGRAPHY_URL}>
-                      {({ geographies }) =>
-                        geographies.map((geo) => (
-                          <Geography
-                            key={`county-${geo.rsmKey}`}
-                            geography={geo}
-                            stroke="rgba(15, 23, 42, 0.32)"
-                            strokeWidth={activeMapZoom >= 10 ? 0.45 : 0.22}
-                            fill="rgba(255, 255, 255, 0)"
-                            style={{
-                              default: { outline: "none" },
-                              hover: { outline: "none" },
-                              pressed: { outline: "none" },
-                            }}
-                          />
-                        ))
-                      }
-                    </Geographies>
-                  )}
-
-                  {activePoints.map((point) => {
-                    const shouldShowLabel = activeMapZoom >= 10;
-                    const zoomScale = Math.min(1, 1 / Math.pow(Math.max(1, activeMapZoom), 0.42));
-                    const baseRadius = 4.8;
-                    const minRadius = 1.6;
-                    const circleRadius = Math.max(minRadius, baseRadius * zoomScale);
-                    const markerStrokeWidth = Math.max(0.7, 1.6 * zoomScale);
-                    const labelXOffset = Math.max(5.5, 9 * zoomScale);
-                    const labelYOffset = Math.min(-6.5, -8 * zoomScale);
-                    const fieldText = getPointFieldText(point, activeMapTab);
-                    const pinLabel = `${point.name} | ${fieldText}`;
-                    const hoverLabel = getPointHoverLabel(point, activeMapTab);
-
-                    return (
-                      <Marker
-                        key={`${point.id}-${point.stackIndex}`}
-                        coordinates={[point.displayLongitude, point.displayLatitude]}
-                      >
-                        <g>
-                          <circle
-                            r={circleRadius}
-                            fill={KTP_BLUE_ACCENT}
-                            stroke={KTP_BLUE_LIGHT}
-                            strokeWidth={markerStrokeWidth}
-                          />
-
-                          {shouldShowLabel && (
-                            <text
-                              x={labelXOffset}
-                              y={labelYOffset}
-                              fontSize={10}
-                              fontWeight={600}
-                              fill="#1e3a8a"
-                              stroke="#ffffff"
-                              strokeWidth={0.8}
-                              paintOrder="stroke"
-                            >
-                              {truncateLabel(pinLabel, 36)}
-                            </text>
-                          )}
-
-                          <title>{hoverLabel}</title>
-                        </g>
-                      </Marker>
-                    );
-                  })}
-                </ZoomableGroup>
-              </ComposableMap>
-            </div>
-          </div>
-        </div>
-
-        {statusMessage.length > 0 && (
-          <div className="mt-4 rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-            {statusMessage}
-          </div>
-        )}
-
-        <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-          <h2 className="text-base font-semibold text-slate-900">My Pin</h2>
-
-          {activeCurrentUserPin ? (
-            <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm font-semibold text-slate-800">{activeCurrentUserPin.name}</p>
-                  <p className="text-sm text-slate-700">
-                    {getPointFieldText(activeCurrentUserPin, activeMapTab)}
-                  </p>
-                  {getPointCityText(activeCurrentUserPin).length > 0 && (
-                    <p className="text-sm text-slate-700">
-                      {getPointCityText(activeCurrentUserPin)}
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs text-slate-500">
-                    {activeCurrentUserPin.latitude.toFixed(5)}, {activeCurrentUserPin.longitude.toFixed(5)}
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={deleteMyPin}
-                  disabled={isDeletingPin}
-                  className={`inline-flex items-center gap-1 rounded-md border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 ${
-                    isDeletingPin ? "cursor-not-allowed opacity-60" : ""
-                  }`}
-                >
-                  <TrashIcon className="h-4 w-4" />
-                  {isDeletingPin ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="mt-2 text-sm text-slate-600">{activeConfig.emptyStateMessage}</p>
-          )}
-        </div>
-
-        <p className="mt-4 text-xs text-slate-500">
-          Each user can have one pin per tab. Saving again updates your existing pin.
-        </p>
+          {editing && draftLocation && <g transform={`translate(${draftLocation[0]},${draftLocation[1]})`} pointerEvents="none" role="img" aria-label={`Draft hometown pin: ${[draft.city,draft.country].filter(Boolean).join(", ")}`}><circle r="13" fill="none" stroke="#f2d491" strokeWidth="2"/><circle r="5" fill="#f2d491"/></g>}
+        </g>
+      </svg>
+      {pinHover && !editing && hoverPins.length>0 && <GlobePinTooltip id={`${id}-pin-tooltip`} anchor={pinHover.anchor} pins={hoverPins} onPointerEnter={keepHover} onPointerLeave={dismissHover}/>}
+      <div className="globe-controls">
+        <button className="globe-my-pin" onClick={openEditor} disabled={busy || isReadOnlyLivePortal || !uid}><MapPinIcon/>{myPin ? "Edit my pin" : "Place my pin"}</button>
+        <div className="globe-zoom-controls"><button aria-label="Zoom in on globe" onClick={()=>changeZoom(1.5)} disabled={zoom>=6}><PlusIcon/></button><button aria-label="Zoom out on globe" onClick={()=>changeZoom(1/1.5)} disabled={zoom<=1}><MinusIcon/></button><button aria-label="Reset globe view" onClick={resetView}><ArrowPathIcon/></button></div>
       </div>
-    </div>
+      {editing && <div className="globe-editor globe-floating-panel" role="dialog" aria-modal="false" aria-labelledby={`${id}-editor`}>
+        <div className="globe-panel-header"><h3 id={`${id}-editor`}>{myPin?"Edit my hometown":"Place my hometown"}</h3><button aria-label="Close pin editor" disabled={busy} onClick={()=>setEditing(false)}><XMarkIcon/></button></div>
+        <p>Search for your city, or click the globe to choose your hometown.</p>
+        <form onSubmit={savePin}>
+          <div className="globe-city-search">
+            <label htmlFor={`${id}-city-search`}>Search for a city</label>
+            <div className="globe-city-search-input"><input id={`${id}-city-search`} type="search" placeholder="City, state or country" autoFocus autoComplete="off" maxLength={120} value={cityQuery} disabled={busy}
+              onChange={event=>{cityQueryEdited.current=true;cityRequest.current?.abort();cityRequest.current=null;setSearching(false);setCityQuery(event.target.value);setCityResults([]);setSearchMessage("");}}
+              onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();findCity();}}}/>
+              <button type="button" aria-label="Search cities" disabled={searching||busy||cityQuery.trim().length<2} onClick={findCity}><MagnifyingGlassIcon/></button>
+            </div>
+            {(searching||searchMessage) && <p className="globe-search-status" role="status">{searching?"Searching cities…":searchMessage}</p>}
+            {cityResults.length>0 && <ul className="globe-city-results" aria-label="City search results">{cityResults.map(city=><li key={city.id}><button type="button" onClick={()=>selectCity(city)}><MapPinIcon aria-hidden="true"/><span><strong>{city.city}</strong><small>{[city.region,city.country].filter(Boolean).join(", ")}</small></span></button></li>)}</ul>}
+            <span className="globe-search-credit">Search the included city list · Typos supported</span>
+          </div>
+          <label>City<input value={draft.city} maxLength={120} required disabled={busy} onChange={event=>setDraft({...draft,city:event.target.value})}/></label>
+          <label>Country<input value={draft.country} maxLength={120} required disabled={busy} onChange={event=>setDraft({...draft,country:event.target.value})}/></label>
+          <details open={draftLat===null||draftLng===null}><summary>{draftLat!==null&&draftLng!==null?`${draftLat.toFixed(3)}, ${draftLng.toFixed(3)} · Adjust location`:"Choose a location or enter coordinates"}</summary><div className="globe-coordinates"><label>Latitude<input type="number" min={-90} max={90} step="any" required disabled={busy} value={draft.latitude} onChange={event=>setDraft({...draft,latitude:event.target.value})}/></label><label>Longitude<input type="number" min={-180} max={180} step="any" required disabled={busy} value={draft.longitude} onChange={event=>setDraft({...draft,longitude:event.target.value})}/></label></div></details>
+          <button className="globe-save" type="submit" disabled={busy}>{busy?"Saving…":"Save my pin"}</button>
+          {myPin && <button className="globe-remove" type="button" disabled={busy} onClick={()=>{if(confirmRemove)deleteMyPin();else setConfirmRemove(true);}}>{confirmRemove?"Confirm removal":"Remove my pin"}</button>}
+        </form>
+      </div>}
+      {message && <div className="globe-message" role="status">{message}<button aria-label="Dismiss message" onClick={()=>setMessage("")}><XMarkIcon/></button></div>}
+    </section>
   );
-};
-
-export default MemberMapHub;
+}

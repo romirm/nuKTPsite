@@ -19,8 +19,6 @@
   font-style: normal;
   font-display: swap;
 }
-
-/* All arcade styling stays inside the public page. */
 .ktp-landing {
   --studio-bg: #211235;
   --studio-panel: #30194d;
@@ -96,8 +94,6 @@
 .ktp-landing .studio-network h2::before { content: "07 / STAY CONNECTED"; }
 .ktp-landing .studio-faq h2::before { content: "08 / NEED A HINT?"; }
 .ktp-landing .studio-recruitment h2::before { content: "09 / TEAM UP WITH US"; }
-
-/* The title screen. */
 .ktp-landing .studio-header {
   position: fixed;
   inset: 0 0 auto;
@@ -177,9 +173,6 @@
 .ktp-landing .studio-hero-rule > span { display: flex; align-items: center; gap: 12px; }
 .ktp-landing .studio-hero-rule a { color: var(--studio-accent); }
 .ktp-landing .arcade-status-dot { width: 8px; height: 8px; background: var(--studio-accent); box-shadow: 0 0 0 3px #d8c4ff1c; flex: 0 0 auto; }
-
-/* Pixel campus and the toy ninja. */
-/* The pixel countdown uses the same framed arcade vocabulary. */
 .ktp-landing .rush-countdown { min-width: 0; background: #211235; border: 3px solid #b6acd1; box-shadow: 8px 8px 0 #30104e; }
 .ktp-landing .rush-countdown-bar, .ktp-landing .rush-countdown-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; font: 500 14px/1.5 "KTP Pixel", monospace; }
 .ktp-landing .rush-countdown-bar { border-bottom: 2px solid #836eaa; color: var(--studio-lilac); }
@@ -198,33 +191,13 @@
 .ktp-landing .rush-countdown-note { color: var(--studio-muted); font-size: 15px; margin-top: 24px; }
 .ktp-landing .rush-countdown-footer { border-top: 2px solid #836eaa; color: var(--studio-lilac); }
 @keyframes rush-digit-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
-
-.ktp-landing .arcade-scene { min-width: 0; border: 3px solid #b6acd1; background: #211235; box-shadow: 8px 8px 0 #30104e; }
-.ktp-landing .arcade-scene-bar, .ktp-landing .arcade-scene-footer { display: flex; justify-content: space-between; gap: 12px; padding: 15px 16px; font: 500 14px/1.5 "KTP Pixel", monospace; }
-.ktp-landing .arcade-scene-bar { border-bottom: 3px solid #b6acd1; color: #e9e4ef; }
-.ktp-landing .arcade-scene-bar span:last-child { color: var(--studio-accent); letter-spacing: 3px; }
-.ktp-landing .arcade-scene-footer { border-top: 3px solid #836eaa; }
-.ktp-landing .arcade-scene-footer span:last-child { color: var(--studio-accent); }
-.ktp-landing .arcade-scene-world { position: relative; aspect-ratio: 4 / 3; overflow: hidden; }
-.ktp-landing .arcade-landscape { display: block; width: 100%; height: 100%; }
-.ktp-landing .arcade-scene-mascot { position: absolute; width: 23%; left: 18%; bottom: 10%; animation: arcade-idle 1.6s steps(2, end) infinite; }
 .ktp-landing .pixel-ninja { display: block; width: 100%; height: 100%; image-rendering: pixelated; overflow: visible; }
-.ktp-landing .arcade-scene-message { position: absolute; left: 0; right: 0; top: 12%; text-align: center; font: 500 14px/1.5 "KTP Pixel", monospace; color: var(--studio-accent); background: #211235d9; padding: 10px; }
 .ktp-landing .ninja-eyes { animation: arcade-blink 6s steps(1, end) infinite; }
 .ktp-landing .ninja-scarf { transform-origin: 22px 13px; animation: arcade-scarf 1.4s steps(2, end) infinite; }
-.ktp-landing .arcade-stars { animation: arcade-twinkle 3s steps(2, end) infinite; }
-.ktp-landing .arcade-coin { animation: arcade-coin 2s steps(4, end) infinite; }
-.ktp-landing .arcade-cloud { animation: arcade-cloud 8s steps(16, end) infinite alternate; }
-@keyframes arcade-idle { 50% { transform: translateY(-4px); } }
 @keyframes arcade-blink { 0%, 96%, 100% { opacity: 1; } 97%, 99% { opacity: 0; } }
 @keyframes arcade-scarf { 50% { transform: rotate(-8deg); } }
-@keyframes arcade-twinkle { 50% { opacity: 0.45; } }
-@keyframes arcade-coin { 50% { transform: translateY(-4px); } }
-@keyframes arcade-cloud { to { transform: translateX(8px); } }
 @keyframes arcade-run-left { 50% { transform: translate(2px, -3px); } }
 @keyframes arcade-run-right { 50% { transform: translate(-2px, 2px); } }
-
-/* Community, photos and character stats. */
 .ktp-landing .studio-greeting > div > div { gap: 64px; grid-template-columns: 1.1fr 0.9fr; align-items: center; }
 .ktp-landing .studio-greeting > div > div > div:first-child { order: 2; }
 .ktp-landing .studio-greeting > div > div > div:last-child { order: 1; max-width: none; }
@@ -247,8 +220,6 @@
 .ktp-landing .studio-about-photos { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-width: 0; }
 .ktp-landing .studio-about-photos img { width: 100%; height: 205px; object-fit: cover; border: 3px solid #836eaa; box-shadow: 4px 4px 0 #211235; }
 .ktp-landing .studio-about-photos img:nth-child(even) { transform: translateY(20px); }
-
-/* Six skill cards. */
 .ktp-landing .studio-pillars > div > div:first-child { text-align: left; max-width: none; margin: 0; }
 .ktp-landing .studio-pillars > div > div:last-child { margin-top: 42px; max-width: none; }
 .ktp-landing .studio-pillars .grid { gap: 20px; counter-reset: pillar; }
@@ -261,8 +232,6 @@
 .ktp-landing .studio-pillars h3 { font-size: 23px; line-height: 1.3; }
 .ktp-landing .studio-pillars p { font-size: 18px; line-height: 1.5; }
 .ktp-landing .studio-pillars .group > div:last-child { display: none; }
-
-/* Continuous belts. Hover pauses; keyboard focus allows manual scrolling. */
 .ktp-landing .studio-companies { background: var(--studio-paper); color: var(--studio-ink); color-scheme: light; border-block: 4px solid #836eaa; }
 .ktp-landing .studio-companies .studio-section-mark { color: var(--studio-purple); }
 .ktp-landing .studio-companies-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 28px; }
@@ -285,8 +254,6 @@
 .ktp-landing .arcade-logo-marquee:has(a:focus-visible) .is-duplicate { display: none; }
 .ktp-landing .arcade-logo-marquee:has(a:focus-visible) .arcade-logo-row { overflow-x: auto; scrollbar-color: #836eaa #b6acd133; }
 @keyframes arcade-marquee { to { transform: translateX(-50%); } }
-
-/* Recruitment checkpoints and player cards. */
 .ktp-landing .studio-rush > div > div:first-child { text-align: left; max-width: none; margin-inline: 0; }
 .ktp-landing .studio-rush .grid { max-width: none; gap: 0; }
 .ktp-landing .studio-rush .group { position: relative; background: transparent; border-top: 3px solid #836eaa; border-radius: 0; box-shadow: none; padding: 28px 22px 0 0; --tw-ring-color: transparent; }
@@ -333,10 +300,7 @@
 .ktp-landing .studio-footer { border-top: 3px solid #836eaa; background: #211235; padding-block: 32px; }
 .ktp-landing .studio-footer p { font-size: 16px; color: #d3c6e4; }
 .ktp-landing .studio-footer a { color: #cab0f3; }
-
-/* The small ninja follows the page beside clickable section checkpoints. */
 .ktp-landing .arcade-journey { position: fixed; z-index: 35; right: 10px; top: 50%; transform: translateY(-50%); height: clamp(240px, 34vh, 320px); max-height: calc(100dvh - 180px); width: 30px; padding: 19px 2px; border: 1px solid #a18aba80; border-radius: 999px; background: #160e27ed; box-shadow: 0 2px 12px #160e2733; display: flex; align-items: center; flex-direction: column; }
-/* The inset travel area keeps the entire ninja inside both rounded ends. */
 .ktp-landing .arcade-journey-rail { position: relative; flex: 1; min-height: 0; width: 100%; --journey-progress: 0; }
 .ktp-landing .arcade-journey-rail::before { content: ""; position: absolute; inset-block: 0; left: calc(50% - .5px); width: 1px; background: #a18aba40; }
 .ktp-landing .arcade-journey-fill { position: absolute; inset-block: 0; left: calc(50% - .5px); width: 1px; background: #d8c4ff70; transform: scaleY(var(--journey-progress)); transform-origin: top; }
@@ -373,7 +337,6 @@
   .ktp-landing .studio-hero-grid { grid-template-columns: 1fr; gap: 50px; padding-top: 64px; }
   .ktp-landing .studio-hero h1 { font-size: clamp(44px, 7vw, 64px); }
   .ktp-landing .studio-hero-copy > p { max-width: 650px; }
-  .ktp-landing .arcade-scene { width: min(100%, 620px); margin-inline: auto; }
   .ktp-landing .rush-countdown { width: min(100%, 620px); margin-inline: auto; }
   .ktp-landing .studio-greeting > div > div { display: grid; grid-template-columns: 1fr; gap: 44px; max-width: none; }
   .ktp-landing .studio-greeting .group > img { height: 580px; }
@@ -412,7 +375,6 @@
   .ktp-landing .studio-actions { gap: 22px; font-size: 18px; }
   .ktp-landing .studio-primary { padding: 12px 14px; }
   .ktp-landing .studio-hero-rule { flex-direction: column; gap: 14px; font-size: 13px; padding-block: 20px; }
-  .ktp-landing .arcade-scene { box-shadow: 5px 5px 0 #30104e; }
   .ktp-landing .rush-countdown { box-shadow: 5px 5px 0 #30104e; }
   .ktp-landing .rush-countdown-bar, .ktp-landing .rush-countdown-footer { padding: 14px 12px; font-size: 12px; gap: 8px; }
   .ktp-landing .rush-countdown-body { padding: 28px 16px 24px; }
@@ -422,8 +384,6 @@
   .ktp-landing .rush-countdown-number { font-size: clamp(30px, 9vw, 46px); }
   .ktp-landing .rush-countdown-unit dt { font-size: 9px; }
   .ktp-landing .rush-countdown-note { font-size: 14px; }
-  .ktp-landing .arcade-scene-bar, .ktp-landing .arcade-scene-footer { font-size: 11px; padding: 12px 10px; }
-  .ktp-landing .arcade-scene-message { font-size: 11px; padding: 9px 4px; }
   .ktp-landing .studio-section { padding-block: 64px; }
   .ktp-landing h2 { font-size: 19px; line-height: 1.65; }
   .ktp-landing .studio-section-mark, .ktp-landing h2::before { font-size: 16px; }

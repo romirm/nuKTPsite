@@ -7,12 +7,6 @@ const os = require("os");
 const { Storage } = require("@google-cloud/storage");
 const gcs = new Storage();
 
-// const ACC_SID = functions.config().twilio.acc_sid;
-// const AUTH_TOKEN = functions.config().twilio.auth_token;
-// const twilio_client = require("twilio")(ACC_SID, AUTH_TOKEN);
-const phoneUtil =
-  require("google-libphonenumber").PhoneNumberUtil.getInstance();
-
 const sharp = require("sharp");
 const fs = require("fs-extra");
 const uuid = require("uuid");
@@ -24,7 +18,6 @@ const getDatabase = () => admin.database();
 const usersRef = () => getDatabase().ref("users");
 const allowedRef = () => getDatabase().ref("allowed_users");
 const publicRef = () => getDatabase().ref("public_users");
-const announcementsRef = () => getDatabase().ref("announcements");
 
 const LEETCODE_API_BASE_URL = "https://leetcode-stats-api.herokuapp.com/";
 const LEETCODE_UPDATE_MIN_INTERVAL_MS = 10 * 60 * 1000;
@@ -482,96 +475,6 @@ exports.setUserAdmin = functions.https.onCall(async (data, context) => {
   }
 });
 
-// exports.sendText = functions.https.onCall(async (data, context) => {
-//   const prom = new Promise((resolve, reject) => {
-//     usersRef.child(context.auth.uid).once("value", (user_snapshot) => {
-//       if (user_snapshot.val()["admin"] === true) {
-//         usersRef.once("value", (all_users) => {
-//           const message = data["message"];
-//           const whoTo = data["whoTo"];
-//           const type = data["type"];
-//           var success = 0;
-//           var newAnnouncement = {
-//             text: message,
-//             whoTo: whoTo,
-//             timestamp: admin.database.ServerValue.TIMESTAMP, // use firebase server timestamp
-//             messageType: type,
-//           };
-//           announcementsRef.push(newAnnouncement);
-//           for (let currUser in all_users.val()) {
-//             try {
-//               const actualUser = all_users.val()[currUser];
-//               if (
-//                 !actualUser["role"] ||
-//                 !actualUser["phone"] ||
-//                 !actualUser["announcement_level"]
-//               ) {
-//                 console.log(
-//                   "Skipping " +
-//                     actualUser["name"] +
-//                     " due to them having an incomplete profile"
-//                 );
-//                 continue;
-//               }
-//               if (whoTo != "Everyone") {
-//                 if (
-//                   actualUser["role"].substring(0, 2) != "VP" &&
-//                   whoTo === "Pledges" &&
-//                   actualUser["role"] != "Pledge"
-//                 ) {
-//                   console.log("Skipping " + actualUser["name"]);
-//                   continue;
-//                 } else if (
-//                   actualUser["role"].substring(0, 2) != "VP" &&
-//                   whoTo === "Brothers" &&
-//                   actualUser["role"] != "Member" &&
-//                   actualUser["role"] != "Brother"
-//                 ) {
-//                   console.log("Skipping " + actualUser["name"]);
-//                   continue;
-//                 }
-//               }
-
-//               if (
-//                 actualUser["role"].substring(0, 2) != "VP" &&
-//                 actualUser["announcement_level"] === 1
-//               ) {
-//                 console.log("Skipping " + actualUser["name"]);
-//                 continue;
-//               }
-
-//               if (
-//                 actualUser["role"].substring(0, 2) != "VP" &&
-//                 actualUser["announcement_level"] === 2 &&
-//                 type === "Event"
-//               ) {
-//                 console.log("Skipping " + actualUser["name"]);
-//                 continue;
-//               }
-//               try {
-//                 console.log("Texting " + actualUser["name"]);
-//                 twilio_client.messages.create({
-//                   body: message,
-//                   from: "+17579193238",
-//                   to:
-//                     "+1" +
-//                     phoneUtil
-//                       .parse(actualUser["phone"], "US")
-//                       .getNationalNumber(),
-//                 });
-//                 success++;
-//               } catch (error) {}
-//             } catch (error2) {}
-//           }
-//           resolve({ status: "Success", amount: success });
-//         });
-//       }
-//     });
-//   });
-//   const val = await prom;
-//   return val;
-// });
-
 exports.resizeCover = functions.storage.object().onFinalize(async (object) => {
   try {
     // generate a unique name we'll use for the temp directories
@@ -729,15 +632,14 @@ exports.beforeAcc = functions.auth.user().beforeCreate(async (user) => {
                 signed_up: false,
                 role: newuser_role,
                 profile_pic_link: user.photoURL,
-                cover_page_link:
-                  "https://images.ctfassets.net/7thvzrs93dvf/wpImage18643/2f45c72db7876d2f40623a8b09a88b17/linkedin-default-background-cover-photo-1.png?w=790&h=196&q=90&fm=png",
+                // Empty covers use the portal's shared purple ninja banner.
+                cover_page_link: "",
                 email: user.email,
               });
               await publicRef().child(user.uid).set({
                 profile_pic_link: user.photoURL,
                 role: newuser_role,
-                cover_page_link:
-                  "https://images.ctfassets.net/7thvzrs93dvf/wpImage18643/2f45c72db7876d2f40623a8b09a88b17/linkedin-default-background-cover-photo-1.png?w=790&h=196&q=90&fm=png",
+                cover_page_link: "",
               });
               resolve(1); //allowed but needs to sign up, correct
             } else if (user_snapshot.val()["signed_up"]) {

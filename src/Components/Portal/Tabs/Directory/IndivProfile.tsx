@@ -1,5 +1,8 @@
 import "animate.css";
-import { MouseEventHandler } from "react";
+import { MouseEventHandler, useEffect, useRef } from "react";
+import ProfileCover from "../../Framework/ProfileCover";
+import PortalBackdrop from "../../Framework/PortalBackdrop";
+import { alumniFacts } from "./directoryModel";
 import {
   ChevronLeftIcon,
   EnvelopeIcon,
@@ -14,17 +17,18 @@ function asString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
-//visible cases:
-//case 1: dir_vis false and not loading
-//case 2: xl size and not loading
 function IndivProfile(props: {
-  tabs: { name: string; href: string; current: boolean }[];
   directory: any;
   activeProfile:string;
   dir_vis: boolean;
   handler: MouseEventHandler<HTMLElement>;
   loading: boolean;
+  alumni?: boolean;
 }) {
+  const profileScrollRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    profileScrollRef.current?.scrollTo({ top: 0 });
+  }, [props.activeProfile]);
   const currProfile =
     props.directory &&
     typeof props.directory === "object" &&
@@ -35,11 +39,10 @@ function IndivProfile(props: {
   if(!currProfile) {
     return <div></div>;
   }
-  const coverImage = asString(currProfile.cover_resized_link) || asString(currProfile.cover_page_link);
   const profileImage = asString(currProfile.pfp_large_link) || asString(currProfile.profile_pic_link);
   const profileName = asString(currProfile.name) || "Member";
-  const profileEmail = asString(currProfile.email);
-  const resumeLink = asString(currProfile.resume_link);
+  const profileEmail = props.alumni ? "" : asString(currProfile.email);
+  const resumeLink = props.alumni ? "" : asString(currProfile.resume_link);
   const aboutHtml = asString(currProfile.about);
   const leetcodeUsername =
     currProfile.leetcode && typeof currProfile.leetcode === "object"
@@ -62,7 +65,7 @@ function IndivProfile(props: {
       ),
     });
   }
-  if (leetcodeUsername) {
+  if (leetcodeUsername && !props.alumni) {
     socials.push({
       name: "Leetcode",
       href: "https://leetcode.com/" + leetcodeUsername,
@@ -102,15 +105,17 @@ function IndivProfile(props: {
     if (asString(currProfile.year)) {
       fields["Class Standing"] = asString(currProfile.year);
     }
-    if (asString(currProfile.major)) {
-      fields["Major"] = asString(currProfile.major);
-    }
+    const majors = Array.isArray(currProfile.majors) ? currProfile.majors.filter((v: unknown) => typeof v === "string").join(", ") : asString(currProfile.major);
+    const minors = Array.isArray(currProfile.minors) ? currProfile.minors.filter((v: unknown) => typeof v === "string").join(", ") : asString(currProfile.minor);
+    if (majors) fields["Majors"] = majors;
+    if (minors) fields["Minors"] = minors;
     if (asString(currProfile.internships)) {
       fields["Relevant Internships"] = asString(currProfile.internships);
     }
     if (asString(currProfile.role)) {
       fields["Role"] = asString(currProfile.role);
     }
+    if (props.alumni) fields = alumniFacts(currProfile);
   return (
     <div
       className={classNames(
@@ -118,10 +123,10 @@ function IndivProfile(props: {
           ? "order-first flex flex-col"
           : "hidden",
         props.loading ? "invisible" : "",
-        "relative flex-1 focus:outline-none xl:order-last xl:flex xl:flex-col xl:order-first"
+        "portal-member-profile relative flex-1 focus:outline-none xl:order-last xl:flex xl:flex-col xl:order-first"
       )}
     >
-      {/* Breadcrumb */}
+
       <nav
         className="cursor-pointer flex items-start px-4 py-3 sm:px-6 lg:px-8 xl:hidden shadow"
         aria-label="Breadcrumb"
@@ -139,33 +144,27 @@ function IndivProfile(props: {
         </a>
       </nav>
 
-      <main className="overflow-y-scroll mobileProfHeight">
+      <main ref={profileScrollRef} className="overflow-y-scroll mobileProfHeight">
         <article className="pb-32 sm:pb-0">
-          {/* Profile header */}
-          <div>
+
+          <div className="portal-profile-hero">
             <div>
-              <img
-                className="h-32 w-full object-cover lg:h-48"
-                src={coverImage}
-                alt=""
-              />
+              <ProfileCover major={currProfile.major} assigned={currProfile.banner_activity}/>
             </div>
-            <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-              <div className="-mt-12 sm:-mt-16 sm:flex sm:items-end sm:space-x-5">
-                <div className="flex">
+            <div className="portal-profile-heading mx-auto max-w-5xl">
+                <div className="portal-profile-avatar">
                   <img
-                    className="h-24 w-24 rounded-full ring-4 ring-white sm:h-32 sm:w-32 object-cover"
+                    className="rounded-full object-cover"
                     src={profileImage}
                     alt=""
                   />
                 </div>
-                <div className="mt-6 sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:justify-end sm:space-x-6 sm:pb-1">
-                  <div className="mt-6 min-w-0 flex-1 sm:hidden 2xl:block">
-                        <h1 className="truncate text-2xl font-bold text-gray-900">
+                <div className="portal-profile-identity">
+                        <h1 className="text-2xl font-bold text-gray-900">
                       {profileName}
                     </h1>
-                  </div>
-                  <div className="justify-stretch mt-6 flex space-y-3 flex-row space-y-0 space-x-4">
+                  <div className="portal-profile-actions">
+                    {!props.alumni && <>
                     <button
                       onClick={() => {
                         window.location.href = "mailto:" + profileEmail;
@@ -197,7 +196,8 @@ function IndivProfile(props: {
                       />
                       <span>Resume</span>
                     </a>
-                    <div className="flex space-x-6 md:order-2 items-center">
+                    </>}
+                    <div className="portal-profile-socials flex items-center">
                       {socials.map(
                         (item: { name: string; href: string; icon: any; className: string }) => (
                           <a
@@ -218,46 +218,22 @@ function IndivProfile(props: {
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="mt-6 hidden min-w-0 flex-1 sm:block 2xl:hidden">
-                <h1 className="truncate text-2xl font-bold text-gray-900">
-                  {profileName}
-                </h1>
-              </div>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="mt-6 sm:mt-2 2xl:mt-5">
-            <div className="border-b border-slate-200">
-              <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-                <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-                  {props.tabs.map((tab) => (
-                    <a
-                      key={tab.name}
-                      href={tab.href}
-                      className={classNames(
-                        tab.current
-                          ? "border-blue-600 text-blue-900 font-bold"
-                          : "border-transparent text-slate-600 hover:text-blue-700 hover:border-blue-300",
-                        "whitespace-nowrap py-4 px-1 border-b-2 transition-colors"
-                      )}
-                      aria-current={tab.current ? "page" : undefined}
-                    >
-                      {tab.name}
-                    </a>
-                  ))}
-                </nav>
-              </div>
-            </div>
-          </div>
-
-          {/* Description list */}
-          <div className="mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8">
-            <div className="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 p-6 sm:p-8">
-              <dl className="grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2">
+          <div className="portal-profile-details mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8">
+            <PortalBackdrop profile />
+            <div className={classNames("portal-profile-content", props.alumni ? "portal-alumni-content" : "")}>
+              {!props.alumni && <section className="portal-profile-about" aria-labelledby="member-about-heading">
+                <h2 id="member-about-heading">About</h2>
+                <div
+                  className="portal-profile-biography"
+                  dangerouslySetInnerHTML={{ __html: aboutHtml }}
+                />
+              </section>}
+              <dl className="portal-profile-facts">
                 {Object.keys(fields).map((field) => (
-                  <div key={field} className="sm:col-span-1">
+                  <div key={field} className="portal-profile-field sm:col-span-1">
                     <dt className="text-xs font-bold uppercase tracking-wider text-blue-600">
                       {field}
                     </dt>
@@ -266,17 +242,6 @@ function IndivProfile(props: {
                     </dd>
                   </div>
                 ))}
-                <div className="sm:col-span-2">
-                  <dt className="text-xs font-bold uppercase tracking-wider bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">
-                    About
-                  </dt>
-                  <dd
-                    className="mt-2 max-w-prose space-y-5 text-sm text-slate-900"
-                    dangerouslySetInnerHTML={{
-                      __html: aboutHtml,
-                    }}
-                  />
-                </div>
               </dl>
             </div>
           </div>

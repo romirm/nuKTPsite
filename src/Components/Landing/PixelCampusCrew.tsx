@@ -18,7 +18,7 @@ export function TelescopeOperator() {
 
 export default function StadiumConstructionCrew() {
   return <g className="stadium-construction-crew" data-campus-activity="construction">
-    {/* Tower crane: the cable and load travel together while the operator stays in the cab. */}
+
     <g transform="translate(0 16)" data-crew-equipment="crane">
       <path fill={ink} d="M496 936h64v8h-64z" />
       <path fill={mid} d="M512 760h6v176h-6zM532 760h6v176h-6zM512 780h26v4h-26zM512 812h26v4h-26zM512 844h26v4h-26zM512 876h26v4h-26zM512 908h26v4h-26z" />
@@ -38,7 +38,6 @@ export default function StadiumConstructionCrew() {
       </g></g>
     </g>
 
-    {/* Bricklayer, a moving hammer, and a small wall in the forecourt. */}
     <g data-crew-equipment="brickwork">
       <path fill={ink} d="M670 960h120v6H670z" />
       <g transform="translate(676 922) scale(2)" className="crew-builder" data-crew-role="bricklayer"><CompactNinjaArtwork /></g>
@@ -51,7 +50,6 @@ export default function StadiumConstructionCrew() {
       <g transform="translate(718 940)"><path className="crew-building-dust" fill={lilac} d="M0 0h2v2H0zM8-4h2v2H8zM18 2h2v2h-2z" /></g>
     </g>
 
-    {/* Excavator driver and a gently digging boom; the tracked base stays planted. */}
     <g transform="translate(832 936)" data-crew-equipment="excavator">
       <path fill={ink} d="M-4 28h112v6H-4zM0 16h100v12H0z" />
       <path fill={mid} d="M4 18h92v8H4zM0 4h92v12H0z" />
@@ -66,7 +64,6 @@ export default function StadiumConstructionCrew() {
       </g></g>
     </g>
 
-    {/* Lavender safety cones keep the scene within the Northwestern palette. */}
     <g fill={mid}><path d="M636 958h18v4h-18zM638 954h14v4h-14zM642 944h6v10h-6zM804 962h18v4h-18zM806 958h14v4h-14zM810 948h6v10h-6z" /></g>
     <path fill={light} d="M640 952h10v2h-10zM808 956h10v2h-10z" />
   </g>;

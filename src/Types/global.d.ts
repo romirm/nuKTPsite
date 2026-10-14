@@ -2,7 +2,6 @@ declare type NavigationType = {
   [key: string]: {
     name: string;
     icon: any;
-    current: boolean;
     secondary: boolean;
     adminonly: boolean;
     pledgeonly: boolean;
@@ -26,6 +25,8 @@ declare type UserProfileType = {
   allowed?: boolean;
   email_viewable?: boolean;
   internships?: string;
+  graduation_year?: string;
+  workplace?: string;
   internships_viewable?: boolean;
   cover_resized_link?: string;
   phone?: string;
@@ -33,17 +34,21 @@ declare type UserProfileType = {
   standing_viewable?: boolean;
   announcement_level?: number;
   cover_page_link?: string;
+  banner_activity?: string;
   email?: string;
   instagram?: string;
   leetcode?: { username?: string; offsets?: any; answers?: any };
   linkedin?: string;
   major?: string;
+  majors?: string[];
+  minor?: string;
+  minors?: string[];
   name?: string;
   pfp_large_link?: string;
   pfp_thumb_link?: string;
   profile_pic_link?: string;
   resume_link?: string;
+  resume_filename?: string;
   role?: string;
-  signed_up?: boolean;
-  year?: freshman;
+  year?: string;
 };

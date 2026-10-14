@@ -33,8 +33,6 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-
-  // Function to process and calculate leaderboard data
   const processPubDir = (dir: any): LeaderboardUser[] => {
     try {
       const lc_users: {
@@ -51,7 +49,6 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
         const user = dir[user_uid];
         if (user.leetcode && user.leetcode.username) {
           if (!user.leetcode.answers) {
-            console.log(user.leetcode.username + " has no answers, skipping");
             continue;
           }
           const prof_pic = user.pfp_large_link
@@ -66,7 +63,6 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
         }
       }
 
-      console.log("ALL LC USERS:", lc_users);
 
       // Calculate stats for each user
       const formattedStats: LeaderboardUser[] = [];
@@ -94,15 +90,12 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
         (a, b) => b.weightedScore - a.weightedScore
       );
 
-      console.log("Processed and sorted leaderboard data:", sortedData);
       return sortedData;
     } catch (errors) {
       console.error("Error loading lc stats:", errors);
       throw new Error("Failed to process leaderboard data");
     }
   };
-
-  // Effect to process data when fullPubDir changes
   useEffect(() => {
     if (!fullPubDir || Object.keys(fullPubDir).length === 0) {
       setLoading(false);
@@ -163,12 +156,12 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
   }
 
   return (
-    <div className="bg-white h-screen overflow-y-scroll">
+    <div className="portal-page-scroll bg-white h-full overflow-y-auto">
         <div className="mx-auto max-w-7xl py-12 px-6">
         <div className="space-y-12">
-          {/* Header Section */}
+
           <div className="space-y-5 sm:space-y-4">
-            <div>
+            <div className="portal-page-heading">
               <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
                 LeetCode Leaderboard
               </h2>
@@ -178,11 +171,11 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
             </div>
 
             {lastUpdated && (
-              <p className="text-gray-500 italic text-sm">
+              <p className="portal-page-note text-gray-500 italic text-sm">
                 Last updated: {lastUpdated.toLocaleTimeString()}
               </p>
             )}
-            <p className="text-gray-500 italic">
+            <p className="portal-page-note text-gray-500 italic">
               Note: This page is automatically updated every 10 minutes via our LeetCode API.
             </p>
 
@@ -229,7 +222,6 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
             )}
           </div>
 
-          {/* Full Leaderboard List */}
           <div className="lg:col-span-2">
             {displayedStats.length === 0 ? (
               <div className="text-center py-12">
@@ -244,12 +236,12 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
             ) : (
               <ul
                 role="list"
-                className="space-y-12 sm:-mt-8 sm:space-y-0 sm:divide-y sm:divide-gray-200 lg:gap-x-8 lg:space-y-0"
+                className="portal-score-list space-y-12 sm:-mt-8 sm:space-y-0 sm:divide-y sm:divide-gray-200 lg:gap-x-8 lg:space-y-0"
               >
                 {displayedStats.map((currUser, index) => (
                   <li key={currUser.name} className="sm:pt-5">
                     <div className="space-y-4 sm:grid sm:grid-cols-3 sm:items-start sm:gap-6 sm:space-y-0 max-w-3xl">
-                      <div className="max-w-[200px] max-h-[200px] mt-[0.335rem]">
+                      <div className="portal-score-avatar max-w-[200px] max-h-[200px] mt-[0.335rem]">
                         <div className="aspect-square overflow-hidden rounded-lg">
                           <img
                             className="rounded-lg shadow-lg object-cover min-w-full min-h-full"

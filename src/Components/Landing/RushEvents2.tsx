@@ -10,13 +10,13 @@ const timeline = [
   },
   {
     name: "Coffee Chats",
-    description: "Dive into casual conversations about tech innovations, career insights, and shared experiences over coffee.",
+    description: "Get to know our members over coffee, share your interests, and ask about their KTP experience.",
     date: "Day 2",
     dateTime: "2026-01-13",
   },
   {
-    name: "Social",
-    description: "Join us for our social to connect with members and discover what KTP is all about.",
+    name: "Social Night",
+    description: "Meet members, make new friends, and spend a relaxed evening getting to know the KTP community.",
     date: "Day 3",
     dateTime: "2026-01-14",
   },
@@ -86,7 +86,9 @@ export default function RushEvents2() {
                   {item.date}
                 </time>
                 <p className="studio-hover-title mt-4 text-xl font-bold tracking-tight text-slate-900 transition-colors">
-                  {item.name}
+                  {item.name.split(" ").map((word) => (
+                    <span key={word} className="block whitespace-nowrap">{word}</span>
+                  ))}
                 </p>
                 <p className="mt-4 text-base leading-7 text-slate-600">
                   {item.description}

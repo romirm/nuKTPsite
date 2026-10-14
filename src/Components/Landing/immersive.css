@@ -1,4 +1,3 @@
-/* One continuous pixel world, with readable content suspended inside it. */
 .ktp-landing { background: #211235; }
 .ktp-landing .studio-header {
   background: #160e27ed;
@@ -7,7 +6,6 @@
   box-shadow: 0 8px 28px #160e2733;
 }
 .ktp-landing .studio-portal { border-color: #a18aba80; background: #4e2a842b; }
-/* Keep all public-page text interactions within the Northwestern palette. */
 .ktp-landing a:not(.arcade-skip-link):is(:hover, :focus-visible),
 .ktp-landing .group:is(:hover, :focus-within) .studio-hover-title { color: var(--studio-accent); }
 .ktp-landing .studio-companies a:is(:hover, :focus-visible) { color: var(--studio-purple); }
@@ -119,8 +117,6 @@
 @keyframes crew-hammer { from { transform: rotate(-22deg); } to { transform: rotate(12deg); } }
 @keyframes crew-building-dust { 0%, 30% { opacity: 0; } 50% { opacity: .6; } 100% { transform: translate(4px, -6px); opacity: 0; } }
 @keyframes crew-excavator { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
-
-/* The opening is a lakefront scene; the original countdown is its glowing console. */
 .ktp-landing .studio-hero {
   min-height: 100svh;
   padding-bottom: 190px;
@@ -161,8 +157,6 @@
 .ktp-landing .rush-countdown-body { background-color: #35205245; }
 .ktp-landing .rush-countdown-tile { background: linear-gradient(#533477 0 50%, #3e265d 50%); }
 .ktp-landing .studio-hero .pixel-world { opacity: .85; }
-
-/* Campus clearing: text rests on a dark translucent map panel. */
 .ktp-landing .studio-greeting { padding-bottom: 220px; }
 .ktp-landing .studio-greeting > div > div { gap: 60px; }
 .ktp-landing .studio-greeting > div > div > div:last-child,
@@ -195,8 +189,6 @@
 .ktp-landing .studio-about-photos img { border-color: #a18aba; box-shadow: 6px 6px 0 #160e27aa; }
 .ktp-landing .studio-about-photos img:nth-child(odd) { transform: rotate(-2deg); }
 .ktp-landing .studio-about-photos img:nth-child(even) { transform: translateY(20px) rotate(2deg); }
-
-/* Portraits and skills become stations along the same wooded path. */
 .ktp-landing .studio-team { padding-bottom: 190px; }
 .ktp-landing .studio-team > div > div:first-child,
 .ktp-landing .studio-pillars > div > div:first-child,
@@ -215,8 +207,6 @@
 }
 .ktp-landing .studio-pillars .group:hover { background: linear-gradient(145deg, #654095, #30194d); box-shadow: 6px 6px 0 #160e2799, 0 0 32px #a18aba22; }
 .ktp-landing .studio-pillars .group > div:first-child > div { background: #211235a8; border: 1px solid #a18aba; box-shadow: 3px 3px 0 #160e27; }
-
-/* A pale skyline district keeps every company logo clear and recognisable. */
 .ktp-landing .studio-companies {
   --world-floor: #211235;
   background: linear-gradient(#d5c6e6, #e9e1f0 58%, #c0add6);
@@ -247,8 +237,6 @@
 .ktp-landing .arcade-logo-marquee { margin-top: 44px; }
 .ktp-landing .arcade-logo-row { margin-block: 20px; }
 .ktp-landing .arcade-logo-list { gap: 28px; padding-right: 28px; }
-
-/* Rush, portal and FAQ continue through the stadium and the glowing grotto. */
 .ktp-landing .studio-rush { padding-bottom: 260px; }
 .ktp-landing .studio-rush .grid { gap: 20px; }
 .ktp-landing .studio-rush .group { background: #211235e8; padding: 28px 18px 22px; border-top-color: #a18aba; }

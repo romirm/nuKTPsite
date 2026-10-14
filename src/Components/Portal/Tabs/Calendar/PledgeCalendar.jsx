@@ -7,14 +7,14 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { Calendar as BigCalendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import { ref, get, child, remove, onValue, set, update } from "firebase/database";
+import { ref, get, child, remove, onValue, update } from "../../../../localPortal/database";
 import Swal from "sweetalert2";
+import { isLocalPortalDemo } from "../../../../localPortal/config";
 
 const localizer = momentLocalizer(moment);
 
 // Custom Toolbar Component
 const CustomToolbar = (toolbar) => {
-  const goToToday = () => toolbar.onNavigate("TODAY");
   const goToBack = () => toolbar.onNavigate("PREV");
   const goToNext = () => toolbar.onNavigate("NEXT");
 
@@ -91,7 +91,7 @@ class PledgeCalendar extends React.Component {
     this.API_KEY = "AIzaSyBj2UQzQuZJrqC4SI5MZ_tBL6jWD9z-sVE";
     this.DEFAULT_GCAL_PUBLIC_URL =
       "https://calendar.google.com/calendar/u/0?cid=0d50eaeb066499c78cb55207b8499ba6dbc9f06ab7e903f45c46eada3b947f5c@group.calendar.google.com";
-    
+
     // Get admin status from props (defaults to false)
     this.isAdmin = props.admin || false;
     this.userRole = props.role || "Member";
@@ -107,21 +107,21 @@ class PledgeCalendar extends React.Component {
         notionEventsFuture: prevState.notionEvents.filter((event) => {
           // Filter out past events
           const isUpcoming = today - new Date(Date.parse(event["Date"])) < millisecondsPerDay;
-          
+
           if (!isUpcoming) return false;
-          
+
           // Admin sees all events
           if (this.isAdmin) return true;
-          
+
           // Non-admin users see events based on Group field
           const eventGroup = event["Group"] || "Everyone";
-          
+
           // Show if event is for Everyone
           if (eventGroup === "Everyone") return true;
-          
+
           // Show if event matches user role (checking for Pledges, Members, etc.)
           if (eventGroup === this.userRole + "s" || eventGroup === this.userRole) return true;
-          
+
           return false;
         }),
       };
@@ -136,16 +136,16 @@ class PledgeCalendar extends React.Component {
         .filter((event) => {
           // Admin sees all events
           if (this.isAdmin) return true;
-          
+
           // Non-admin users see events based on Group field
           const eventGroup = event["Group"] || "Everyone";
-          
+
           // Show if event is for Everyone
           if (eventGroup === "Everyone") return true;
-          
+
           // Show if event matches user role
           if (eventGroup === this.userRole + "s" || eventGroup === this.userRole) return true;
-          
+
           return false;
         })
         .map((event, index) => {
@@ -154,7 +154,6 @@ class PledgeCalendar extends React.Component {
         let date = new Date(Date.parse(event["Date"]));
         let type = event["Type"];
         let mand = event["Mandatory?"];
-        let group = event["Group"];
         let desc = event["Description"];
         let source = event["source"];
         let firebaseId = event["firebaseId"];
@@ -422,17 +421,17 @@ class PledgeCalendar extends React.Component {
     try {
       const dbRef = ref(this.props.database);
       const snapshot = await get(child(dbRef, "calendar_events"));
-      
+
       if (snapshot.exists()) {
         const firebaseEvents = snapshot.val();
         const formattedEvents = [];
 
         for (let eventId in firebaseEvents) {
           const event = firebaseEvents[eventId];
-          
+
           // Keep the date in a parseable format (YYYY-MM-DD or ISO string)
           let dateStr = event.Date;
-          
+
           // Parse YYYY-MM-DD string as local date (not UTC) to avoid timezone offset issues
           let dateObj;
           if (dateStr && dateStr.includes('-')) {
@@ -441,14 +440,14 @@ class PledgeCalendar extends React.Component {
           } else {
             dateObj = new Date(dateStr);
           }
-          
+
           // Format to match Notion event structure with consistent date format
           const formattedEvent = {
             Name: event.Name,
-            Date: dateObj.toLocaleDateString("en-US", { 
-              month: "long", 
-              day: "numeric", 
-              year: "numeric" 
+            Date: dateObj.toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric"
             }),
             Type: event.Type || "Social",
             "Mandatory?": event["Mandatory?"] ? "Yes" : "No",
@@ -464,7 +463,7 @@ class PledgeCalendar extends React.Component {
         // Merge with existing Notion events
         this.setState((prevState) => {
           const mergedEvents = [...prevState.notionEvents, ...formattedEvents];
-          
+
           // Sort by date
           mergedEvents.sort((a, b) => {
             let a_date = new Date(Date.parse(a["Date"]));
@@ -494,7 +493,7 @@ class PledgeCalendar extends React.Component {
   async loadNotionPage() {
     try {
       const res = await this.fetchNotionContent(this.NOTION_ID);
-      
+
       return new Promise((resolve) => {
         this.setState({ notionPageData: res.data }, () => {
           if (this.state.notionPageData && this.state.notionPageData.length > 0) {
@@ -601,7 +600,7 @@ class PledgeCalendar extends React.Component {
 
                     // After notionEvents is created, add them to the UI
                     this.createEventDates();
-                    
+
                     // Notion API fetch is no longer in progress
                     this.setState({ loading: false });
                     resolve();
@@ -633,6 +632,7 @@ class PledgeCalendar extends React.Component {
 
   // Fetch data from Notion's API endpoint
   fetchNotionContent = (pageId) => {
+    if (isLocalPortalDemo) return Promise.resolve({ data: [] });
     const apiCompletionPromise = request({
       method: "GET",
       url: "https://notion-api.splitbee.io/v1/table/" + pageId,
@@ -691,23 +691,21 @@ class PledgeCalendar extends React.Component {
   render() {
     return (
       <>
-        <div className="overflow-y-auto m-8">
-          {/* Header */}
-          <div className="mb-6">
-            {/* Icon and Title */}
+        <div className="portal-page overflow-y-auto m-8">
+
+          <div className="portal-page-heading mb-6">
+
             <div className="flex items-center pb-2">
-              {/* Calendar Icon */}
+
               <div className="flex justify-center items-center">
                 <CalendarDaysIcon className="text-blue-600 mr-3 h-8 w-8" />
               </div>
 
-              {/* Title */}
               <div className="text-3xl font-bold tracking-tight text-gray-900">
                 KTP Calendar
               </div>
             </div>
 
-            {/* Subtitle */}
             <div className="mt-2 text-sm text-gray-600">
               View the shared Google Calendar for KTP.
             </div>
@@ -740,15 +738,15 @@ class PledgeCalendar extends React.Component {
                 {this.state.notionCols.length > 0 ? (
                   <div className="w-full">
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                      {/* Table */}
+
                       <div className="overflow-x-auto">
                         <table className="w-full divide-y divide-gray-200">
                           <thead className="bg-gradient-to-r from-blue-50 to-blue-100">
-                            {/* Render columns */}
+
                             <tr>
                               {this.state.notionCols.map((column, index) => (
-                                <th 
-                                  key={index} 
+                                <th
+                                  key={index}
                                   className="px-6 py-3 text-left text-xs font-semibold text-blue-900 uppercase tracking-wider"
                                 >
                                   {column}
@@ -762,18 +760,18 @@ class PledgeCalendar extends React.Component {
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-gray-200">
-                            {/* Render rows */}
+
                             {this.state.notionEventsFuture.map(
                               (event, index) => (
-                                <tr 
+                                <tr
                                   key={index}
                                   className="hover:bg-blue-50 transition-colors duration-150"
                                 >
-                                  {/* Render each point in each row - only display defined columns */}
+
                                   {this.state.notionCols.map((column, cellIndex) => {
                                     const value = event[column];
                                     return (
-                                      <td 
+                                      <td
                                         key={cellIndex}
                                         className="px-6 py-3 whitespace-nowrap text-sm text-gray-900"
                                       >
@@ -783,8 +781,8 @@ class PledgeCalendar extends React.Component {
                                           </span>
                                         ) : column === "Mandatory?" ? (
                                           <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                                            value === "Yes" 
-                                              ? "bg-red-100 text-red-800" 
+                                            value === "Yes"
+                                              ? "bg-red-100 text-red-800"
                                               : "bg-green-100 text-green-800"
                                           }`}>
                                             {value === "Yes" ? "Required" : "Optional"}
@@ -851,18 +849,18 @@ class PledgeCalendar extends React.Component {
                     selectable={false}
                     eventPropGetter={this.eventStyleGetter}
                     onSelectEvent={() => false}
-                    components={{ 
+                    components={{
                       toolbar: CustomToolbar,
                       event: ({ event }) => (
-                        <div 
+                        <div
                           onMouseEnter={(e) => this.onEventMouseEnter(event, e)}
                           onMouseLeave={this.onEventMouseLeave}
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); return false; }}
-                          style={{ 
-                            height: '100%', 
+                          style={{
+                            height: '100%',
                             width: '100%',
-                            overflow: 'hidden', 
-                            cursor: 'default', 
+                            overflow: 'hidden',
+                            cursor: 'default',
                             userSelect: 'none',
                             padding: '2px 4px'
                           }}
@@ -873,9 +871,9 @@ class PledgeCalendar extends React.Component {
                     }}
                   />
                 </div>
-                {/* Hover Tooltip */}
+
                 {this.state.hoveredEvent && (
-                  <div 
+                  <div
                     style={{
                       position: 'fixed',
                       left: `${this.state.tooltipPosition.x}px`,

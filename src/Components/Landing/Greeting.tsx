@@ -71,20 +71,19 @@ function Greeting() {
       <PixelWorld scene="campus" />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-16 gap-y-16 lg:mx-0 lg:min-w-full lg:max-w-none lg:flex-none lg:grid-cols-2 lg:items-center">
-          
-          {/* Left Side: Testimonial Card */}
+
           <div className="relative">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               // Uses naturalSpring for the entrance animation
               transition={naturalSpring}
               // Hover physics are refined for a smooth lift and subtle scale
-              whileHover={{ 
+              whileHover={{
                 y: -4,
                 scale: 1.015,
-                transition: { type: "spring", stiffness: 300, damping: 25 } 
+                transition: { type: "spring", stiffness: 300, damping: 25 }
               }}
               className="group relative overflow-hidden rounded-3xl bg-gray-900 shadow-2xl transition-shadow duration-500 ring-1 ring-slate-200 hover:ring-blue-200"
             >
@@ -94,7 +93,7 @@ function Greeting() {
                 alt="KTP Member Quote"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/20 opacity-90" />
-              
+
               <div className="absolute bottom-0 p-8 sm:p-12">
                 <blockquote className="text-xl font-medium text-white leading-relaxed">
                   <p className="relative italic">
@@ -109,7 +108,6 @@ function Greeting() {
             </motion.div>
           </div>
 
-          {/* Right Side: Text Content */}
           <div className="lg:max-w-lg lg:pt-4">
             <motion.div
               initial={{ opacity: 0, x: 20 }}
@@ -125,8 +123,8 @@ function Greeting() {
               </h2>
               <div className="mt-8 space-y-6 text-lg leading-relaxed text-slate-600">
                 <p>
-                  Welcome to the Kappa Chapter of Kappa Theta Pi, Northwestern's premier 
-                  pre-professional technology fraternity. 
+                  Welcome to the Kappa Chapter of Kappa Theta Pi, Northwestern's premier
+                  pre-professional technology fraternity.
                   At KTP, we prepare members for their prospective careers through professional development, taught by those who have been in the industry.
                 </p>
                 <p>
@@ -134,7 +132,6 @@ function Greeting() {
                 </p>
               </div>
 
-              {/* Stats Section */}
               <div className="mt-12" ref={statsRef}>
                 <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3">
                   {stats.map((stat) => (

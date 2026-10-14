@@ -1,4 +1,3 @@
-/* Decorative landscapes sit below the content, in the section's breathing room. */
 .ktp-landing .studio-about,
 .ktp-landing .studio-rush { isolation: isolate; overflow: clip; }
 .ktp-landing .studio-hero { padding-bottom: 224px; overflow: clip; }
@@ -35,8 +34,6 @@
 @keyframes campus-glimmer { to { opacity: .2; } }
 @keyframes campus-fireflies { to { transform: translateY(-8px); opacity: .15; } }
 @keyframes campus-flags { to { transform: translateY(2px); } }
-
-/* Flybys cross the section margins; their staggered timing leaves quiet gaps. */
 .ktp-landing .arcade-sky-section { overflow: clip; }
 .ktp-landing .arcade-flight {
   position: absolute;

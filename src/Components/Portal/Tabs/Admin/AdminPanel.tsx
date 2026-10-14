@@ -6,7 +6,8 @@ import {
   AcademicCapIcon,
   CheckBadgeIcon,
 } from "@heroicons/react/20/solid";
-import { ref, set, get, child, update, remove } from "firebase/database";
+import { ref, set, get, child, update, remove } from "../../../../localPortal/database";
+import { resolveMemberRole } from "../../../../localPortal/memberRoles.mjs";
 import Swal from "sweetalert2";
 import { Tab } from "@headlessui/react";
 
@@ -179,7 +180,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
           uid,
           name: toDisplayString(publicUsers[uid]?.name, "Unknown"),
           currentRole: toDisplayString(
-            allowedUsers[uid]?.role ?? publicUsers[uid]?.role,
+            resolveMemberRole(uid, publicUsers[uid], allowedUsers),
             "No Role"
           ),
           currentAdmin: Boolean(adminByUid[uid])
@@ -189,7 +190,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       const pledgeRows: PledgeTrackerUserRow[] = [];
       Object.keys(publicUsers).forEach((uid) => {
         const user = publicUsers[uid] || {};
-        const mergedRole = String(allowedUsers[uid]?.role || user.role || "").trim().toLowerCase();
+        const mergedRole = resolveMemberRole(uid, user, allowedUsers).toLowerCase();
 
         if (mergedRole !== "pledge") {
           return;
@@ -253,7 +254,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       .then(() => {
         // Update local state
         this.setState({
-          users: this.state.users.map(u => 
+          users: this.state.users.map(u =>
             u.uid === uid ? { ...u, currentRole: newRole } : u
           )
         });
@@ -514,7 +515,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
           title: "Event Added!",
           text: `Successfully added "${eventName}" to the calendar.`
         });
-        
+
         // Reset form
         this.setState({
           eventName: "",
@@ -524,12 +525,12 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
           eventGroup: "Everyone",
           eventDescription: ""
         });
-        
+
         // Clear input refs
         if (this.eventNameInput.current) this.eventNameInput.current.value = "";
         if (this.eventDateInput.current) this.eventDateInput.current.value = "";
         if (this.eventDescInput.current) this.eventDescInput.current.value = "";
-        
+
         // Reload calendar events
         this.loadCalendarEvents();
       })
@@ -547,14 +548,14 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
       this.setState({ calendarLoading: true });
       const dbRef = ref(this.props.database);
       const snapshot = await get(child(dbRef, "calendar_events"));
-      
+
       if (snapshot.exists()) {
         const firebaseEvents = snapshot.val();
         const formattedEvents = [];
 
         for (let eventId in firebaseEvents) {
           const event = firebaseEvents[eventId];
-          
+
           // Parse date to ensure proper formatting
           let dateStr = event.Date;
           let dateObj;
@@ -564,7 +565,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
           } else {
             dateObj = new Date(dateStr);
           }
-          
+
           const formattedEvent = {
             id: eventId,
             Name: event.Name,
@@ -763,7 +764,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
 
   render() {
     const execRoles = ["President", "VP of Technology", "VP of Programming", "VP of Recruitment", "VP of External Affairs", "VP of Internal Experience", "VP of Marketing", "VP of Finance", "VP of DEI", "VP of Pledge Experience"];
-    
+
     const normalizedSearchTerm = this.state.searchTerm.toLowerCase();
     const filteredUsers = this.state.users.filter(user => {
       const userName = toDisplayString(user.name, "Unknown").toLowerCase();
@@ -808,7 +809,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
 
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <Tab.Panels>
-              {/* Tab 1: Member Management */}
+
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
@@ -817,7 +818,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
           </div>
         </div>
 
-        {/* Add new user section */}
         <div className="mt-2 px-4 w-full">
           <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
@@ -876,7 +876,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         </div>
               </Tab.Panel>
 
-              {/* Tab 2: User Roles */}
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
@@ -894,8 +893,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
               <div className="mt-2 max-w-xl text-sm text-gray-600">
                 <p>Select Member/Pledge/Alumni, or choose Exec for leadership or Custom.</p>
               </div>
-              
-              {/* Search bar */}
+
               <div className="mt-4 mb-4">
                 <label htmlFor="search-users" className="sr-only">Search users</label>
                 <input
@@ -908,7 +906,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 />
               </div>
 
-              {/* User list */}
               {this.state.loading ? (
                 <div className="text-center py-4 text-gray-600">Loading users...</div>
               ) : (
@@ -974,8 +971,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                                   <option value="Exec">Exec</option>
                                   <option value="Custom">Custom</option>
                                 </select>
-                                
-                                {/* Show exec dropdown if Exec is selected */}
+
                                 {this.state.roleSelections[user.uid] === "Exec" && (
                                   <select
                                     className="block rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
@@ -995,8 +991,7 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                                     ))}
                                   </select>
                                 )}
-                                
-                                {/* Show custom input if Custom is selected */}
+
                                 {this.state.roleSelections[user.uid] === "Custom" && (
                                   <input
                                     type="text"
@@ -1054,7 +1049,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         </div>
               </Tab.Panel>
 
-              {/* Tab 3: Academic Info */}
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
           <div className="flex items-center mb-4">
@@ -1142,7 +1136,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
         </div>
               </Tab.Panel>
 
-              {/* Tab 4: Pledge Tracker */}
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
                   <div className="flex items-center mb-4">
@@ -1313,7 +1306,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 </div>
               </Tab.Panel>
 
-              {/* Tab 5: Maps */}
               <Tab.Panel>
                 <div className="mt-6 px-4 w-full">
                   <div className="flex items-center mb-4">
@@ -1348,7 +1340,6 @@ class AdminPanel extends React.Component<{firebase:any,database:any}, AdminPanel
                 </div>
               </Tab.Panel>
 
-              {/* Tab 6: Quick Links */}
               <Tab.Panel>
                 <div className="mt-4 px-4 w-full">
           <div className="bg-gradient-to-r from-blue-50 to-transparent border border-blue-100 shadow sm:rounded-lg">

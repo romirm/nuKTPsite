@@ -25,3 +25,6 @@ yarn-error.log*
 
 # local planning docs (never commit)
 /local-docs/
+
+# Real member snapshots for localhost testing only (never bundle or commit).
+/.local-portal/

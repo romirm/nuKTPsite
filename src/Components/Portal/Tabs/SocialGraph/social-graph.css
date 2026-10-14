@@ -1,0 +1,135 @@
+.ktp-portal .portal-tab-region[data-portal-tab=SocialGraph] { padding: 16px 20px; overflow: hidden; }
+.ktp-portal .social-graph { --sg-line: #a18aba38; --sg-muted: #bfaecc; display: flex; flex-direction: column; gap: 12px; height: 100%; min-height: 420px; color: #f2ebfa; }
+.ktp-portal .social-graph h3 { color: #f3eafa; }
+.social-toolbar { display: flex; gap: 8px; flex-shrink: 0; }
+.social-search { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 120px; padding: 0 12px; background: #251733d9; border: 1px solid #a18aba60; border-radius: 5px; }
+.social-search > svg { width: 17px; height: 17px; color: #c9b8db; flex-shrink: 0; }
+.ktp-portal.portal-app .portal-tab-region[data-portal-tab=SocialGraph] .social-search input { min-width: 0; width: 100%; padding: 9px 0; background: transparent; color: #f6f0ff; border: 0; border-radius: 0; box-shadow: none; outline: none; font-size: 12px; }
+.social-search:focus-within { outline: 2px solid #bda1e3; outline-offset: 2px; }
+.ktp-portal .social-graph input::placeholder { color: #b7a5c9; }
+.ktp-portal.portal-app .portal-tab-region[data-portal-tab=SocialGraph] .social-graph select { background-color: #2b1d3d; color: #eee5f8; border: 1px solid #a18aba60; border-radius: 5px; padding: 8px 30px 8px 10px; font-size: 12px; color-scheme: dark; }
+.ktp-portal .social-graph select option { background: #2b1d3d; }
+.social-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 8px 12px; border: 1px solid #a18aba60; background: #302044; border-radius: 5px; color: #f2eafa; font-size: 12px; white-space: nowrap; }
+.social-button > svg { width: 16px; height: 16px; }
+.social-button:hover, .social-button.is-active { background: #4f326e; border-color: #c2a5e5; }
+.social-button:disabled { opacity: .45; }
+.social-filter-dot { width: 5px; height: 5px; background: #a8ead5; border-radius: 50%; }
+.social-filter-panel { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) auto; gap: 12px; flex-shrink: 0; max-height: 40%; overflow-y: auto; padding: 14px; background: #271938; border: 1px solid var(--sg-line); border-radius: 5px; }
+.ktp-portal .social-filter-panel > label { display: flex; flex-direction: column; gap: 5px; color: #d8c9e6; font-size: 11px; }
+.social-filter-panel select { width: 100%; min-width: 0; }
+.social-filter-panel input[type=range] { height: 30px; padding: 0; accent-color: #c6adff; }
+.social-text-button { color: #ddc5f5; font-size: 11px; white-space: nowrap; }
+.social-text-button:hover { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
+.social-kind-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; grid-column: 1 / -1; }
+.social-kind-row > span { font-size: 11px; color: #c4b2d4; margin-right: 6px; }
+.social-kind-row > button { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #bba0d240; border-radius: 4px; padding: 4px 8px; color: #bfaecf; font-size: 11px; background: transparent; }
+.social-kind-row > button[aria-pressed=true] { color: #f1e8fb; border-color: #bba0d280; background: #51357480; }
+.social-kind-row > button[aria-pressed=false] i { opacity: .2; }
+.social-kind-row i, .social-year-legend i, .social-reason summary > i { display: inline-block; width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.social-method { grid-column: 1 / -1; font-size: 11px; color: #c5b2d6; }
+.social-method summary { cursor: pointer; width: fit-content; }
+.social-method p { margin-top: 8px; max-width: 85ch; line-height: 1.7; }
+.social-workbench { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 285px; border: 1px solid #a18aba60; border-radius: 6px; overflow: hidden; background: #251735; }
+.social-workbench.is-overview { grid-template-columns: 1fr; }
+.social-workbench.is-overview .social-inspector { display: none; }
+.social-explorer { min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.social-explorer-bar { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; height: 43px; padding: 6px 12px; border-bottom: 1px solid var(--sg-line); background: #2c1d3d; gap: 8px; }
+.social-view-switch { display: inline-flex; gap: 3px; align-items: center; }
+.social-view-switch button { display: flex; align-items: center; gap: 5px; color: #bdadce; padding: 4px 8px; border-radius: 4px; font-size: 11px; }
+.social-view-switch svg { width: 13px; height: 13px; }
+.social-view-switch button[aria-pressed=true] { color: #f6edff; background: #513770; }
+.ktp-portal .social-layout { display: flex; gap: 5px; align-items: center; font-size: 11px; color: #bdadce; }
+.ktp-portal.portal-app .portal-tab-region[data-portal-tab=SocialGraph] .social-layout select { border: 0; background-color: transparent; padding: 3px 25px 3px 4px; font-size: 11px; }
+.social-stage { position: relative; flex: 1; min-height: 0; min-width: 0; background: radial-gradient(ellipse at 50% 45%, #4b33714a, transparent 80%), #241633; }
+.social-map { position: relative; height: 100%; overflow: hidden; }
+.social-canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: none; }
+.social-canvas:active { cursor: grabbing; }
+.social-canvas:focus-visible { outline-offset: -3px; }
+.social-node { cursor: pointer; outline: none; }
+.social-node:focus .social-node-frame { stroke: #fff; stroke-width: 4; }
+.social-node:hover .social-node-frame { fill: #705099; }
+.social-node-initials { font: 600 13px 'KTP Portal Reading', sans-serif; }
+.social-node-label { fill: #f6f0ff; font: 500 13px 'KTP Portal Reading', sans-serif; paint-order: stroke; stroke: #241633; stroke-width: 4px; stroke-linejoin: round; pointer-events: none; }
+.social-edge { cursor: pointer; }
+.social-edge:hover line:first-of-type { opacity: 1; stroke-width: 3; }
+.social-edge-score rect { fill: #302044; stroke: #a18aba55; stroke-width: 1; }
+.social-edge-score text { fill: #f4ebff; font: 600 15px 'KTP Portal Reading', sans-serif; font-variant-numeric: tabular-nums lining-nums; }
+.social-orbits circle { fill: #65409512; stroke: #c6adff25; stroke-width: 1; }
+.social-map-group rect { fill: #c6adff03; stroke: #c6adff30; stroke-dasharray: 4 6; }
+.social-map-group text { fill: #d5bee9; font: 500 13px 'KTP Portal Reading', sans-serif; }
+.social-map-controls { position: absolute; right: 12px; bottom: 12px; display: flex; align-items: center; background: #2c1d3dee; border: 1px solid #a18aba50; border-radius: 5px; }
+.social-map-controls button { display: grid; place-items: center; height: 32px; width: 32px; color: #e3d4f1; }
+.social-map-controls button:last-child { border-left: 1px solid #a18aba50; }
+.social-map-controls button:hover { background: #4e326e; }
+.social-map-controls button:disabled { opacity: .3; }
+.social-map-controls svg { width: 15px; height: 15px; }
+.social-map-controls span { color: #dac9e9; font-size: 11px; font-variant-numeric: tabular-nums; width: 40px; text-align: center; }
+.social-map-footer { padding: 8px 12px; border-top: 1px solid var(--sg-line); flex-shrink: 0; }
+.social-year-legend { display: flex; flex-wrap: wrap; gap: 5px 12px; }
+.social-year-legend > span { display: inline-flex; align-items: center; gap: 5px; color: #cdbbdd; font-size: 10px; }
+.social-inspector { min-width: 0; min-height: 0; overflow-y: auto; border-left: 1px solid var(--sg-line); padding: 15px; background: #2a1b3b; }
+.social-panel-heading { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.social-panel-heading > button:last-child { padding: 3px; border-radius: 3px; color: #c9b4da; }
+.social-panel-heading svg { width: 15px; height: 15px; }
+.social-selected-member { display: flex; align-items: center; gap: 10px; }
+.social-avatar { display: inline-grid; place-items: center; position: relative; flex-shrink: 0; width: 34px; height: 34px; border: 1px solid; border-radius: 10px; background: #37264c; color: #dac1ee; font-size: 11px; font-weight: 600; overflow: hidden; }
+.social-avatar img { position: absolute; width: 100%; height: 100%; object-fit: cover; inset: 0; }
+.social-selected-member > .social-avatar { width: 40px; height: 40px; border-radius: 12px; }
+.ktp-portal .social-selected-member h3 { color: #f7edff; font-size: 17px; line-height: 1.3; font-weight: 550; overflow-wrap: anywhere; }
+.social-selected-member p { color: #c5b3d6; font-size: 10px; margin-top: 4px; }
+.social-profile-link { display: inline-flex; gap: 6px; align-items: center; margin: 9px 0 0 50px; color: #d6b7fa; font-size: 11px; }
+.social-profile-link:hover { text-decoration: underline; }
+.social-profile-link svg { width: 12px; height: 12px; }
+.social-connection-heading { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 17px 0 0; padding: 12px 0 8px; border-top: 1px solid var(--sg-line); }
+.social-connection-heading h4 { font-size: 11px; font-weight: 500; color: #e3d5ef; }
+.social-connection-heading > span { color: #c0aacd; font-size: 10px; }
+.social-connection { display: flex; width: 100%; text-align: left; gap: 9px; align-items: center; padding: 11px 0; border-bottom: 1px solid #a18aba24; }
+.social-connection > span:nth-child(2) { min-width: 0; flex: 1; }
+.social-connection strong { display: block; color: #f0e5fa; font-size: 12px; line-height: 1.4; font-weight: 500; }
+.social-connection > span:nth-child(2) > span { display: block; font-size: 10px; color: #bca9ce; line-height: 1.5; margin-top: 3px; }
+.social-connection > b { color: #e8d7ff; font: 600 19px/1.2 'KTP Portal Reading', sans-serif; font-variant-numeric: tabular-nums lining-nums; min-width: 28px; text-align: right; }
+.social-connection:hover { background: #a18aba10; }
+.social-panel-empty { color: #c3afd4; font-size: 12px; padding: 20px 0; }
+.social-back { display: inline-flex; gap: 6px; align-items: center; color: #d4bce9; font-size: 11px; margin: 14px 0; }
+.social-back svg { width: 13px; height: 13px; }
+.social-compare-person { display: flex; gap: 10px; align-items: center; }
+.social-compare-person strong { color: #f0e5fa; font-size: 13px; font-weight: 500; }
+.social-similarity-score { display: flex; align-items: baseline; justify-content: space-between; padding: 18px 0; }
+.social-similarity-score > strong { font-size: 38px; font-weight: 550; line-height: 1; color: #eee2ff; font-variant-numeric: tabular-nums lining-nums; }
+.social-similarity-score small { font-size: 14px; color: #bda9d0; font-weight: 400; margin-left: 4px; }
+.social-similarity-score > span { color: #c5b0d5; font-size: 11px; }
+.social-reason { border-bottom: 1px solid #a18aba35; }
+.social-reason summary { cursor: pointer; display: flex; align-items: center; gap: 8px; color: #ecdef8; font-size: 12px; padding: 11px 0; list-style: none; }
+.social-reason summary::after { content: '+'; margin-left: auto; color: #c4aad9; }
+.social-reason[open] summary::after { content: '−'; }
+.social-reason summary small { display: block; color: #b8a3ca; font-size: 10px; margin-top: 2px; }
+.social-reason > div { padding: 0 0 12px; font-size: 11px; overflow-wrap: anywhere; }
+.social-reason strong { font-weight: 500; color: #e0ccec; }
+.social-reason p { color: #c3afd3; line-height: 1.7; margin: 4px 0 11px; }
+.social-full-button { width: 100%; margin-top: 16px; }
+.social-member-list { height: 100%; overflow-y: auto; padding: 4px 14px; }
+.social-member-list > button { width: 100%; display: flex; align-items: center; gap: 11px; padding: 12px 2px; text-align: left; border-bottom: 1px solid var(--sg-line); }
+.social-member-list > button:hover, .social-member-list > button[aria-pressed=true] { background: #65409530; }
+.social-member-list > button > span:nth-child(2) { flex: 1; min-width: 0; }
+.social-member-list strong { display: block; color: #f2e8fa; font-size: 13px; font-weight: 500; }
+.social-member-list strong small { font-size: 8px; margin-left: 8px; color: #fce7ad; }
+.social-member-list > button > span:nth-child(2) > span { display: block; color: #c4afd6; font-size: 11px; }
+.social-member-list b { color: #ddcafa; font: 600 19px 'KTP Portal Reading', sans-serif; font-variant-numeric: tabular-nums lining-nums; text-align: right; }
+.social-member-list b small { display: block; color: #bdabd0; font-size: 9px; font-weight: 400; }
+.social-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; padding: 25px; }
+.ktp-portal .social-empty h3 { color: #f0e4ff; font-size: 18px; }
+.social-no-links { position: absolute; bottom: 22px; left: 16px; max-width: calc(100% - 180px); color: #cdb9de; font-size: 11px; pointer-events: none; }
+.social-status { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-shrink: 0; color: #cdbadd; font-size: 11px; line-height: 1.4; font-variant-numeric: tabular-nums; }
+@media (min-width: 1650px) { .social-workbench { grid-template-columns: minmax(0, 1fr) 315px; } }
+@media (max-width: 1100px) { .social-workbench { grid-template-columns: minmax(0, 1fr) 255px; } .social-filter-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) {
+  .ktp-portal .portal-tab-region[data-portal-tab=SocialGraph] { padding: 12px; overflow: auto; }
+  .ktp-portal .social-graph { height: auto; min-height: 100%; gap: 10px; }
+  .social-toolbar { flex-wrap: wrap; } .social-search { flex-basis: 100%; } .social-population { flex: 1; } .social-population select { width: 100%; }
+  .social-workbench { flex: none; grid-template-columns: 1fr; } .social-workbench.is-overview { grid-template-columns: 1fr; }
+  .social-stage { flex: none; height: 380px; } .social-explorer-bar { padding-inline: 8px; } .social-layout > span { display: none; }
+  .social-inspector { border-left: 0; border-top: 1px solid var(--sg-line); max-height: 380px; padding: 15px; }
+  .social-filter-panel { max-height: none; } .social-node-label { font-size: 17px; } .social-edge-score text { font-size: 21px; }
+  .social-no-links { font-size: 10px; } .social-status { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) { .social-graph *, .social-graph *::before, .social-graph *::after { animation: none !important; transition: none !important; } }

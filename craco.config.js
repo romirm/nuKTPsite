@@ -11,7 +11,6 @@ module.exports = {
       '@portal': path.resolve(__dirname, 'src/Components/Portal'),
       '@landing': path.resolve(__dirname, 'src/Components/Landing'),
     },
-    // Add the configuration block below to handle the SVG errors
     configure: (webpackConfig) => {
       webpackConfig.module.rules.forEach((rule) => {
         if (rule.oneOf) {

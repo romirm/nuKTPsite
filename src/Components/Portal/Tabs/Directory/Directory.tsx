@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { graduationYear } from "./directoryModel";
 import {
   FunnelIcon,
   MagnifyingGlassIcon,
@@ -18,12 +19,8 @@ function toDisplayString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }
 
-//dir vis but not loading: visible
-//no dir vis and not loading: invisible
-//no dir vis and loading: invisible
-//dir vis and loading: invisible
-
 function Directory(props: any) {
+  const alumni = props.population === "alumni";
   const [searchVal, setSearchVal] = React.useState("");
   const [showType, setShowType] = React.useState("Everyone");
   const [shownDirectory, setShownDirectory]:any = React.useState([{}, 0]); // [directory, amount of results]
@@ -37,19 +34,12 @@ function Directory(props: any) {
   }
 
   function profileIncludesSearch(profile: any, search_val: string) {
-    const searches = [
-      "about",
-      "email",
-      "internships",
-      "linkedin",
-      "instagram",
-      "major",
-      "name",
-      "role",
-      "year",
-    ];
+    if (alumni && graduationYear(profile).includes(search_val)) return true;
+    const searches = alumni
+      ? ["name", "major", "majors", "workplace", "graduation_year", "linkedin", "instagram"]
+      : ["about", "email", "internships", "linkedin", "instagram", "major", "majors", "minor", "minors", "name", "role", "year"];
     for (var i = 0; i < searches.length; i++) {
-      const searchableValue = toSearchableString(profile[searches[i]]);
+      const searchableValue = toSearchableString(Array.isArray(profile[searches[i]]) ? profile[searches[i]].join(" ") : profile[searches[i]]);
       if (searchableValue.includes(search_val)) {
         return true;
       }
@@ -58,6 +48,7 @@ function Directory(props: any) {
   }
 
   function profMatchesShowType(elem: any): boolean {
+    if (alumni) return showType === "Everyone" || graduationYear(elem) === showType;
     const role = toDisplayString(elem?.role);
     if (showType === "Everyone") {
       return true;
@@ -65,7 +56,7 @@ function Directory(props: any) {
       return (
         role.length > 0 &&
         (role === showType ||
-          (showType === "Member" && role.includes("VP of")))
+          (showType === "Member" && /^(VP of|President|Vice President|Co-President|Treasurer|Secretary)/i.test(role)))
       );
     }
   }
@@ -109,10 +100,10 @@ function Directory(props: any) {
           ? "order-first flex flex-col"
           : "hidden",
         props.loading ? "" : "xl:order-first xl:flex xl:flex-col",
-        "w-full xl:w-96 flex-shrink-0 border-r border-gray-200"
+        "portal-directory-list w-full xl:w-96 flex-shrink-0 border-r border-gray-200"
       )}
     >
-      {/* Breadcrumb */}
+
       <div
         className="cursor-pointer w-full flex bg-gray-50 shadow"
         onClick={props.handler}
@@ -131,10 +122,10 @@ function Directory(props: any) {
         </nav>
       </div>
       <div className="px-6 pt-6 pb-4">
-        <h2 className="text-lg font-bold bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">Member Directory</h2>
+        <h2 className="text-lg font-bold bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">{alumni ? "Alumni Directory" : "Member Directory"}</h2>
         {searchVal === "" && showType === "Everyone" && (
           <p className="mt-1 text-sm text-gray-600">
-            Search directory of {shownDirectory[1]} members
+            Search directory of {shownDirectory[1]} {alumni ? "alumni" : "members"}
           </p>
         )}
         {!(searchVal === "" && showType === "Everyone") && (
@@ -143,7 +134,7 @@ function Directory(props: any) {
             {shownDirectory[1] != 1 && "s"}
           </p>
         )}
-        <form className="mt-6 flex space-x-4" action="#">
+        <form className="mt-6 flex" onSubmit={(event) => event.preventDefault()}>
           <div className="min-w-0 flex-1">
             <label htmlFor="search" className="sr-only">
               Search
@@ -172,7 +163,7 @@ function Directory(props: any) {
           </div>
           <Menu as="div" className="relative inline-block text-left">
             <div>
-              <Menu.Button className="inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
+              <Menu.Button aria-label={alumni ? "Filter alumni" : "Filter members"} className="portal-directory-filter inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
                 <FunnelIcon
                   className="h-5 w-5 text-gray-400"
                   aria-hidden="true"
@@ -191,74 +182,11 @@ function Directory(props: any) {
             >
               <Menu.Items className="z-[500] absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
                 <div className="py-1">
-                  <Menu.Item>
-                    {({ active }) => (
-                      <a
-                        onClick={() => {
-                          funnelChange("Pledge");
-                        }}
-                        className={classNames(
-                          active
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-700",
-                          "block px-4 py-2 text-sm"
-                        )}
-                      >
-                        Pledges
-                      </a>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <a
-                        onClick={() => {
-                          funnelChange("Member");
-                        }}
-                        className={classNames(
-                          active
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-700",
-                          "block px-4 py-2 text-sm"
-                        )}
-                      >
-                        Members
-                      </a>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <a
-                        onClick={() => {
-                          funnelChange("Alumni");
-                        }}
-                        className={classNames(
-                          active
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-700",
-                          "block px-4 py-2 text-sm"
-                        )}
-                      >
-                        Alumni
-                      </a>
-                    )}
-                  </Menu.Item>
-                  <Menu.Item>
-                    {({ active }) => (
-                      <a
-                        onClick={() => {
-                          funnelChange("Everyone");
-                        }}
-                        className={classNames(
-                          active
-                            ? "bg-gray-100 text-gray-900"
-                            : "text-gray-700",
-                          "block px-4 py-2 text-sm"
-                        )}
-                      >
-                        Everyone
-                      </a>
-                    )}
-                  </Menu.Item>
+                  {(alumni ? ["Everyone", ...Array.from(new Set(Object.values(props.directory).flatMap((group: any) => Object.values(group).map(graduationYear)).filter(Boolean))).sort().reverse()] : ["Everyone", "Member", "Pledge"]).map((filter: any) => (
+                    <Menu.Item key={filter}>{({ active }) => <button type="button" onClick={() => funnelChange(filter)} className={classNames(active ? "bg-gray-100 text-gray-900" : "text-gray-700", "block w-full text-left px-4 py-2 text-sm")}>
+                      {filter === "Everyone" ? "Everyone" : alumni ? `Class of ${filter}` : filter === "Pledge" ? "Pledges" : "Members"}
+                    </button>}</Menu.Item>
+                  ))}
                 </div>
               </Menu.Items>
             </Transition>
@@ -272,7 +200,8 @@ function Directory(props: any) {
           </button>
         </form>
       </div>
-      {/* Directory list */}
+      {shownDirectory[1] === 0 && <p role="status" className="px-6 py-4 text-sm text-gray-500">No matching {alumni ? "alumni" : "members"}.</p>}
+
       <nav
         className="min-h-0 flex-1 overflow-y-auto pb-[120px] sm:pb-[61px]"
         aria-label="Directory"
@@ -296,13 +225,13 @@ function Directory(props: any) {
                   const personRole = toDisplayString(person?.role);
                   const personImage = toDisplayString(person?.pfp_thumb_link) || toDisplayString(person?.profile_pic_link);
                   return (
-                    <li key={uid} onClick={() => {props.setActiveProfile(uid);props.handler();}}>
-                      <div
+                    <li key={uid}>
+                      <button
+                        type="button"
+                        onClick={() => props.onSelectProfile(uid)}
+                        aria-pressed={uid === props.activeProfile}
                         className={classNames(
-                          uid === props.activeProfile
-                            ? "bg-blue-50 border-l-4 border-blue-600 shadow-sm"
-                            : "hover:bg-slate-50",
-                          "relative flex items-center space-x-3 px-6 py-5 transition-colors"
+                          "portal-directory-member relative flex items-center space-x-3 px-6 py-5 transition-colors"
                         )}
                       >
                         <div className="flex-shrink-0">
@@ -313,21 +242,15 @@ function Directory(props: any) {
                           />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <a className="cursor-pointer focus:outline-none">
-                            {/* Extend touch target to entire panel */}
-                            <span
-                              className="absolute inset-0"
-                              aria-hidden="true"
-                            />
                             <p className="text-sm font-medium text-gray-900">
                               {personName}
                             </p>
                             <p className="truncate text-sm text-gray-500">
-                              {personRole}
+                              {alumni && graduationYear(person) ? `Class of ${graduationYear(person)}` : personRole}
                             </p>
-                          </a>
                         </div>
-                      </div>
+                        <ChevronRightIcon className="portal-directory-member-arrow h-4 w-4" aria-hidden="true" />
+                      </button>
                     </li>
                   );
                 })}

@@ -92,7 +92,7 @@ function Rock() {
     <path fill={purple} d="M-100 8v-56h20v-32h36v-16h72v12h44v20h24v72z" />
     <path fill={mid} d="M-80-48v-32h36v-16h72v12h44v20H20v-12h-56v16z" />
     <path fill={deep} d="M76-64h20V8H76zM-80-4H76V8H-80z" />
-    {/* Painted letters remain decorative, just like the physical campus Rock. */}
+
     <text x="-4" y="-24" fill={light} textAnchor="middle" fontFamily="KTP Arcade, monospace" fontSize="24">KTP</text>
   </g>;
 }
