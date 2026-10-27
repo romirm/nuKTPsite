@@ -23,7 +23,7 @@ Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
 const savedProfile = {
   name: "Test Member", email: "member@example.com", phone: "555-0100", year: "Junior",
-  major: "Computer Science (BS)", majors: ["Computer Science (BS)"], minors: [], about: "I enjoy building projects with fellow members.",
+  major: "Computer Science", majors: ["Computer Science"], minors: [], about: "I enjoy building projects with fellow members. ".repeat(5),
   internships: "A software internship", resume_link: "https://example.test/resume.pdf",
   profile_pic_link: "https://example.test/photo.png",
   email_viewable: false, standing_viewable: false, internships_viewable: true,
@@ -62,6 +62,19 @@ async function mountEditor(profile, props = {}) {
 async function submit() {
   await act(async () => container.querySelector("form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })));
 }
+
+test('member About requires at least 200 characters before saving', async () => {
+  await mountEditor(savedProfile);
+  const about = document.getElementById('about');
+  expect(about.minLength).toBe(200);
+  about.value = 'a'.repeat(199);
+  await submit();
+  expect(update).not.toHaveBeenCalled();
+  expect(Swal.fire).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'About section must be at least 200 characters long' }));
+  about.value = 'a'.repeat(200);
+  await submit();
+  expect(update).toHaveBeenCalledTimes(2);
+});
 
 test('alumni can edit graduation year and current workplace without inventing work from internships', async () => {
   await mountEditor({ ...savedProfile, role: 'Alumni', year: 'Alumni', about: '', resume_link: '', profile_pic_link: '', minor: 'Historic minor', minors: undefined, graduation_year: '2024', workplace: 'Previous employer', leetcode: { username: 'member-code' } }, { alumni: true });
@@ -103,7 +116,7 @@ test('multiple confirmed majors and minors save as canonical arrays; draft text 
   act(() => container.querySelector('#minor-options [role=option]').click());
   await submit();
   expect(update).toHaveBeenCalledTimes(2);
-  expect(update.mock.calls[0][1]).toMatchObject({ majors: ['Computer Science (BS)', 'Economics'], minors: ['Data Science', 'Psychology'], major: 'Computer Science (BS), Economics', minor: 'Data Science, Psychology' });
+  expect(update.mock.calls[0][1]).toMatchObject({ majors: ['Computer Science', 'Economics'], minors: ['Data Science', 'Psychology'], major: 'Computer Science, Economics', minor: 'Data Science, Psychology' });
   expect(update.mock.calls[1][1].majors).toEqual(update.mock.calls[0][1].majors);
 });
 
@@ -141,7 +154,7 @@ test('catalog load failures block saving and offer a retry', async () => {
   await submit();
   expect(update).not.toHaveBeenCalled();
   await act(async () => container.querySelector('[role=alert] button').click());
-  expect(editor.state.majors).toEqual(['Computer Science (BS)']);
+  expect(editor.state.majors).toEqual(['Computer Science']);
 });
 
 test("required fields are marked and the Settings section is removed", async () => {
@@ -191,7 +204,7 @@ test("banner is absent from editing and changing majors preserves its existing a
   });
   expect(container.querySelector("[data-banner-activity]")).toBeNull();
   act(() => container.querySelector('[role=option]').click());
-  act(() => container.querySelector('[aria-label="Remove Computer Science (BS) major"]').click());
+  act(() => container.querySelector('[aria-label="Remove Computer Science major"]').click());
   expect(container.querySelector("[data-banner-activity]")).toBeNull();
   expect(update).not.toHaveBeenCalled();
   expect(uploadBytes).not.toHaveBeenCalled();

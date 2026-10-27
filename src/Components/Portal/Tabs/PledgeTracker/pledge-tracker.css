@@ -1,0 +1,51 @@
+.ktp-portal .pledge-tracker { background: transparent; }
+.pledge-tracker-shell { max-width: 1320px; margin: 0 auto; padding: 28px; }
+.pledge-tracker-panel, .pledge-tracker-empty { border: 1px solid #a18aba70; border-top: 3px solid #c9aceb; border-radius: 4px; box-shadow: 4px 4px 0 #160e2733; overflow: hidden; }
+.pledge-tracker-panel { background: #291a3ce8; }
+.pledge-tracker-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px; }
+.ktp-portal .pledge-tracker-heading h2 { color: #faf7ff; font-size: 26px; font-weight: 600; line-height: 1.3; letter-spacing: -.025em; }
+.pledge-tracker-heading p { margin-top: 4px; color: #c7b6de; font-size: 13px; }
+.pledge-tracker-emblem { font-size: 30px; color: #d8c4ff; text-shadow: 3px 3px #160e27; }
+.pledge-tracker-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 16px 24px; border-top: 1px solid #a18aba40; background: #21123570; }
+.pledge-tracker-search { position: relative; flex: 1; min-width: 180px; }
+.pledge-tracker-search > svg { position: absolute; left: 12px; top: 12px; width: 18px; height: 18px; color: #bca6d5; pointer-events: none; }
+.ktp-portal .pledge-tracker .pledge-tracker-toolbar .pledge-tracker-search input[type=search], .ktp-portal .pledge-tracker .pledge-tracker-toolbar .pledge-tracker-sort select[id=pledge-sort] { width: 100%; height: 42px; margin: 0; border: 1px solid #a18aba70; border-radius: 4px; background-color: #291a3c; color: #f6f1fc; font: inherit; font-size: 14px; box-shadow: none; }
+.ktp-portal .pledge-tracker-search input { padding: 9px 12px 9px 38px; }
+.ktp-portal .pledge-tracker-search input::placeholder { color: #c7b6de; opacity: 1; }
+.pledge-tracker-sort { display: flex; align-items: center; gap: 10px; }
+.ktp-portal .pledge-tracker-sort label { flex-shrink: 0; color: #d3c6e4; font-size: 13px; }
+.ktp-portal .pledge-tracker .pledge-tracker-toolbar .pledge-tracker-sort select[id=pledge-sort] { width: 160px; padding: 8px 32px 8px 12px; }
+.ktp-portal .pledge-tracker :is(input, select):focus { outline: 2px solid #d8c4ff; outline-offset: 2px; background-color: #352052; color: #fff; }
+.pledge-leaderboard-frame { margin-top: 24px; overflow: hidden; border: 1px solid #ad93c9; border-top: 3px solid #c9aceb; border-radius: 4px; background: #211235; box-shadow: 5px 5px 0 #160e2755; }
+.pledge-leaderboard-scroll { overflow-x: auto; }
+.ktp-portal .pledge-leaderboard { width: 100%; border-collapse: collapse; text-align: left; }
+.ktp-portal .pledge-leaderboard thead th { padding: 18px 16px; background: #211235; color: #eee5fa; font: 600 14px/1.5 var(--font-sans); text-transform: none; letter-spacing: 0; white-space: nowrap; border-bottom: 2px solid #a18aba80; }
+.ktp-portal .pledge-leaderboard tbody :is(th, td) { padding: 22px 16px; background: #e9dff4; color: #38204f; border-bottom: 1px solid #ad93c980; vertical-align: middle; }
+.ktp-portal .pledge-leaderboard tbody tr:nth-child(even) :is(th, td) { background: #e0d3ef; }
+.ktp-portal .pledge-leaderboard tbody tr:last-child :is(th, td) { border-bottom: 0; }
+.ktp-portal .pledge-leaderboard tbody tr:hover :is(th, td) { background: #f3ebff; }
+.ktp-portal .pledge-leaderboard :is(th, td):nth-child(n+3) { text-align: center; }
+.pledge-player { display: flex; align-items: center; gap: 12px; min-width: 170px; }
+.pledge-player img { width: 42px; height: 42px; flex-shrink: 0; object-fit: cover; background: #fff; border: 2px solid #9470b9; border-radius: 4px; box-shadow: 2px 2px 0 #4e2a8426; }
+.pledge-player > span { font-family: var(--font-sans); font-size: 17px; font-weight: 600; line-height: 1.4; text-transform: none; letter-spacing: -.025em; white-space: nowrap; }
+.ktp-portal .pledge-leaderboard .pledge-position { color: #594269; font: 400 14px/1.5 var(--font-mono); }
+.ktp-portal .pledge-leaderboard .pledge-score { font: 400 22px/1.5 var(--font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0; }
+.ktp-portal .pledge-leaderboard .pledge-score-primary { color: #3e206a; font-size: 26px; text-shadow: none; }
+.pledge-stage-track { display: flex; justify-content: center; gap: 6px; }
+.pledge-stage-track > span { display: grid; place-items: center; flex-shrink: 0; width: 28px; height: 30px; background: #f8f3fc; border: 1px solid #ad93c9; border-radius: 2px; color: #594269; font: 400 12px/1.5 var(--font-mono); }
+.pledge-stage-track > .is-complete { background: #4e2a84; color: #fff; border-color: #4e2a84; box-shadow: 2px 2px 0 #30194d33; }
+.pledge-stage-track svg { width: 18px; height: 18px; }
+.pledge-tracker-empty { margin-top: 24px; padding: 40px 24px; text-align: center; background: #e9dff4; }
+.ktp-portal .pledge-tracker-empty h3 { font-size: 20px; color: #291a3c; font-weight: 600; }
+.pledge-tracker-empty p { margin-top: 8px; color: #594269; font-size: 14px; }
+.pledge-tracker-empty button { margin-top: 18px; padding: 9px 16px; border: 1px solid #6a4893; border-radius: 4px; background: #4e2a84; color: #fff; font-size: 14px; }
+@media (max-width: 639px) {
+  .pledge-tracker-shell { padding: 20px 16px; }
+  .pledge-tracker-heading { padding: 20px; }
+  .pledge-tracker-toolbar { padding: 16px 20px; gap: 12px; }
+  .pledge-tracker-search { flex-basis: 100%; }
+  .pledge-tracker-sort { width: 100%; }
+  .ktp-portal .pledge-tracker .pledge-tracker-toolbar .pledge-tracker-sort select[id=pledge-sort] { flex: 1; width: auto; }
+  .ktp-portal .pledge-leaderboard thead th { padding: 14px 12px; }
+  .ktp-portal .pledge-leaderboard tbody :is(th, td) { padding: 18px 12px; }
+}

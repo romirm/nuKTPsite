@@ -28,7 +28,7 @@ export default function ProfileEditorFields({ editor }) {
 
     <section className="profile-edit-card" aria-labelledby="profile-about-title">
       <h2 id="profile-about-title">Profile</h2>
-      {!props.alumni && <div className="profile-edit-field"><label htmlFor="about">About<RequiredMark /></label><textarea id="about" name="about" rows={4} required minLength={20} placeholder="A little about you" aria-describedby="about-help" defaultValue="" /><p id="about-help" className="profile-edit-note">At least 20 characters.</p></div>}
+      {!props.alumni && <div className="profile-edit-field"><label htmlFor="about">About<RequiredMark /></label><textarea id="about" name="about" rows={4} required minLength={200} placeholder="A little about you" aria-describedby="about-help" defaultValue="" /><p id="about-help" className="profile-edit-note">At least 200 characters.</p></div>}
       <div className="profile-edit-grid profile-edit-socials">
         {props.alumni ? <Field id="workplace" label="Workplace" type="text" placeholder="Company or organization" /> : <Field id="internships" label="Internships" type="text" />}
         <Field id="instagram" label="Instagram" type="text" placeholder="Username" autoCapitalize="none" />

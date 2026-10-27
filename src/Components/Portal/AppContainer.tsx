@@ -45,9 +45,12 @@ const navigation = {
     adminonly: false,
     pledgeonly: false,
   },
-  Alumni: {
-    name: "Alumni", icon: AcademicCapIcon, current: false,
-    secondary: false, adminonly: false, pledgeonly: false,
+  PledgeTracker: {
+    name: "Pledges",
+    icon: ClipboardDocumentListIcon,
+    secondary: false,
+    adminonly: false,
+    pledgeonly: false,
   },
   Calendar: {
     name: "Calendar",
@@ -56,16 +59,16 @@ const navigation = {
     adminonly: false,
     pledgeonly: false,
   },
-  PledgeTracker: {
-    name: "Pledge Tracker",
-    icon: ClipboardDocumentListIcon,
+  Leaderboard: {
+    name: "Leetcode",
+    icon: BoltIcon,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
   },
-  Leaderboard: {
-    name: "LC Leaderboard",
-    icon: BoltIcon,
+  SocialGraph: {
+    name: "Connections",
+    icon: ShareIcon,
     secondary: false,
     adminonly: false,
     pledgeonly: false,
@@ -77,12 +80,9 @@ const navigation = {
     adminonly: false,
     pledgeonly: false,
   },
-  SocialGraph: {
-    name: "Connections",
-    icon: ShareIcon,
-    secondary: false,
-    adminonly: false,
-    pledgeonly: false,
+  Alumni: {
+    name: "Alumni", icon: AcademicCapIcon, current: false,
+    secondary: false, adminonly: false, pledgeonly: false,
   },
   Admin: {
     name: "Admin",
@@ -98,6 +98,7 @@ const navigation = {
     adminonly: false,
     pledgeonly: false,
   },
+
 };
 
 export default function AppContainer(props: { firebase: any, database: any, storage: any }) {
@@ -317,7 +318,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
             <button type="button" className="portal-menu-button lg:hidden" onClick={() => setSidebarOpen(true)}>
               <span className="sr-only">Open sidebar</span><Bars3Icon aria-hidden="true" />
             </button>
-            <h1>{navigation[currTab as keyof typeof navigation].name}</h1>
+            <h1>{currTab === "PledgeTracker" ? "Pledge Tracker" : navigation[currTab as keyof typeof navigation].name}</h1>
           </div>
           <button type="button" className="portal-topbar-profile" onClick={() => { onTabClick("MyProfile"); setActiveProfile(currUserUid); }}>
             <span>{user.name}</span><img src={user.imageUrl} alt="" />

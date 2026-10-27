@@ -14,7 +14,7 @@ export function createSampleData(): any {
   const allowedUsers: any = {};
   members.forEach(([uid, name, role, year, major], i) => {
     const profile = {
-      name, role, year, major,
+      name, role, year, major, majors: [major],
       email: `${uid}@example.com`,
       about: "This is a fictional member for exploring the local KTP portal. I enjoy building projects, meeting fellow members, and learning new skills.",
       internships: "Sample software engineering internship",

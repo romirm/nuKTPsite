@@ -223,6 +223,8 @@ function Directory(props: any) {
                   const person = shownDirectory[0][letter][uid]; //individual profile
                   const personName = toDisplayString(person?.name) || "Member";
                   const personRole = toDisplayString(person?.role);
+                  const roleLabel = alumni && graduationYear(person) ? `Class of ${graduationYear(person)}` : personRole;
+                  const roleStyle = alumni ? "alumni" : /^pledge$/i.test(personRole.trim()) ? "pledge" : /^(VP of|President|Vice President|Co-President|Treasurer|Secretary)/i.test(personRole) ? "exec" : "member";
                   const personImage = toDisplayString(person?.pfp_thumb_link) || toDisplayString(person?.profile_pic_link);
                   return (
                     <li key={uid}>
@@ -231,7 +233,7 @@ function Directory(props: any) {
                         onClick={() => props.onSelectProfile(uid)}
                         aria-pressed={uid === props.activeProfile}
                         className={classNames(
-                          "portal-directory-member relative flex items-center space-x-3 px-6 py-5 transition-colors"
+                          "portal-directory-member relative flex items-center transition-colors"
                         )}
                       >
                         <div className="flex-shrink-0">
@@ -241,15 +243,12 @@ function Directory(props: any) {
                             alt=""
                           />
                         </div>
-                        <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900">
+                        <div className="portal-directory-person">
+                            <span className="portal-directory-name">
                               {personName}
-                            </p>
-                            <p className="truncate text-sm text-gray-500">
-                              {alumni && graduationYear(person) ? `Class of ${graduationYear(person)}` : personRole}
-                            </p>
+                            </span>
+                            {roleLabel && <span className="portal-directory-role" data-role={roleStyle}>{roleLabel}</span>}
                         </div>
-                        <ChevronRightIcon className="portal-directory-member-arrow h-4 w-4" aria-hidden="true" />
                       </button>
                     </li>
                   );

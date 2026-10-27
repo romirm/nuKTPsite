@@ -52,9 +52,13 @@ for row in parser.root.descendants("tr"):
         option = text[len(name):].strip() if text.startswith(name) else text
         kind = "majors" if "major" in option.lower() else "minors" if option.lower() == "minor" else None
         if kind is None: excluded.append({"name": name, "option": option}); continue
-        record = {"name": name, "option": option, "school": school, "url": urljoin(SOURCE, anchor.attrs["href"])}
-        if name in catalogues[kind] and catalogues[kind][name] != record: raise ValueError(f"Ambiguous duplicate: {name}")
-        catalogues[kind][name] = record
+        canonical_name = "Computer Science" if name in {"Computer Science (BS)", "Computer Science BA-CS"} else name
+        record = {"name": canonical_name, "option": option, "school": school, "url": urljoin(SOURCE, anchor.attrs["href"])}
+        if canonical_name in catalogues[kind] and catalogues[kind][canonical_name] != record: raise ValueError(f"Ambiguous duplicate: {canonical_name}")
+        catalogues[kind][canonical_name] = record
+# Explicitly approved portal additions; these are not attributed to the admissions table.
+for name in ("Data Engineering", "Journalism", "Jazz"):
+    catalogues["minors"].setdefault(name, {"name": name, "option": "Minor", "school": "", "url": ""})
 output = ROOT / "public/data"
 output.mkdir(parents=True, exist_ok=True)
 for kind, values in catalogues.items():

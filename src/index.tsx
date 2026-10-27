@@ -18,6 +18,7 @@ import { isLocalPortalDemo, isReadOnlyLivePortal } from "./localPortal/config";
 import { demoFirebase, demoDatabase, demoStorage, loadLocalMemberSnapshot } from "./localPortal/runtime";
 import { createReadOnlyFirebase } from "./localPortal/readOnly";
 import LivePortalGate from "./localPortal/LivePortalGate";
+import "./terminal-theme.css";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBY_olTq-IJkQs1-VXTCgxIUzlD7_-3MXQ",

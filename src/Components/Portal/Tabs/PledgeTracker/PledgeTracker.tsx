@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react";
-import { CheckIcon } from "@heroicons/react/20/solid";
+import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+import Logo from "../../../../Assets/Images/Branding/Logo.png";
+import "./pledge-tracker.css";
 
-const PLACEHOLDER_IMAGE_URL = "https://via.placeholder.com/200";
+const PLACEHOLDER_IMAGE_URL = Logo;
 const DEFAULT_PLEDGE_POINTS = 100;
 
 interface PledgeTrackerProps {
@@ -37,10 +39,11 @@ const parseCapstoneProgress = (rawValue: any): [boolean, boolean, boolean] => {
   ];
 };
 
-type SortMode = "alphabetical" | "pledgePoints" | "coffeeChats";
+type SortMode = "alphabetical" | "pledgePoints";
 
 const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
-  const [sortMode, setSortMode] = useState<SortMode>("alphabetical");
+  const [search, setSearch] = useState("");
+  const [sortMode, setSortMode] = useState<SortMode>("pledgePoints");
 
   const pledgeUsers = useMemo(() => {
     if (!fullPubDir || typeof fullPubDir !== "object") {
@@ -97,161 +100,70 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
         return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
       }
 
-      if (sortMode === "coffeeChats") {
-        if (b.coffeeChatsCompleted !== a.coffeeChatsCompleted) {
-          return b.coffeeChatsCompleted - a.coffeeChatsCompleted;
-        }
-        return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-      }
-
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
 
     return sortedRows;
   }, [fullPubDir, sortMode]);
 
+  const visiblePledges = pledgeUsers.filter(user => user.name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase()));
+
   return (
-    <div className="portal-page-scroll bg-white h-full overflow-y-auto">
-      <div className="mx-auto max-w-7xl py-12 px-6">
-        <div className="space-y-12">
-          <div className="space-y-5 sm:space-y-4">
-            <div className="portal-page-heading">
-              <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
-                Pledge Tracker
-              </h2>
-              <p className="text-xl text-gray-500 mt-2">
-                View pledge progress for points, coffee chats, thank you notes,
-                and capstone milestones.
-              </p>
+    <div className="portal-page-scroll pledge-tracker">
+      <div className="pledge-tracker-shell">
+        <section className="pledge-tracker-panel" aria-labelledby="pledge-roster-heading">
+          <div className="pledge-tracker-heading">
+            <div>
+              <h2 id="pledge-roster-heading">Pledge Tracker</h2>
+              <p>{pledgeUsers.length} {pledgeUsers.length === 1 ? "pledge" : "pledges"}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: "alphabetical", label: "Alphabetical" },
-                { key: "pledgePoints", label: "Pledge Points" },
-                { key: "coffeeChats", label: "Coffee Chats" },
-              ].map((tab) => {
-                const active = sortMode === tab.key;
-
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => setSortMode(tab.key as SortMode)}
-                    className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
-                      active
-                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                        : "border-gray-200 bg-white text-gray-700 hover:border-blue-300 hover:text-blue-700"
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                );
-              })}
+            <span className="pledge-tracker-emblem" aria-hidden="true">&#10022;</span>
+          </div>
+          <div className="pledge-tracker-toolbar">
+            <div className="pledge-tracker-search">
+              <MagnifyingGlassIcon aria-hidden="true" />
+              <label className="sr-only" htmlFor="pledge-search">Search pledges</label>
+              <input id="pledge-search" type="search" placeholder="Search pledges" value={search} onChange={event => setSearch(event.target.value)} />
             </div>
-            <p className="portal-page-note text-gray-500 italic">
-              {sortMode === "alphabetical"
-                ? "Pledges are listed alphabetically by name."
-                : sortMode === "pledgePoints"
-                  ? "Pledges are listed by pledge points, highest first."
-                  : "Pledges are listed by coffee chats completed, highest first."}
-            </p>
+            <div className="pledge-tracker-sort">
+              <label htmlFor="pledge-sort">Sort by</label>
+              <select id="pledge-sort" value={sortMode} onChange={event => setSortMode(event.target.value as SortMode)}>
+                <option value="alphabetical">Alphabetical</option>
+                <option value="pledgePoints">Pledge points</option>
+                              </select>
+            </div>
           </div>
-
-          <div className="lg:col-span-2">
-            {pledgeUsers.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 text-lg">
-                  No pledge tracker entries are available right now.
-                </p>
-              </div>
-            ) : (
-              <ul
-                role="list"
-                className="portal-score-list space-y-12 sm:-mt-8 sm:space-y-0 sm:divide-y sm:divide-gray-200 lg:gap-x-8 lg:space-y-0"
-              >
-                {pledgeUsers.map((pledgeUser) => (
-                  <li key={pledgeUser.uid} className="sm:pt-5">
-                    <div className="space-y-4 sm:grid sm:grid-cols-3 sm:items-start sm:gap-6 sm:space-y-0 max-w-4xl">
-                      <div className="portal-score-avatar max-w-[200px] max-h-[200px] mt-[0.335rem]">
-                        <div className="aspect-square overflow-hidden rounded-lg">
-                          <img
-                            className="rounded-lg shadow-lg object-cover min-w-full min-h-full"
-                            src={pledgeUser.pictureLink}
-                            alt={pledgeUser.name}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).src =
-                                PLACEHOLDER_IMAGE_URL;
-                            }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="sm:col-span-2">
-                        <h3 className="text-lg font-medium leading-6">
-                          {pledgeUser.name}
-                        </h3>
-                        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                              Pledge Points
-                            </p>
-                            <p className="mt-1 text-2xl font-bold text-gray-900">
-                              {pledgeUser.pledgePoints}
-                            </p>
-                          </div>
-
-                          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                              Coffee Chats Completed
-                            </p>
-                            <p className="mt-1 text-2xl font-bold text-gray-900">
-                              {pledgeUser.coffeeChatsCompleted}
-                            </p>
-                          </div>
-
-                          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                              Thank You Notes Sent
-                            </p>
-                            <p className="mt-1 text-2xl font-bold text-gray-900">
-                              {pledgeUser.thankYouNotesSent}
-                            </p>
-                          </div>
-
-                          <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
-                              Capstone Project Progress
-                            </p>
-                            <div className="mt-2 flex gap-2">
-                              {pledgeUser.capstoneProjectProgress.map(
-                                (isComplete, index) => (
-                                  <div
-                                    key={`${pledgeUser.uid}-capstone-${index}`}
-                                    className={`flex h-9 w-9 items-center justify-center rounded border text-sm font-semibold ${
-                                      isComplete
-                                        ? "border-blue-600 bg-blue-600 text-white"
-                                        : "border-blue-200 bg-white text-blue-400"
-                                    }`}
-                                  >
-                                    {isComplete ? (
-                                      <CheckIcon className="h-5 w-5" aria-hidden="true" />
-                                    ) : (
-                                      <span>{index + 1}</span>
-                                    )}
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
+        </section>
+        {visiblePledges.length === 0 ? (
+          <div className="pledge-tracker-empty" role="status">
+            <h3>{pledgeUsers.length ? "No matching pledges" : "No pledges yet"}</h3>
+            <p>{pledgeUsers.length ? "Try a different name." : "Members with the Pledge role will appear here."}</p>
+            {search && <button type="button" onClick={() => setSearch("")}>Clear search</button>}
           </div>
-        </div>
+        ) : (
+          <div className="pledge-leaderboard-frame">
+            <div className="pledge-leaderboard-scroll" role="region" aria-label="Pledge leaderboard" tabIndex={0}>
+              <table className="pledge-leaderboard">
+                <caption className="sr-only">Pledge progress, sorted {sortMode === "alphabetical" ? "alphabetically" : "by points, highest first"}</caption>
+                <thead><tr><th scope="col">#</th><th scope="col">Pledge</th><th scope="col">Points</th><th scope="col">Coffee chats</th><th scope="col">Thank-you notes</th><th scope="col">Capstone</th></tr></thead>
+                <tbody>
+                  {visiblePledges.map((user, index) => (
+                    <tr key={user.uid}>
+                      <td className="pledge-position">{String(index + 1).padStart(2, "0")}</td>
+                      <th scope="row"><div className="pledge-player"><img src={user.pictureLink} alt="" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = PLACEHOLDER_IMAGE_URL; }} /><span>{user.name}</span></div></th>
+                      <td className="pledge-score pledge-score-primary">{user.pledgePoints.toLocaleString()}</td>
+                      <td className="pledge-score">{user.coffeeChatsCompleted.toLocaleString()}</td>
+                      <td className="pledge-score">{user.thankYouNotesSent.toLocaleString()}</td>
+                      <td><div className="pledge-stage-track" aria-label={`${user.capstoneProjectProgress.filter(Boolean).length} of 3 capstone milestones complete`}>
+                        {user.capstoneProjectProgress.map((complete, stage) => <span key={stage} className={complete ? "is-complete" : ""} title={`Milestone ${stage + 1}: ${complete ? "complete" : "not complete"}`} aria-label={`Milestone ${stage + 1}: ${complete ? "complete" : "not complete"}`}>{complete ? <CheckIcon aria-hidden="true" /> : <span aria-hidden="true">{stage + 1}</span>}</span>)}
+                      </div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

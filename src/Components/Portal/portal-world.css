@@ -104,7 +104,13 @@
   background: radial-gradient(ellipse at 90% 0, #65409560, transparent 80%), #291a3c;
   box-shadow: inset 0 2px #a18aba40;
 }
-.ktp-portal .portal-directory-member { transition: background .2s, border-color .2s; }
+.ktp-portal .portal-directory-member { gap: 10px; padding: 11px 14px; transition: background .2s, border-color .2s; }
+.portal-directory-person { display: flex; flex: 1; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; }
+.ktp-portal .portal-directory-name { min-width: 0; font-family: var(--font-sans); font-size: 17px; font-weight: 650; line-height: 1.35; letter-spacing: -.035em; color: #f6f1fc; overflow-wrap: anywhere; }
+.ktp-portal .portal-directory-role { flex-shrink: 0; max-width: 44%; color: #cbb9df; font-family: var(--font-mono); font-size: 12px; font-weight: 500; line-height: 1.5; text-align: right; overflow-wrap: anywhere; }
+.ktp-portal .portal-directory-role[data-role=exec] { color: #e1c4ff; }
+.ktp-portal .portal-directory-role[data-role=pledge] { color: #d2c5e5; }
+.ktp-portal .portal-directory-role[data-role=alumni] { color: #c4afd7; }
 .ktp-portal .portal-directory-member[aria-pressed=true] {
   background: linear-gradient(90deg, #6540959c, #4e2a8433); border-left-color: #d8c4ff;
 }
@@ -123,9 +129,11 @@
 .ktp-portal .portal-profile-hero {
   background: linear-gradient(110deg, #291a3cf5, #352052d9); border-bottom-color: #a18aba66;
 }
-.ktp-portal .portal-profile-heading { gap: 24px; padding: 0 32px 28px; }
-.ktp-portal .portal-profile-identity { display: block; padding-top: 20px; }
-.ktp-portal .portal-profile-actions { margin-top: 14px; gap: 10px; }
+.ktp-portal .portal-profile-heading { display: grid; grid-template-columns: 96px minmax(0, 1fr) minmax(0, 230px); align-items: start; gap: 20px; padding: 0 32px 28px; }
+.ktp-portal .portal-profile-avatar { width: 96px; height: 96px; margin-top: -12px; }
+.ktp-portal .portal-profile-identity { display: block; padding-top: 18px; }
+.ktp-portal .portal-profile-actions { justify-content: flex-end; justify-self: end; margin-top: 22px; gap: 10px; }
+.ktp-portal .portal-profile-socials { justify-content: flex-end; flex-wrap: wrap; }
 .ktp-portal .portal-profile-hero > div:first-child > img,
 .ktp-portal .portal-default-cover { height: 136px; }
 .ktp-portal .portal-default-cover { position: relative; }
@@ -153,45 +161,57 @@
 @keyframes portal-banner-inspect { to { transform: translateY(-2px); } }
 @keyframes portal-banner-bubbles { 0% { opacity: 0; transform: translateY(2px); } 30%, 60% { opacity: .6; } 100% { opacity: 0; transform: translateY(-6px); } }
 @keyframes portal-banner-hands { from { transform: translate(1px, -2px); } to { transform: translate(2px, -3px); } }
-.ktp-portal .portal-profile-identity h1 { font-weight: 550; letter-spacing: -.03em; text-shadow: 0 2px 20px #a18aba26; }
+.ktp-portal .portal-profile-identity h1 { min-width: 0; font-family: var(--font-sans); font-size: clamp(36px, 3vw, 44px); font-weight: 600; line-height: 1.2; letter-spacing: -.04em; text-shadow: none; }
 .ktp-portal .portal-profile-actions :is(button, a) { border-radius: 5px; }
 .ktp-portal .portal-profile-socials a { border-radius: 50%; }
 .ktp-portal .portal-member-profile .portal-profile-details {
-  isolation: isolate; min-height: 420px; padding: 32px 32px 88px;
+  isolation: isolate; padding: 24px 28px 36px;
   overflow: hidden;
 }
-.portal-profile-content { display: grid; gap: 24px; align-items: start; }
+.portal-profile-content { display: grid; gap: 20px; align-items: start; min-width: 0; }
+.portal-profile-content > * { min-width: 0; }
 .ktp-portal .portal-member-profile .portal-profile-facts {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 22px;
-  padding: 8px 22px; border-left: 2px solid #b89bd9; border-radius: 4px;
+  padding: 4px 20px; border: 1px solid #b89bd9; border-top: 3px solid #c9aceb; border-radius: 0;
   background: #e7dbf2eb; box-shadow: 4px 4px 0 #160e2726;
 }
 .ktp-portal .portal-member-profile .portal-profile-facts > .portal-profile-field {
-  padding: 12px 0; border: 0; border-bottom: 1px solid #70509330; background: transparent; box-shadow: none;
+  padding: 16px 0; border: 0; border-bottom: 1px solid #70509330; background: transparent; box-shadow: none;
 }
 .ktp-portal .portal-member-profile .portal-profile-facts > .portal-profile-field:last-child { border-bottom: 0; }
 .portal-profile-field::before { content: none; }
-.ktp-portal .portal-member-profile .portal-profile-field dt { color: #3b2453 !important; font-size: 11px; font-weight: 600; }
-.ktp-portal .portal-member-profile .portal-profile-field dd { font-size: 14px; margin-top: 5px; line-height: 1.6; }
+.portal-profile-field--wide { grid-column: 1 / -1; }
+.ktp-portal .portal-member-profile .portal-profile-field dt { color: #38204f !important; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; letter-spacing: .01em; font-weight: 400; }
+.ktp-portal .portal-member-profile .portal-profile-field dd { font-size: 15px; margin-top: 6px; line-height: 1.6; }
+.ktp-portal .portal-member-profile .portal-profile-field .portal-academic-label { font-weight: 400; }
+.portal-academic-label strong { font-weight: 700; }
+.portal-academic-majors { font-weight: 650; }
 .ktp-portal .portal-member-profile .portal-profile-about {
-  position: relative; margin: 0; padding: 28px; border: 1px solid #a18aba55; border-radius: 4px;
+  position: relative; margin: 0; padding: 20px; border: 1px solid #a18aba80; border-top: 3px solid #c9aceb; border-radius: 0;
   background: linear-gradient(120deg, #211235e8, #291741d9); box-shadow: 5px 5px 0 #160e2726;
 }
 .portal-profile-about::before {
   content: ""; position: absolute; top: 0; left: 0; width: 56px; height: 2px;
   background: #cab0f3; pointer-events: none;
 }
-.ktp-portal .portal-member-profile .portal-profile-about h2 { color: #f6f1fc; font-size: 26px; font-weight: 550; }
-.portal-profile-biography { color: #e8dff1; margin-top: 16px; font-size: 16px; line-height: 1.8; overflow-wrap: anywhere; }
+.ktp-portal .portal-member-profile .portal-profile-about h2 { color: #fff; font-family: var(--font-sans); font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -.02em; }
+.portal-profile-biography { color: #e8dff1; margin-top: 12px; font-size: 15px; line-height: 1.75; overflow-wrap: anywhere; }
 .portal-profile-biography > * + * { margin-top: 16px; }
-.ktp-portal .portal-member-profile .portal-alumni-content { grid-template-columns: minmax(0, 1fr); }
-.ktp-portal .portal-member-profile .portal-alumni-content .portal-profile-facts { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+.ktp-portal .portal-member-profile .portal-profile-content--facts-only { grid-template-columns: minmax(0, 1fr); }
+.ktp-portal .portal-member-profile .portal-profile-content--facts-only .portal-profile-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.portal-alumni-content .portal-profile-field--wide { grid-column: auto; }
 .portal-directory-empty { color: #e8dff1; padding: 32px; }
 .ktp-portal .portal-profile-biography a { color: #d8c4ff; text-decoration: underline; text-underline-offset: 3px; }
-@container member-profile (min-width: 640px) {
-  .portal-profile-content { grid-template-columns: minmax(0, 1.75fr) minmax(200px, 1fr); }
-  .ktp-portal .portal-member-profile .portal-profile-facts { grid-template-columns: 1fr; }
-  .ktp-portal .portal-member-profile .portal-profile-about { min-height: 230px; }
+@container member-profile (min-width: 600px) {
+  .portal-profile-content { grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); align-items: stretch; }
+  .ktp-portal .portal-member-profile .portal-alumni-content .portal-profile-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@container member-profile (max-width: 399px) {
+  .ktp-portal .portal-member-profile .portal-profile-content .portal-profile-facts { grid-template-columns: 1fr; }
+}
+@container member-profile (max-width: 599px) {
+  .ktp-portal .portal-profile-heading { grid-template-columns: 96px minmax(0, 1fr); gap: 16px 20px; }
+  .ktp-portal .portal-profile-actions { grid-column: 1 / -1; margin-top: 0; }
 }
 .ktp-portal .member-globe {
   border-radius: 5px; border-color: #a18aba80;
@@ -203,14 +223,16 @@
 
 @media (min-width: 1500px) { .ktp-portal .portal-directory { grid-template-columns: 300px minmax(0, 1fr); } }
 @media (max-width: 639px) {
-  .ktp-portal .portal-member-profile .portal-profile-details { padding: 24px 20px 84px; }
+  .ktp-portal .portal-member-profile .portal-profile-details { padding: 20px 16px 32px; }
   .portal-profile-content { gap: 20px; }
-  .ktp-portal .portal-member-profile .portal-profile-about { padding: 24px; }
-  .ktp-portal .portal-member-profile .portal-profile-about h2 { font-size: 23px; }
+  .ktp-portal .portal-member-profile .portal-profile-about { padding: 20px; }
+  .ktp-portal .portal-member-profile .portal-profile-about h2 { font-size: 22px; }
   .portal-profile-biography { font-size: 15px; }
   .ktp-portal .portal-form-section { padding: 22px 18px; }
   .ktp-portal .portal-page-heading { padding: 20px; }
   .ktp-portal .portal-profile-heading { gap: 20px; padding: 0 20px 24px; }
+  .ktp-portal .portal-profile-heading { grid-template-columns: 80px minmax(0, 1fr); }
+  .ktp-portal .portal-profile-avatar { width: 80px; height: 80px; margin-top: -8px; }
   .ktp-portal .portal-profile-identity { padding-top: 18px; }
   .ktp-portal .portal-profile-hero > div:first-child > img,
   .ktp-portal .portal-default-cover { height: 120px; }

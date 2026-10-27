@@ -54,7 +54,7 @@ export function searchAcademicPrograms(options: AcademicProgram[], query: string
 export function initialAcademicSelection(array: unknown, legacy: unknown, options: AcademicProgram[]) {
   const values = Array.isArray(array) ? array.filter(v => typeof v === 'string') : typeof legacy === 'string' && legacy.trim() ? [legacy.trim()] : [];
   const selected: string[] = [], unresolved: string[] = [];
-  values.forEach(value => { const match = options.find(p => normalize(p.name) === normalize(value)); if (match) { if (!selected.includes(match.name)) selected.push(match.name); } else unresolved.push(value); });
+  values.forEach(value => { const canonical = /^computer science\s*(?:\(bs\)|ba-cs)$/i.test(value.trim()) ? 'Computer Science' : value; const match = options.find(p => normalize(p.name) === normalize(canonical)); if (match) { if (!selected.includes(match.name)) selected.push(match.name); } else unresolved.push(value); });
   return { selected, query: unresolved.join(', ') };
 }
 export function validAcademicSelection(values: string[], options: AcademicProgram[], required = false): boolean {

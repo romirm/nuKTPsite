@@ -125,10 +125,10 @@ class NewUser extends React.Component {
         icon: "error",
         title: "Phone input not filled in",
       });
-    } else if (!this.props.alumni && config.about.length < 20) {
+    } else if (!this.props.alumni && config.about.trim().length < 200) {
       Swal.fire({
         icon: "error",
-        title: "About section must be at least 20 characters long",
+        title: "About section must be at least 200 characters long",
       });
     } else if (!this.props.alumni && !this.resumeAdded) {
       Swal.fire({

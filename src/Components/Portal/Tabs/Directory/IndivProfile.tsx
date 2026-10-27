@@ -2,7 +2,7 @@ import "animate.css";
 import { MouseEventHandler, useEffect, useRef } from "react";
 import ProfileCover from "../../Framework/ProfileCover";
 import PortalBackdrop from "../../Framework/PortalBackdrop";
-import { alumniFacts } from "./directoryModel";
+import { alumniFacts, profileAcademics, profileMajors, profileMinors } from "./directoryModel";
 import {
   ChevronLeftIcon,
   EnvelopeIcon,
@@ -44,11 +44,30 @@ function IndivProfile(props: {
   const profileEmail = props.alumni ? "" : asString(currProfile.email);
   const resumeLink = props.alumni ? "" : asString(currProfile.resume_link);
   const aboutHtml = asString(currProfile.about);
+  const majorLabels = profileMajors(currProfile);
+  const minorLabels = profileMinors(currProfile);
+  const hasAbout = !props.alumni && Boolean(aboutHtml.replace(/<[^>]*>|&nbsp;/g, " ").trim());
   const leetcodeUsername =
     currProfile.leetcode && typeof currProfile.leetcode === "object"
       ? asString(currProfile.leetcode.username)
       : "";
   var socials: Array<{ name: string; href: string; icon: any; className: string }> = [];
+  if (asString(currProfile.linkedin)) {
+    socials.push({
+      name: "LinkedIn",
+      href: "https://linkedin.com/in/" + asString(currProfile.linkedin),
+      className: "text-[#0A66C2] hover:text-[#084C8C]",
+      icon: (props:any) => (
+        <svg fill="currentColor" viewBox="0 -1.3 28 28" {...props}>
+          <path
+            fillRule="evenodd"
+            d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+            clipRule="evenodd"
+          />
+        </svg>
+      ),
+    });
+  }
   if (asString(currProfile.instagram)) {
     socials.push({
       name: "Instagram",
@@ -85,35 +104,17 @@ function IndivProfile(props: {
       ),
     });
   }
-  if (asString(currProfile.linkedin)) {
-    socials.push({
-      name: "LinkedIn",
-      href: "https://linkedin.com/in/" + asString(currProfile.linkedin),
-      className: "text-[#0A66C2] hover:text-[#084C8C]",
-      icon: (props:any) => (
-        <svg fill="currentColor" viewBox="0 -1.3 28 28" {...props}>
-          <path
-            fillRule="evenodd"
-            d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
-            clipRule="evenodd"
-          />
-        </svg>
-      ),
-    });
-  }
   var fields:any = {};
     if (asString(currProfile.year)) {
       fields["Class Standing"] = asString(currProfile.year);
     }
-    const majors = Array.isArray(currProfile.majors) ? currProfile.majors.filter((v: unknown) => typeof v === "string").join(", ") : asString(currProfile.major);
-    const minors = Array.isArray(currProfile.minors) ? currProfile.minors.filter((v: unknown) => typeof v === "string").join(", ") : asString(currProfile.minor);
-    if (majors) fields["Majors"] = majors;
-    if (minors) fields["Minors"] = minors;
-    if (asString(currProfile.internships)) {
-      fields["Relevant Internships"] = asString(currProfile.internships);
-    }
     if (asString(currProfile.role)) {
       fields["Role"] = asString(currProfile.role);
+    }
+    const academics = profileAcademics(currProfile);
+    if (academics) fields["Major/Minor"] = academics;
+    if (asString(currProfile.internships)) {
+      fields["Relevant Internships"] = asString(currProfile.internships);
     }
     if (props.alumni) fields = alumniFacts(currProfile);
   return (
@@ -163,6 +164,7 @@ function IndivProfile(props: {
                         <h1 className="text-2xl font-bold text-gray-900">
                       {profileName}
                     </h1>
+                </div>
                   <div className="portal-profile-actions">
                     {!props.alumni && <>
                     <button
@@ -217,14 +219,13 @@ function IndivProfile(props: {
                       )}
                     </div>
                   </div>
-                </div>
             </div>
           </div>
 
           <div className="portal-profile-details mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8">
             <PortalBackdrop profile />
-            <div className={classNames("portal-profile-content", props.alumni ? "portal-alumni-content" : "")}>
-              {!props.alumni && <section className="portal-profile-about" aria-labelledby="member-about-heading">
+            <div className={classNames("portal-profile-content", !hasAbout ? "portal-profile-content--facts-only" : "", props.alumni ? "portal-alumni-content" : "")}>
+              {hasAbout && <section className="portal-profile-about" aria-labelledby="member-about-heading">
                 <h2 id="member-about-heading">About</h2>
                 <div
                   className="portal-profile-biography"
@@ -233,12 +234,12 @@ function IndivProfile(props: {
               </section>}
               <dl className="portal-profile-facts">
                 {Object.keys(fields).map((field) => (
-                  <div key={field} className="portal-profile-field sm:col-span-1">
-                    <dt className="text-xs font-bold uppercase tracking-wider text-blue-600">
-                      {field}
+                  <div key={field} className={classNames("portal-profile-field", ["Major/Minor", "Relevant Internships", "Workplace"].includes(field) ? "portal-profile-field--wide" : "")}>
+                    <dt className={classNames("text-xs font-bold uppercase tracking-wider text-blue-600", field === "Major/Minor" ? "portal-academic-label" : "")}>
+                      {field === "Major/Minor" ? <><strong>Majors</strong><span>/Minors</span></> : field}
                     </dt>
                     <dd className="mt-2 text-sm text-slate-900">
-                      {fields[field]}
+                      {field === "Major/Minor" ? <>{majorLabels && <strong className="portal-academic-majors">{majorLabels}</strong>}{majorLabels && minorLabels && ", "}{minorLabels}{!majorLabels && !minorLabels && "Not added"}</> : fields[field]}
                     </dd>
                   </div>
                 ))}

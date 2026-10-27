@@ -14,6 +14,12 @@ export function graduationYear(profile: any): string {
 export function profileMajors(profile: any): string {
   return Array.isArray(profile?.majors) ? profile.majors.filter((v: unknown) => typeof v === 'string').join(', ') : typeof profile?.major === 'string' ? profile.major : '';
 }
+export function profileMinors(profile: any): string {
+  return Array.isArray(profile?.minors) ? profile.minors.filter((value: unknown) => typeof value === 'string' && value.trim()).join(', ') : typeof profile?.minor === 'string' ? profile.minor.trim() : '';
+}
+export function profileAcademics(profile: any): string {
+  return [profileMajors(profile), profileMinors(profile)].filter(Boolean).join(', ');
+}
 export function alumniFacts(profile: any): Record<string, string> {
-  return { 'Graduation year': graduationYear(profile) || 'Not added', 'Majors': profileMajors(profile) || 'Not added', 'Workplace': typeof profile?.workplace === 'string' && profile.workplace.trim() ? profile.workplace.trim() : 'Not added' };
+  return { 'Graduation year': graduationYear(profile) || 'Not added', 'Major/Minor': profileAcademics(profile) || 'Not added', 'Workplace': typeof profile?.workplace === 'string' && profile.workplace.trim() ? profile.workplace.trim() : 'Not added' };
 }

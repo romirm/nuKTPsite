@@ -1,0 +1,116 @@
+/* Shared terminal styling for the public site and member workspace. */
+:root {
+  --terminal-line: #a18aba66;
+  --terminal-accent: #d8c4ff;
+  --terminal-surface: #251735;
+  --terminal-radius: 3px;
+}
+:is(.ktp-portal, .portal-auth) {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "calt" 0;
+}
+:is(.ktp-landing, .ktp-portal, .portal-auth) :is(button, input, select, textarea) {
+  font-family: inherit;
+}
+.ktp-portal :is(h1, h2, h3) { letter-spacing: -.035em; }
+:is(.ktp-landing, .ktp-portal, .portal-auth) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid #b695e3;
+  outline-offset: 3px;
+}
+
+/* Public site: slimmer frames and a readable terminal hierarchy. */
+.ktp-landing .studio-header { box-shadow: none; border-bottom: 1px solid var(--terminal-line); }
+.ktp-landing .studio-links a::after { height: 2px; }
+.ktp-landing .studio-section { padding-block: 88px 112px; }
+.ktp-landing .studio-section h2::before {    margin-bottom: 14px; }
+.ktp-landing .studio-hero h1 > .studio-welcome {  color: #d3c6e4; }
+.ktp-landing :is(.studio-primary, .studio-portal) {
+  border: 1px solid #b698da;
+  border-radius: var(--terminal-radius);
+  box-shadow: none;
+  
+  
+  transition: background-color .18s, border-color .18s;
+}
+.ktp-landing .studio-primary:hover { transform: none; box-shadow: none; background: #654095; border-color: #e1caff; }
+.ktp-landing .rush-countdown { border: 1px solid #a18aba; border-radius: var(--terminal-radius); box-shadow: 0 12px 32px #160e2733; }
+.ktp-landing .rush-countdown::before, .ktp-landing .rush-countdown::after { content: none; }
+.ktp-landing .rush-countdown-tile { border: 1px solid var(--terminal-line); border-radius: 2px; box-shadow: none; background: #352052; }
+.ktp-landing .studio-greeting > div > div > div:last-child,
+.ktp-landing .studio-about-copy,
+.ktp-landing .studio-network > div > div:first-child {
+  padding: 28px; border: 1px solid var(--terminal-line); border-radius: var(--terminal-radius);
+  background: #251735d9; box-shadow: none;
+}
+.ktp-landing .studio-greeting > div > div > div:last-child::before,
+.ktp-landing .studio-about-copy::before,
+.ktp-landing .studio-network > div > div:first-child::before { content: none; }
+.ktp-landing .studio-pillars .group { border: 1px solid var(--terminal-line); border-radius: var(--terminal-radius); box-shadow: none; padding: 24px; background: #251735db; }
+.ktp-landing .studio-pillars .group > div:first-child > div { border-width: 1px; box-shadow: none; border-radius: 3px; }
+.ktp-landing .studio-person a > div:first-child,
+.ktp-landing .studio-about-photos img,
+.ktp-landing .studio-recruitment img,
+.ktp-landing .studio-network .overflow-hidden { border-width: 1px; border-radius: var(--terminal-radius); box-shadow: none; }
+.ktp-landing .studio-person a > div:last-child { margin-top: 12px; }
+.ktp-landing .studio-rush .group { border-top-width: 1px; }
+.ktp-landing .studio-faq dl > div { border-top-width: 1px; padding-block: 22px; gap: 32px; }
+.ktp-landing .studio-footer { border-top-width: 1px; }
+
+/* Portal: matching lightweight frames, controls, and page headings. */
+.ktp-portal { --portal-shadow: none; }
+.ktp-portal .portal-nav-item { border-radius: var(--terminal-radius); font-weight: 500; }
+.ktp-portal .portal-topbar h1 { font-weight: 600; font-size: 21px; }
+.ktp-portal .portal-page-heading { padding: 0 0 18px; margin-bottom: 20px; border: 0; border-bottom: 1px solid var(--terminal-line); border-radius: 0; background: transparent; box-shadow: none; }
+.ktp-portal .portal-page-heading::before { content: none; }
+.ktp-portal .portal-page-heading :is(h1, h2, .text-3xl, .text-2xl) { font-size: clamp(24px, 2.3vw, 30px); font-weight: 600; }
+.ktp-portal .portal-page-heading :is(p, .text-sm, .text-xl) { font-size: 13px; line-height: 1.8; }
+.ktp-portal .portal-tab-region :is(button, a):is(.bg-blue-600, .bg-indigo-600, .bg-blue-500) { border-radius: var(--terminal-radius); background: #4e2a84; box-shadow: none; }
+.ktp-portal .portal-tab-region :is(button, a):is(.bg-blue-600, .bg-indigo-600, .bg-blue-500):hover { background: #654095; box-shadow: none; }
+.ktp-portal :is(.portal-form-section, .profile-edit-section) { border-radius: var(--terminal-radius); box-shadow: none; }
+.ktp-portal .portal-form-section { padding: 22px; }
+.ktp-portal :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]), select, textarea) { border-radius: var(--terminal-radius); }
+.ktp-portal .portal-tab-region[data-portal-tab=Admin] thead th { font-size: 11px; letter-spacing: .025em; font-weight: 600; }
+.ktp-portal .portal-tab-region[data-portal-tab=Admin] tbody td { font-size: 12px; line-height: 1.7; }
+.ktp-portal.portal-auth :is(.rounded-2xl, .rounded-lg, .rounded-md) { border-radius: var(--terminal-radius); box-shadow: none; }
+.ktp-portal.portal-auth :is(h1, h2) { font-weight: 600; }
+.ktp-portal .portal-form-section::before { content: none; }
+.ktp-portal .portal-form-section h3 { font-size: 19px; font-weight: 600; }
+.ktp-portal .portal-tab-region[data-portal-tab=Admin] :is(.rounded-lg, .rounded-xl, .rounded-2xl) { border-radius: var(--terminal-radius); box-shadow: none; }
+.ktp-portal .portal-tab-region[data-portal-tab=Admin] [role=tab] { font-size: 12px; font-weight: 500; }
+.ktp-portal .portal-member-profile :is(.portal-profile-facts, .portal-profile-about),
+.ktp-portal :is(.pledge-tracker-panel, .pledge-leaderboard-frame) { border-top-width: 1px; border-radius: var(--terminal-radius); box-shadow: none; }
+.ktp-portal .pledge-tracker-heading { padding: 18px 22px; }
+.ktp-portal .pledge-leaderboard thead th { padding-block: 13px; border-bottom-width: 1px; }
+.ktp-portal .pledge-leaderboard tbody :is(th, td) { padding-block: 15px; }
+.ktp-portal .lc-leaderboard-header { padding-bottom: 18px; border-bottom: 1px solid var(--terminal-line); }
+.ktp-portal .lc-leaderboard-list { border-radius: var(--terminal-radius); }
+.ktp-portal :is(.member-globe, .social-workbench, .globe-floating-panel, .globe-pin-tooltip) { border-radius: var(--terminal-radius); box-shadow: none; }
+.ktp-portal .globe-heading { border-left: 0; padding-left: 0; }
+.ktp-portal .globe-heading h2 { font-size: 24px; font-weight: 600; text-shadow: none; }
+.ktp-portal .globe-controls .globe-my-pin { box-shadow: none; }
+.ktp-portal .social-explorer-bar { background: #211235; }
+.ktp-portal .portal-tab-region[data-portal-tab=Calendar] .rbc-toolbar-custom { padding: 12px; border: 1px solid var(--terminal-line); border-radius: var(--terminal-radius); background: #251735; }
+.ktp-portal .portal-tab-region[data-portal-tab=Calendar] .rbc-toolbar-label { color: #f6f1fc; font-size: 16px; font-weight: 600; }
+.ktp-portal .portal-tab-region[data-portal-tab=Calendar] :is(.rbc-toolbar-btn-nav, .rbc-toolbar-btn-view) { border-radius: var(--terminal-radius); background: #352052; color: #e8dff1; border-color: var(--terminal-line); box-shadow: none; }
+.ktp-portal .portal-tab-region[data-portal-tab=Calendar] .rbc-toolbar-btn-view.active { background: #7955a3; color: #fff; }
+.ktp-portal .portal-tab-region[data-portal-tab=Calendar] :is(.rbc-toolbar-btn-nav, .rbc-toolbar-btn-view):hover { color: #fff; background: #654095; border-color: #b698da; }
+.ktp-portal .rbc-header { padding: 10px 4px; font-size: 12px; font-weight: 500; }
+.ktp-portal .rbc-event { border-radius: 2px; font-size: 12px; }
+.ktp-portal .rbc-month-view { border-radius: var(--terminal-radius); overflow: hidden; }
+
+/* Responsive spacing stays compact without shrinking text or touch targets. */
+@media (max-width: 767px) {
+  .ktp-landing .studio-section { padding-block: 64px 88px; }
+  .ktp-landing .studio-greeting > div > div > div:last-child,
+  .ktp-landing .studio-about-copy,
+  .ktp-landing .studio-network > div > div:first-child { padding: 20px; }
+  .ktp-landing .studio-faq dl > div { grid-template-columns: 1fr; gap: 10px; }
+  .ktp-landing .studio-rush .group { border-left-width: 1px; }
+  .ktp-portal .portal-form-section { padding: 18px; }
+}
+@media (max-width: 639px) {
+
+
+  .ktp-portal .portal-tab-region[data-portal-tab=Calendar] .rbc-toolbar-custom { gap: 12px; flex-wrap: wrap; }
+}
