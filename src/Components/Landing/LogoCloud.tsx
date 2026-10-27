@@ -73,9 +73,6 @@ export default function LogoCloud() {
     <section id="logocloud" className="studio-companies studio-section" aria-labelledby="companies-heading">
       <PixelWorld scene="city" />
       <div className="studio-container">
-        <div className="studio-section-mark" aria-hidden="true">
-          05 / Our network
-        </div>
         <div className="studio-companies-heading">
           <div>
             <h2 id="companies-heading">Where We're At</h2>

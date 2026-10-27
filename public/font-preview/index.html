@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KTP Typography Concepts</title>
+  <style>
+    @font-face { font-family: Space; src: url('space-grotesk.ttf'); font-weight: 300 700; }
+    @font-face { font-family: Bricolage; src: url('bricolage.woff2'); font-weight: 200 800; }
+    @font-face { font-family: JetBrains; src: url('jetbrains-mono.ttf'); font-weight: 100 800; }
+    @font-face { font-family: Pixelify; src: url('pixelify.woff2'); font-weight: 400 700; }
+    @font-face { font-family: SpaceMono; src: url('space-mono.ttf'); font-weight: 400; }
+    @font-face { font-family: PressStart; src: url('press-start.woff2'); font-weight: 400; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background:#100a1b; color:#f4eaff; font-family: Bricolage, sans-serif; }
+    main { width:min(1100px, calc(100% - 40px)); margin:auto; padding:60px 0 80px; }
+    .intro { max-width:700px; margin-bottom:44px; }
+    .eyebrow { color:#bda2df; font:600 12px/1.5 JetBrains, monospace; letter-spacing:.13em; text-transform:uppercase; }
+    .intro h1 { font:700 clamp(28px,5vw,46px)/1.15 Space,sans-serif; margin:12px 0; }
+    .intro p { color:#cbbddb; line-height:1.7; }
+    .card { background:radial-gradient(ellipse at 60% 20%,#3b2458,#20122f 50%,#140c20); border:1px solid #80689c; margin:20px 0; padding:clamp(22px,4vw,46px); }
+    .meta { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; border-bottom:1px solid #7a618c66; padding-bottom:18px; margin-bottom:38px; color:#cbb6e1; font:500 12px/1.5 JetBrains, monospace; }
+    .label { color:#bfa0e5; font:600 12px/1.5 JetBrains, monospace; letter-spacing:.13em; }
+    .heading { margin:12px 0 20px; font-size:clamp(30px,5vw,56px); line-height:1.07; font-weight:700; letter-spacing:-.035em; max-width:850px; }
+    .body { max-width:630px; font-size:18px; line-height:1.7; color:#ded1ea; margin:0; }
+    .space .heading { font-family:Space,sans-serif; }
+    .bricolage .heading { font-family:Bricolage,sans-serif; }
+    .terminal .heading { font-family:JetBrains,monospace; font-size:clamp(26px,4vw,46px); }
+    .space .body, .terminal .body { font-family:Bricolage,sans-serif; }
+    .bricolage .body { font-family:Space,sans-serif; }
+    .links { margin-top:28px; font:600 12px/1.5 JetBrains,monospace; color:#c6a6e8; }
+    .eyebrow, .meta { font-family:SpaceMono,monospace; }
+    .card .heading { font-family:Bricolage,sans-serif; }
+    .card .body { font-family:Space,sans-serif; }
+    .pixel .label, .pixel .links { font-family:Pixelify,monospace; font-size:16px; }
+    .space-mono .label, .space-mono .links { font-family:SpaceMono,monospace; font-size:12px; font-weight:400; }
+    .arcade .label, .arcade .links { font-family:PressStart,monospace; font-size:10px; line-height:1.8; font-weight:400; }
+  </style>
+</head>
+<body><main>
+  <div class="intro"><div class="eyebrow">KTP / Typography studies</div><h1>Warm, confident &amp; a little more tech</h1><p>All three keep your preferred Bricolage headings and Space Grotesk body text. Compare the pixel and tech fonts used for the labels and navigation.</p></div>
+  <section class="card pixel"><div class="meta"><span>01 / FRIENDLY PIXEL — RECOMMENDED</span><span>Bricolage + Space Grotesk + Pixelify Sans</span></div><div class="label">KTP AT A GLANCE</div><h2 class="heading">CELEBRATING TECHNOLOGICAL PASSION</h2><p class="body">Kappa Theta Pi is Northwestern’s co-ed professional technology fraternity. We bring together students passionate about technology to build community, develop their careers, and learn from one another.</p><div class="links">AT A GLANCE &nbsp; / &nbsp; LEADERSHIP &nbsp; / &nbsp; RUSH</div></section>
+  <section class="card space-mono"><div class="meta"><span>02 / CLEAN TECH</span><span>Bricolage + Space Grotesk + Space Mono</span></div><div class="label">KTP AT A GLANCE</div><h2 class="heading">CELEBRATING TECHNOLOGICAL PASSION</h2><p class="body">Kappa Theta Pi is Northwestern’s co-ed professional technology fraternity. We bring together students passionate about technology to build community, develop their careers, and learn from one another.</p><div class="links">AT A GLANCE &nbsp; / &nbsp; LEADERSHIP &nbsp; / &nbsp; RUSH</div></section>
+  <section class="card arcade"><div class="meta"><span>03 / ARCADE ACCENT</span><span>Bricolage + Space Grotesk + Press Start 2P</span></div><div class="label">KTP AT A GLANCE</div><h2 class="heading">CELEBRATING TECHNOLOGICAL PASSION</h2><p class="body">Kappa Theta Pi is Northwestern’s co-ed professional technology fraternity. We bring together students passionate about technology to build community, develop their careers, and learn from one another.</p><div class="links">AT A GLANCE &nbsp; / &nbsp; LEADERSHIP &nbsp; / &nbsp; RUSH</div></section>
+</main></body></html>

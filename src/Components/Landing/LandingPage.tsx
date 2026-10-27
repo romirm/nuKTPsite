@@ -1,5 +1,4 @@
 import { MotionConfig, useReducedMotion } from "framer-motion";
-import ArcadeJourney from "./ArcadeJourney";
 import Hero from "./Hero";
 import Greeting from "./Greeting";
 import WhyKTP from "./WhyKTP";
@@ -15,6 +14,7 @@ import useWorldParallax from "./useWorldParallax";
 import "./arcade.css";
 import "./campus.css";
 import "./immersive.css";
+import "./ascii-world.css";
 
 export default function LandingPage({ maintenance }: { maintenance: boolean }) {
   const paused = !!useReducedMotion();
@@ -36,7 +36,6 @@ export default function LandingPage({ maintenance }: { maintenance: boolean }) {
           <ReachOut />
         </main>
         <Footer />
-        <ArcadeJourney paused={paused} />
       </div>
     </MotionConfig>
   );

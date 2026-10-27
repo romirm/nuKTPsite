@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import PixelWorld from "./PixelWorld";
+import ArcadeSky from "./ArcadeSky";
 // @ts-ignore
 import RohanPic from "@images/Exec/rohan2026.jpeg";
 
@@ -68,7 +69,9 @@ function Greeting() {
 
   return (
     <div id="greeting" className="studio-greeting studio-section relative bg-slate-50 py-24 sm:py-32">
+      <PixelWorld scene="lake" />
       <PixelWorld scene="campus" />
+      <ArcadeSky />
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-16 gap-y-16 lg:mx-0 lg:min-w-full lg:max-w-none lg:flex-none lg:grid-cols-2 lg:items-center">
 
@@ -123,12 +126,7 @@ function Greeting() {
               </h2>
               <div className="mt-8 space-y-6 text-lg leading-relaxed text-slate-600">
                 <p>
-                  Welcome to the Kappa Chapter of Kappa Theta Pi, Northwestern's premier
-                  pre-professional technology fraternity.
-                  At KTP, we prepare members for their prospective careers through professional development, taught by those who have been in the industry.
-                </p>
-                <p>
-                  Celebrate a culture of growth with some of Northwestern's most brilliant software developers, designers, quants, and engineers.
+                  Kappa Theta Pi is Northwestern's co-ed professional technology fraternity. We bring together students passionate about technology to build community, develop their careers, and learn from one another through workshops, events, and socials.
                 </p>
               </div>
 

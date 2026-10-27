@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import Logo from "@images/Branding/Logo.png";
-import RushCountdown from "./RushCountdown";
-import PixelWorld from "./PixelWorld";
-import ArcadeSky from "./ArcadeSky";
 import { landingNavigation as navigation } from "./navigation";
 
 export default function Hero(props: { maintenance: boolean }) {
@@ -73,9 +70,7 @@ export default function Hero(props: { maintenance: boolean }) {
   };
   const portalHref = props.maintenance ? "/maintenance" : "/signup";
   return (
-    <section className="studio-hero" id="top">
-      <PixelWorld scene="lake" />
-      <ArcadeSky />
+    <section className="studio-hero ascii-hero" id="top">
       <header className="studio-header">
         <nav className="studio-nav" aria-label="Global">
           <a href="#top" className="studio-logo">
@@ -101,40 +96,8 @@ export default function Hero(props: { maintenance: boolean }) {
           </a>
         </nav>
       </header>
-      <div className="studio-hero-grid studio-container">
-        <div className="studio-hero-copy">
-          <h1>
-            <span className="studio-welcome">Welcome to</span> Kappa{" "}
-            <span>Theta Pi</span>
-          </h1>
-          <p className="studio-hero-intro">
-            We are a <span>tech fraternity</span> that connects, educates, and
-            empowers.
-          </p>
-          <p>
-            KTP Northwestern is a co-ed organization dedicated to providing a
-            community for students interested in technology. We host events,
-            workshops, and socials to help students learn and grow in their tech
-            careers.
-          </p>
-          <div className="studio-actions">
-            <a
-              href="https://rush.ktpnu.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="studio-primary"
-            >
-              Rush Application <span aria-hidden="true">↗</span>
-            </a>
-            <a href="mailto:info@ktpnu.com">
-              Contact Us <span aria-hidden="true">→</span>
-            </a>
-          </div>
-        </div>
-        <RushCountdown />
-      </div>
-      <div className="studio-hero-rule studio-container">
-        <span><span className="arcade-status-dot" aria-hidden="true" /> NORTHWESTERN UNIVERSITY · KAPPA CHAPTER</span>
+      <div className="ascii-opening">
+        <iframe title="Kappa Theta Pi winter rush countdown" src={`${process.env["PUBLIC_URL"]}/ascii-preview/index.html?scene=space`} />
       </div>
     </section>
   );

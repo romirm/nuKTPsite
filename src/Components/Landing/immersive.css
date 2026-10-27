@@ -267,7 +267,7 @@
   .ktp-landing .studio-section { padding-block: 76px 128px; }
   .ktp-landing .pixel-world { width: 960px; opacity: .7; }
   .ktp-landing .pixel-canopy { height: 150px; }
-  .ktp-landing .world-telescope { transform: translateX(-80px); }
+  .ktp-landing .world-telescope { transform: translateX(180px); }
   .ktp-landing .studio-hero { padding-bottom: 152px; }
   .ktp-landing .studio-hero .pixel-world { top: 60px; bottom: auto; opacity: .6; }
   .ktp-landing .studio-hero-grid { padding-block: 50px 44px; gap: 42px; }

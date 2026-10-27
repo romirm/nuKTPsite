@@ -8,7 +8,7 @@ export function TelescopeOperator() {
     <path fill={ink} d="M-160 122h68v6h-68z" />
     <path fill={mid} d="M-152 76h56v6h-56zM-148 82h4v40h-4zM-104 82h4v40h-4zM-144 94h40v4h-40zM-144 108h40v4h-40z" />
     <path fill={lilac} d="M-152 76h56v2h-56z" />
-    <g transform="translate(-142 36) scale(2)" className="member-working crew-astronomer" data-crew-role="astronomer">
+    <g transform="translate(-142 28) scale(2.4)" className="member-working crew-astronomer" data-crew-role="astronomer">
       <CompactNinjaArtwork />
     </g>
     <path fill={mid} d="M-116 60h12v6h-12zM-110 66h4v8h-4z" />
@@ -27,7 +27,7 @@ export default function StadiumConstructionCrew() {
       <path fill={lilac} d="M480 750h184v2H480zM490 754h8v4h-8zM514 754h8v4h-8zM538 754h8v4h-8zM562 754h8v4h-8zM586 754h8v4h-8zM610 754h8v4h-8zM634 754h8v4h-8z" />
       <path fill={purple} d="M506 808h48v42h-48z" />
       <path fill={ink} d="M510 812h40v34h-40z" />
-      <g transform="translate(516 814) scale(1.5)" className="member-working" data-crew-role="crane-operator"><CompactNinjaArtwork /></g>
+      <g transform="translate(514 812) scale(1.7)" className="member-working" data-crew-role="crane-operator"><CompactNinjaArtwork /></g>
       <path fill={lilac} d="M506 806h48v4h-48zM506 846h48v4h-48z" />
       <path fill={mid} d="M530 840h16v4h-16zM540 836h2v4h-2zM564 760h20v8h-20z" />
       <g transform="translate(573 768)"><path className="crew-crane-cable" fill={lilac} d="M0 0h2v88H0z" /></g>
@@ -40,7 +40,7 @@ export default function StadiumConstructionCrew() {
 
     <g data-crew-equipment="brickwork">
       <path fill={ink} d="M670 960h120v6H670z" />
-      <g transform="translate(676 922) scale(2)" className="crew-builder" data-crew-role="bricklayer"><CompactNinjaArtwork /></g>
+      <g transform="translate(676 914) scale(2.4)" className="crew-builder" data-crew-role="bricklayer"><CompactNinjaArtwork /></g>
       <g transform="translate(708 942)"><g className="crew-hammer">
         <path fill={mid} d="M-2-14h4V2h-4z" /><path fill={lilac} d="M-8-18H8v6H-8z" />
       </g></g>
@@ -55,7 +55,7 @@ export default function StadiumConstructionCrew() {
       <path fill={mid} d="M4 18h92v8H4zM0 4h92v12H0z" />
       <path fill={purple} d="M10 2h68v6H10zM16-28h46V4H16z" />
       <path fill={deep} d="M20-24h38V4H20z" />
-      <g transform="translate(22 -25) scale(1.5)" className="member-working" data-crew-role="excavator-driver"><CompactNinjaArtwork /></g>
+      <g transform="translate(20 -29) scale(1.7)" className="member-working" data-crew-role="excavator-driver"><CompactNinjaArtwork /></g>
       <path fill={lilac} d="M16-30h48v4H16zM16 2h48v4H16zM8 20h8v2H8zM24 20h8v2h-8zM40 20h8v2h-8zM56 20h8v2h-8zM72 20h8v2h-8zM88 20h4v2h-4z" />
       <g transform="translate(84 6)"><g className="crew-excavator-arm">
         <path fill={mid} d="M-4 0v-30h8v-8h30v8h8v30h-6v-26H8v4H4V0zM34-2h22v12H34v-4h-4v-8z" />

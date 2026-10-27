@@ -22,7 +22,7 @@ const memberPositions: Record<Activity, [number, number]> = {
 function Member({ activity }: { activity: Activity }) {
   const [x, y] = memberPositions[activity];
   const standing = activity === "biotech" || activity === "neuroscience";
-  return <g transform={`translate(${x} ${y}) scale(2)`} fill="#cab0f3" className={`activity-ninja activity-ninja--${activity}${standing ? " member-working" : ""}`} data-member-pose={activity}>
+  return <g transform={`translate(${x} ${y - 8}) scale(2.4)`} fill="#cab0f3" className={`activity-ninja activity-ninja--${activity}${standing ? " member-working" : ""}`} data-member-pose={activity}>
     {activity === "software" && <>
 
       <path d="M6 9h9v9H6zM4 17h14v3h4v3H0v-3h4z" />
@@ -111,7 +111,7 @@ function Gear({ x, y, small = false }: { x: number; y: number; small?: boolean }
 
 /** Decorative dioramas share the scroll mascot; integer coordinates keep the art crisp. */
 export default function PixelMembers({ activity, x, y, chartStyle = "trading" }: { activity: Activity; x: number; y: number; chartStyle?: "trading" | "data" }) {
-  return <g transform={`translate(${x} ${y - 96})`} className={`pixel-members pixel-members--${activity}`} data-member-activity={activity}>
+  return <g transform={`translate(${x} ${y}) scale(1.3) translate(0 -96)`} className={`pixel-members pixel-members--${activity}`} data-member-activity={activity}>
     <path fill={ink} opacity=".65" d="M8 90h130v6H8z" />
     <path fill={mid} opacity=".45" d="M0 94v-6h2v4h4v-8h2v10zM144 94v-8h2v6h4v-4h2v6z" />
     {!["software", "mechanical", "electrical"].includes(activity) && <Bench />}

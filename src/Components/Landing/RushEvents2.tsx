@@ -53,7 +53,7 @@ export default function RushEvents2() {
             viewport={{ once: true }}
             className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl"
           >
-            Join us for <span className="bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">rush week</span>
+            <span className="bg-gradient-to-r from-blue-700 to-indigo-500 bg-clip-text text-transparent">Rush Week!</span>
           </motion.h2>
           <p className="mt-6 text-lg leading-8 text-slate-600">
             We're excited to meet you! Apply when applications open.

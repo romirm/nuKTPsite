@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#100a1b">
+  <meta name="description" content="Kappa Theta Pi winter rush countdown">
+  <title>Kappa Theta Pi</title>
+  <link rel="stylesheet" href="./mockup.css">
+</head>
+<body>
+  <main class="scene">
+    <canvas id="ascii-sky" class="ascii-sky" aria-hidden="true"></canvas>
+    <h1 class="screen-reader-only">Kappa Theta Pi</h1>
+    <div class="composition">
+      <p class="chapter-label">KAPPA CHAPTER</p>
+      <div class="art-field" aria-hidden="true">
+        <canvas id="constellation" width="1000" height="500"></canvas>
+      </div>
+      <section class="countdown" aria-labelledby="countdown-title">
+        <h2 id="countdown-title">Countdown to Winter Rush 2027</h2>
+        <div class="countdown-numbers" id="clock" aria-label="Countdown to Winter Rush 2027">
+          <div><strong id="months">--</strong><span>months</span></div>
+          <span class="colon" aria-hidden="true">:</span>
+          <div><strong id="days">--</strong><span>days</span></div>
+          <span class="colon" aria-hidden="true">:</span>
+          <div><strong id="hours">--</strong><span>hours</span></div>
+          <span class="colon" aria-hidden="true">:</span>
+          <div><strong id="minutes">--</strong><span>minutes</span></div>
+          <span class="colon" aria-hidden="true">:</span>
+          <div><strong id="seconds">--</strong><span>seconds</span></div>
+        </div>
+      </section>
+      <nav class="opening-actions" aria-label="Rush and contact">
+        <a href="https://rush.ktpnu.com" target="_blank" rel="noopener noreferrer">Rush Application <span aria-hidden="true">↗</span></a>
+        <a href="mailto:info@ktpnu.com">Contact Us <span aria-hidden="true">↗</span></a>
+      </nav>
+    </div>
+  </main>
+  <script type="module" src="./mockup.js"></script>
+</body>
+</html>

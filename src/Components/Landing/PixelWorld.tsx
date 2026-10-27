@@ -134,18 +134,18 @@ function Terrain({ forest = false }: { forest?: boolean }) {
 }
 
 function Telescope() {
-  return <g className="world-telescope"><g transform="translate(1120 806)">
-    <path className="world-beam" fill={light} opacity=".04" d="M56-36l-448-352h-72v-24h-80v-24h-48v24h48v48h56v40h64v40h72v40h72v40h72v32h56z" />
+  return <g className="world-telescope"><g transform="translate(300 806) scale(-1 1)">
+    <path className="world-beam" fill={light} opacity=".08" d="M-60-30 L-670-350 L-720-440 L-616-416 L-48-58 Z" />
     <path fill={ink} d="M-92 116h184v20h-184z" />
     <path fill={mid} d="M-8 32H8v84H-8zM-8 80h-12v12h-12v12h-12v12h-12v12h-16v-12h12v-12h12V92h12V80h12V68h12zM8 68h12v12h12v12h12v12h12v12h12v12H52v-12H40v-12H28V92H16V80H8z" />
-    <g transform="rotate(-30)">
+    <g transform="scale(-1 1) rotate(-30)">
       <path fill={purple} d="M-100-30H52v48h-152z" />
       <path fill={lilac} d="M-100-30H52v8h-152zM44-38h20v64H44z" />
       <path fill={deep} d="M-96 8H44v10h-140z" />
       <path fill={light} d="M64-28h8v42h-8z" />
       <path fill={mid} d="M-120-20h20v28h-20z" />
     </g>
-    <TelescopeOperator />
+    <g transform="scale(-1 1)"><TelescopeOperator /></g>
   </g></g>;
 }
 
@@ -194,6 +194,17 @@ function Cavern() {
 export default function PixelWorld({ scene }: { scene: World }) {
   const forest = ["grove", "forest", "observatory", "campus"].includes(scene);
   return <>
+    {scene !== "lake" && <div className="ascii-starfield" aria-hidden="true">
+      {Array.from({ length: 90 }, (_, i) => <span key={i} style={{
+        left: `${(i * 37 + 7) % 97}%`,
+        top: `${(i * 61 + 3) % 93}%`,
+        animationDelay: `${-(i * 0.73 % 8)}s`,
+        animationDuration: `${3.5 + (i % 6) * 0.7}s`,
+      }}>{["+", "·", "*", ".", "1", "0", "✦", "+", "."][i % 9]}</span>)}
+      <i className="ascii-comet ascii-comet--one">· . + *</i>
+      <i className="ascii-comet ascii-comet--two">· . + *</i>
+      <i className="ascii-signal">(( + ))</i>
+    </div>}
     {forest && <Canopy />}
     <svg className={`pixel-world pixel-world--${scene}`} data-world={scene} viewBox="0 0 1440 1000" aria-hidden="true" focusable="false" shapeRendering="crispEdges">
     <g className="world-far"><Stars />{["lake", "observatory", "harbor"].includes(scene) && <Moon />}

@@ -1,0 +1,161 @@
+/* Place the ASCII title ahead of the original landing-page artwork. */
+@font-face {
+  font-family: "KTP Terminal";
+  src: url("../../Assets/Fonts/jetbrains-mono-variable.ttf") format("truetype");
+  font-weight: 100 800;
+  font-display: swap;
+}
+.ktp-landing {
+  font-family: "KTP Site Body", sans-serif;
+}
+@font-face {
+  font-family: "KTP Site Body";
+  src: url("../../Assets/Fonts/space-grotesk-variable.ttf") format("truetype");
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "KTP Site Mono";
+  src: url("../../Assets/Fonts/space-mono-regular.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+.ktp-landing :is(h2, h3),
+.ktp-landing :is(h2, h3) span { font-family: "KTP Reading", sans-serif; }
+.ktp-landing .studio-greeting .uppercase,
+.ktp-landing .studio-rush time,
+.ktp-landing .studio-network .overflow-hidden::before {
+  font-family: "KTP Site Mono", monospace;
+}
+.ktp-landing .studio-greeting dd { font-family: "KTP Reading", sans-serif; }
+.ktp-landing :is(.studio-greeting dt, .studio-person p) { font-family: "KTP Site Body", sans-serif; }
+.ktp-landing h2 { font-size: clamp(30px, 3.1vw, 42px); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; text-transform: none; }
+.ktp-landing .studio-greeting h2 { font-size: clamp(30px, 3.1vw, 42px); }
+.ktp-landing h3 { letter-spacing: -.025em; }
+.ktp-landing .studio-nav { width: min(100% - 64px, 1440px); gap: clamp(20px, 2.4vw, 36px); font-family: "KTP Site Body", sans-serif; font-size: 15px; font-weight: 500; line-height: 1.4; }
+.ktp-landing .studio-nav :is(.studio-links a, .studio-portal) { font-size: 15px; letter-spacing: -.01em; }
+.ktp-landing .studio-links { justify-content: center; gap: clamp(20px, 2.4vw, 36px); }
+.ktp-landing .studio-links a { transition: color .2s ease; }
+.ktp-landing .studio-links a::after { bottom: 18px; height: 2px; border-radius: 2px; transform-origin: center; transition: transform .2s ease; }
+.ktp-landing .studio-portal { padding: 10px 16px; background: #72529b24; border-color: #b698da; }
+.ktp-landing .studio-portal:hover { background: #72529b55; }
+.ktp-landing .studio-greeting .uppercase,
+.ktp-landing .studio-rush time { font-size: 13px; font-weight: 400; letter-spacing: .06em; }
+.ktp-landing .studio-greeting dd { font-size: 26px; font-weight: 600; letter-spacing: -.04em; }
+.ktp-landing .ascii-hero { padding:0; }
+.ktp-landing .studio-greeting .pixel-world--lake .world-near { display:none; }
+.ktp-landing .ascii-opening { height:100svh; min-height:560px; position:relative; z-index:2; background:#100a1b; }
+.ktp-landing .ascii-opening iframe { display:block; width:100%; height:100%; border:0; }
+.ktp-landing .ascii-opening::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -80px;
+  height: 160px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, #1a1026 50%, transparent);
+}
+.ktp-landing .ascii-hero .studio-hero-grid { padding-top:90px; position:relative; z-index:3; }
+.ktp-landing .ascii-hero .studio-hero-grid { grid-template-columns:minmax(0,1fr); }
+.ktp-landing .ascii-hero .studio-hero-copy { max-width:800px; }
+
+/* Give the stadium its own clear stretch below the rush timeline. */
+.ktp-landing .studio-section.studio-rush { padding-top: 64px; padding-bottom: clamp(330px, 30vw, 430px); }
+
+/* Keep the illustrated worlds in the foreground and give every section the
+   same quiet night sky as the opening screen. */
+.ktp-landing .studio-hero,
+.ktp-landing .studio-section,
+.ktp-landing .studio-footer {
+  background: radial-gradient(ellipse at 50% 35%, #3b2458 0%, #20122f 40%, #100a1b 78%);
+}
+/* Let the same sky continue behind adjacent sections. Reserve a compact
+   strip for the foreground scenes instead of leaving them under the copy. */
+.ktp-landing { background: #211235 radial-gradient(ellipse at 50% 35%, #35204c 0%, #211235 76%) fixed; }
+.ktp-landing main .studio-section { background: transparent; padding-top: 48px; padding-bottom: 180px; }
+.ktp-landing main .studio-section.studio-rush { padding-top: 48px; padding-bottom: clamp(300px, 28vw, 390px); }
+.ktp-landing .studio-hero::before,
+.ktp-landing .studio-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  z-index: 0;
+  clip-path: none;
+  pointer-events: none;
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='280' viewBox='0 0 360 280'%3E%3Cg fill='%23d8c4ff' font-family='monospace' font-size='14'%3E%3Ctext x='25' y='35' opacity='.5'%3E%2B%3C/text%3E%3Ctext x='190' y='42' opacity='.3'%3E.%3C/text%3E%3Ctext x='300' y='95' opacity='.42'%3E*%3C/text%3E%3Ctext x='92' y='125' opacity='.28'%3E.%3C/text%3E%3Ctext x='230' y='160' opacity='.5'%3E%2B%3C/text%3E%3Ctext x='42' y='220' opacity='.32'%3E*%3C/text%3E%3Ctext x='156' y='245' opacity='.4'%3E%2B%3C/text%3E%3Ctext x='320' y='245' opacity='.3'%3E.%3C/text%3E%3C/g%3E%3C/svg%3E");
+  background-size: 360px 280px;
+  background-attachment: fixed;
+  animation: ascii-sky-twinkle 6s ease-in-out infinite alternate;
+}
+.ktp-landing .studio-companies::after { content: none; }
+.ktp-landing .studio-companies-heading {
+  display: block;
+  padding: 24px 28px;
+  border-left: 3px solid #a18aba;
+  background: linear-gradient(90deg, #211235e8, transparent 85%);
+}
+.ktp-landing .studio-companies h2 { color: var(--studio-text); max-width: none; }
+.ktp-landing .studio-companies-heading p { color: var(--studio-muted); }
+.ktp-landing .studio-section > .ascii-starfield {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: #cdb5eb;
+  font: 11px/1 "KTP Terminal", monospace;
+}
+.ktp-landing .ascii-starfield span {
+  position: absolute;
+  opacity: .15;
+  animation: ascii-star-flicker 5s ease-in-out infinite alternate;
+}
+.ktp-landing .ascii-starfield i { position: absolute; font-style: normal; white-space: nowrap; opacity: 0; }
+.ktp-landing .ascii-comet--one { top: 12%; left: 4%; animation: ascii-comet 16s linear infinite; }
+.ktp-landing .ascii-comet--two { top: 66%; left: 72%; animation: ascii-comet 21s linear -9s infinite; }
+.ktp-landing .ascii-signal { top: 24%; right: 5%; animation: ascii-signal 9s ease-in-out infinite; }
+@keyframes ascii-comet {
+  0%, 75%, 100% { opacity: 0; transform: translate(0, 0); }
+  79% { opacity: .55; }
+  88% { opacity: 0; transform: translate(100px, 35px); }
+}
+@keyframes ascii-signal {
+  0%, 55%, 100% { opacity: 0; transform: scale(.8); }
+  72% { opacity: .5; transform: scale(1.2); }
+}
+@keyframes ascii-star-flicker {
+  0%, 20% { opacity: .06; transform: scale(.8); }
+  55% { opacity: .5; transform: scale(1.1); }
+  100% { opacity: .14; transform: scale(1); }
+}
+.ktp-landing .studio-companies .studio-section-mark { color: #d8c4ff; }
+@keyframes ascii-sky-twinkle {
+  from { opacity: .3; }
+  to { opacity: .85; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ktp-landing .studio-hero::before,
+  .ktp-landing .studio-section::before { animation: none; opacity: .55; }
+  .ktp-landing .ascii-starfield span { animation: none; opacity: .25; }
+  .ktp-landing .ascii-starfield i { animation: none; opacity: 0; }
+}
+@media (max-width:1023px) {
+  .ktp-landing .studio-links { justify-content: flex-start; }
+}
+@media (max-width:640px) {
+  .ktp-landing .studio-nav { width: calc(100% - 24px); gap: 12px; }
+  .ktp-landing .studio-links { justify-content: flex-start; gap: 20px; }
+  .ktp-landing .studio-nav :is(.studio-links a, .studio-portal) { font-size: 13px; }
+  .ktp-landing .studio-links a::after { bottom: 12px; }
+  .ktp-landing .studio-portal { padding: 8px 10px; }
+  .ktp-landing .ascii-opening { min-height:500px; }
+  .ktp-landing .ascii-hero .studio-hero-grid { padding-top:52px; }
+  .ktp-landing main .studio-section { padding-top: 40px; padding-bottom: 140px; }
+  .ktp-landing main .studio-section.studio-rush { padding-top: 40px; padding-bottom: 280px; }
+  .ktp-landing .studio-companies-heading { padding: 16px; }
+}
