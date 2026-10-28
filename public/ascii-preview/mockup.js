@@ -180,21 +180,29 @@ function draw(t) {
 
 let animationFrame = 0;
 let lastFrame = 0;
+let sceneVisible = true;
 function animate(now) {
   if (now - lastFrame >= 1000 / 24) { draw(now / 1000); lastFrame = now; }
   animationFrame = window.requestAnimationFrame(animate);
 }
 function updateMotion() {
   window.cancelAnimationFrame(animationFrame);
+  if (document.hidden || !sceneVisible) return;
   if (motionPreference.matches) draw(5);
   else animationFrame = window.requestAnimationFrame(animate);
 }
 motionPreference.addEventListener("change", updateMotion);
 window.addEventListener("resize", updateMotion);
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) window.cancelAnimationFrame(animationFrame);
-  else updateMotion();
+  updateMotion();
 });
+if ("IntersectionObserver" in window) {
+  const visibilityObserver = new IntersectionObserver(([entry]) => {
+    sceneVisible = entry.isIntersecting;
+    updateMotion();
+  }, { threshold: 0 });
+  visibilityObserver.observe(canvas);
+}
 updateMotion();
 
 // Match the existing front page's Chicago calendar-month countdown.

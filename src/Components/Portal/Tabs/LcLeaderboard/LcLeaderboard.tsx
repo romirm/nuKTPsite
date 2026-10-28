@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import Logo from "@images/Branding/Logo.png";
 import "./lc-leaderboard.css";
 import PortalAsciiSky from "../../Framework/PortalAsciiSky";
 import { isLocalPortalDemo } from "../../../../localPortal/config";
@@ -191,7 +192,7 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
             {displayedStats.map((user, index) => (
               <li key={user.lcUser} className="lc-leaderboard-row" data-rank={index + 1}>
                 <span className="lc-leaderboard-rank" aria-label={`${places_to_20[index] || `Rank ${index + 1}`} place`}>{index + 1}</span>
-                <img className="lc-leaderboard-avatar" src={user.pictureLink} alt="" />
+                <img className="lc-leaderboard-avatar" src={user.pictureLink || Logo} alt="" loading="lazy" decoding="async" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = Logo; }} />
                 <div className="lc-leaderboard-member">
                   <h3><a href={`https://leetcode.com/${user.lcUser}`} target="_blank" rel="noopener noreferrer">{user.name}</a></h3>
                   <a className="lc-leaderboard-username" href={`https://leetcode.com/${user.lcUser}`} target="_blank" rel="noopener noreferrer">@{user.lcUser} <span aria-hidden="true">↗</span></a>

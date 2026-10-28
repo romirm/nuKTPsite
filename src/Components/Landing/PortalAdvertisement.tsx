@@ -53,6 +53,8 @@ function PortalAdvertisement() {
                 className="w-full object-cover"
                 src={PortalPic}
                 alt="KTP Member Portal Interface"
+                loading="lazy"
+                decoding="async"
               />
             </div>
 

@@ -148,6 +148,12 @@
   .ktp-landing .studio-links { justify-content: flex-start; }
 }
 @media (max-width:640px) {
+  .ktp-landing .studio-header { display: none; }
+  .ktp-landing [id] { scroll-margin-top: 16px; }
+  .ktp-landing .studio-greeting .group > img { height: auto; aspect-ratio: 4 / 5; object-position: center top; }
+  .ktp-landing .studio-greeting .group > .absolute.inset-0 { display: none; }
+  .ktp-landing .studio-greeting .group > .absolute.bottom-0 { position: static; padding: 22px; background: #211832; }
+  .ktp-landing .studio-greeting blockquote { font-size: 16px; line-height: 1.5; }
   .ktp-landing .studio-nav { width: calc(100% - 24px); gap: 12px; }
   .ktp-landing .studio-links { justify-content: flex-start; gap: 20px; }
   .ktp-landing .studio-nav :is(.studio-links a, .studio-portal) { font-size: 13px; }
@@ -158,4 +164,18 @@
   .ktp-landing main .studio-section { padding-top: 40px; padding-bottom: 140px; }
   .ktp-landing main .studio-section.studio-rush { padding-top: 40px; padding-bottom: 280px; }
   .ktp-landing .studio-companies-heading { padding: 16px; }
+}
+.ktp-landing .chapter-life { margin-top: 48px; scroll-margin-top: 100px; }
+.ktp-landing .chapter-life-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 22px; }
+.ktp-landing .chapter-life-photo { overflow: hidden; aspect-ratio: 1.35; background: #251a39; border: 3px solid #a18aba; box-shadow: 6px 6px 0 #160e27aa; }
+.ktp-landing .chapter-life-photo:first-child { grid-column: span 2; aspect-ratio: 2.7; }
+.ktp-landing .chapter-life-photo:nth-child(odd) { transform: rotate(-2deg); }
+.ktp-landing .chapter-life-photo:nth-child(even) { transform: translateY(20px) rotate(2deg); }
+.ktp-landing .chapter-life-photo img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .35s ease; }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .ktp-landing .chapter-life-photo:hover img { transform: scale(1.035); }
+}
+@media (max-width: 700px) {
+  .ktp-landing .chapter-life { margin-top: 42px; }
+  .ktp-landing .chapter-life-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 }

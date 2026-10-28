@@ -3,6 +3,7 @@ import Pyramid from "@images/Branding/pyramid.jpg";
 import WinterPC from "@images/Branding/winterpc.jpg";
 import Awh from "@images/Branding/awh.jpg";
 import PixelWorld from "./PixelWorld";
+import ChapterLife from "./ChapterLife";
 
 export default function WhyKTP() {
   return (
@@ -34,6 +35,7 @@ export default function WhyKTP() {
           <img src={WinterPC} alt="" loading="lazy" />
         </div>
       </div>
+      <ChapterLife />
     </section>
   );
 }

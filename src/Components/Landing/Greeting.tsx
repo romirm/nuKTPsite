@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import PixelWorld from "./PixelWorld";
 import ArcadeSky from "./ArcadeSky";
 // @ts-ignore
-import RohanPic from "@images/Exec/rohan2026.jpeg";
+import NnamdiPic from "@images/Exec/nnamdi2026.jpeg";
 
 interface AnimatedNumberProps {
   value: string;
@@ -92,8 +92,10 @@ function Greeting() {
             >
               <img
                 className="h-[450px] w-full object-cover sm:h-[600px] transition-transform duration-700 group-hover:scale-105"
-                src={RohanPic}
-                alt="KTP Member Quote"
+                src={NnamdiPic}
+                alt="Nnamdi Nwosu"
+                loading="lazy"
+                decoding="async"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/20 opacity-90" />
 
@@ -104,7 +106,7 @@ function Greeting() {
                   </p>
                   <footer className="mt-6 flex items-center gap-x-3">
                     <div className="h-px w-8 bg-blue-500"></div>
-                    <p className="text-base font-bold text-blue-400">Rohan Badani, KTP Member</p>
+                    <p className="text-base font-bold text-blue-400">Nnamdi Nwosu, KTP Member</p>
                   </footer>
                 </blockquote>
               </div>
