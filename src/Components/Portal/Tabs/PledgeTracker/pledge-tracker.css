@@ -39,6 +39,17 @@
 .ktp-portal .pledge-tracker-empty h3 { font-size: 20px; color: #291a3c; font-weight: 600; }
 .pledge-tracker-empty p { margin-top: 8px; color: #594269; font-size: 14px; }
 .pledge-tracker-empty button { margin-top: 18px; padding: 9px 16px; border: 1px solid #6a4893; border-radius: 4px; background: #4e2a84; color: #fff; font-size: 14px; }
+/* Match the profile's quiet sky and clear type hierarchy. */
+.ktp-portal .pledge-tracker-panel { position: relative; isolation: isolate; background: radial-gradient(ellipse at 70% 10%, #3b2458, #1a1028 82%); border: 1px solid #a18aba70; box-shadow: none; }
+.ktp-portal .pledge-tracker-panel > :not(.portal-ascii-sky) { position: relative; z-index: 2; }
+.ktp-portal .pledge-tracker-heading h2 { font-size: 30px; font-weight: 700; }
+.ktp-portal .pledge-tracker-heading p { font-size: 15px; }
+.ktp-portal .pledge-tracker-toolbar { background: #211235a8; }
+.ktp-portal .pledge-leaderboard-frame { border: 1px solid #a18aba70; box-shadow: none; margin-top: 18px; }
+.ktp-portal .pledge-leaderboard thead th { font-size: 15px; font-weight: 700; }
+.ktp-portal .pledge-leaderboard tbody :is(th, td) { padding-block: 15px; }
+.ktp-portal .pledge-player > span { font-size: 18px; font-weight: 700; }
+.ktp-portal .pledge-leaderboard .pledge-score { font-weight: 600; }
 @media (max-width: 639px) {
   .pledge-tracker-shell { padding: 20px 16px; }
   .pledge-tracker-heading { padding: 20px; }

@@ -1,9 +1,20 @@
+@font-face {
+  font-family: "KTP Portal Heading";
+  src: url("../../Assets/Fonts/bricolage-grotesque-latin.woff2") format("woff2");
+  font-weight: 200 800;
+  font-display: swap;
+}
 .ktp-portal {
+  --font-sans: "KTP Portal Heading", sans-serif;
+  --font-mono: "KTP Portal Heading", sans-serif;
   --portal-frame: #ad93c9;
   --portal-paper: #ebe2f3;
   --portal-shadow: 5px 5px 0 #160e2740, inset 0 1px 0 #f7f0ff80;
 }
-.ktp-portal :is(h1, h2, h3) { letter-spacing: -.025em; }
+.ktp-portal.portal-app, .ktp-portal.portal-mobile-dialog { font-family: var(--font-sans); }
+.ktp-portal :is(h1, h2, h3) { font-family: "KTP Portal Heading", sans-serif; letter-spacing: -.025em; }
+.ktp-portal :is(.portal-topbar, .portal-tab-region) :is(h1, h2, h3) { font-family: "KTP Portal Heading", sans-serif; }
+.ktp-portal .portal-nav-item { font-family: var(--font-sans); }
 .ktp-portal :is(input, select, textarea) { transition: border-color .2s, background-color .2s; }
 .ktp-portal :is(input, select, textarea):focus { background-color: #fff; }
 .ktp-portal .portal-backdrop {
@@ -17,6 +28,18 @@
   background-image: radial-gradient(#d8c4ff 1px, transparent 1px), radial-gradient(#a18aba 1px, transparent 1px);
   background-size: 157px 181px, 263px 307px;
   background-position: 27px 44px, 108px 130px;
+}
+.ktp-portal .portal-ascii-sky { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; font: 11px/1 "Space Mono", monospace; color: #e0caff; }
+.ktp-portal .portal-ascii-sky span { position: absolute; opacity: .15; animation: portal-ascii-twinkle 5s ease-in-out infinite alternate; }
+.ktp-portal .portal-ascii-sky span:nth-child(3n) { color: #cab0ff; }
+.ktp-portal .portal-ascii-sky span:nth-child(4n) { color: #a5c6ee; }
+.ktp-portal .portal-ascii-sky span:nth-child(7n) { color: #f1c5e8; }
+.ktp-portal .portal-ascii-comet { position: absolute; top: 16%; left: 5%; opacity: 0; font-style: normal; white-space: nowrap; animation: portal-ascii-comet 18s linear infinite; }
+@keyframes portal-ascii-twinkle { 0%, 100% { opacity: 0; } 45% { opacity: .5; } }
+@keyframes portal-ascii-comet { 0%, 72%, 100% { opacity: 0; transform: translate(0, 0); } 77% { opacity: .5; } 88% { opacity: 0; transform: translate(100px, 32px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ktp-portal .portal-ascii-sky span { animation: none; opacity: .24; }
+  .ktp-portal .portal-ascii-comet { animation: none; }
 }
 .ktp-portal .portal-backdrop .pixel-world {
   position: absolute; bottom: 0; left: 50%; width: max(100%, 1000px); height: auto;
@@ -107,7 +130,9 @@
 .ktp-portal .portal-directory-member { gap: 10px; padding: 11px 14px; transition: background .2s, border-color .2s; }
 .portal-directory-person { display: flex; flex: 1; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; }
 .ktp-portal .portal-directory-name { min-width: 0; font-family: var(--font-sans); font-size: 17px; font-weight: 650; line-height: 1.35; letter-spacing: -.035em; color: #f6f1fc; overflow-wrap: anywhere; }
-.ktp-portal .portal-directory-role { flex-shrink: 0; max-width: 44%; color: #cbb9df; font-family: var(--font-mono); font-size: 12px; font-weight: 500; line-height: 1.5; text-align: right; overflow-wrap: anywhere; }
+.ktp-portal .portal-tab-region :is(.portal-directory-name, .lc-leaderboard-member h3, .pledge-player > span, .social-node-label, .social-member-list b) { font-family: "KTP Portal Heading", sans-serif; }
+.ktp-portal .portal-topbar-profile > span { font-family: "KTP Portal Heading", sans-serif; }
+.ktp-portal .portal-directory-role { flex-shrink: 0; max-width: 44%; color: #d7c6e7; font-family: var(--font-sans); font-size: 14px; font-weight: 700; line-height: 1.4; text-align: right; overflow-wrap: anywhere; }
 .ktp-portal .portal-directory-role[data-role=exec] { color: #e1c4ff; }
 .ktp-portal .portal-directory-role[data-role=pledge] { color: #d2c5e5; }
 .ktp-portal .portal-directory-role[data-role=alumni] { color: #c4afd7; }
@@ -120,26 +145,26 @@
 }
 .portal-member-profile article > :not(.portal-backdrop) { position: relative; z-index: 1; }
 .ktp-portal .portal-backdrop--profile {
-  background: radial-gradient(ellipse at 65% 25%, #8360b780, transparent 65%),
-    linear-gradient(145deg, #4e2a84, #473065 55%, #291741);
+  background: radial-gradient(ellipse at 50% 30%, #35204c, #1a1028 78%);
 }
-.portal-backdrop--profile > .portal-pixel-pattern { position: absolute; inset: 0; width: 100%; height: 100%; }
+.portal-backdrop--profile > .portal-pixel-pattern { position: absolute; inset: 0; width: 100%; height: 100%; opacity: .2; }
 .portal-pixel-shimmer { animation: portal-pixel-shimmer 10s ease-in-out infinite alternate; }
 @keyframes portal-pixel-shimmer { to { opacity: .45; } }
 .ktp-portal .portal-profile-hero {
-  background: linear-gradient(110deg, #291a3cf5, #352052d9); border-bottom-color: #a18aba66;
+  background: linear-gradient(180deg, #1a1028, #211430e8); border-bottom-color: #a18aba40;
 }
-.ktp-portal .portal-profile-heading { display: grid; grid-template-columns: 96px minmax(0, 1fr) minmax(0, 230px); align-items: start; gap: 20px; padding: 0 32px 28px; }
-.ktp-portal .portal-profile-avatar { width: 96px; height: 96px; margin-top: -12px; }
-.ktp-portal .portal-profile-identity { display: block; padding-top: 18px; }
-.ktp-portal .portal-profile-actions { justify-content: flex-end; justify-self: end; margin-top: 22px; gap: 10px; }
-.ktp-portal .portal-profile-socials { justify-content: flex-end; flex-wrap: wrap; }
+.ktp-portal .portal-profile-heading { display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; align-items: center; gap: 20px; padding: 12px 32px 24px; }
+.ktp-portal .portal-profile-avatar { width: 96px; height: 96px; margin-top: 0; }
+.ktp-portal .portal-profile-identity { display: block; padding-top: 0; }
+.ktp-portal .portal-profile-actions { justify-content: flex-end; justify-self: end; max-width: 100%; margin-top: 0; gap: 10px; flex-wrap: nowrap; }
+.ktp-portal .portal-profile-socials { justify-content: flex-end; flex-wrap: nowrap; }
 .ktp-portal .portal-profile-hero > div:first-child > img,
 .ktp-portal .portal-default-cover { height: 136px; }
-.ktp-portal .portal-default-cover { position: relative; }
+.ktp-portal .portal-default-cover { position: relative; background: radial-gradient(ellipse at 50% 35%, #3b2458, #1a1028 80%); }
+.ktp-portal .portal-default-cover > .portal-pixel-pattern { opacity: .2; }
 .portal-banner-preview { overflow: hidden; border: 1px solid #ad93c9; border-radius: 5px; }
 .ktp-portal .portal-default-cover > .portal-banner-ninja {
-  position: absolute; right: 28px; bottom: 6px; width: 240px; height: 124px;
+  position: absolute; z-index: 2; right: 28px; bottom: 6px; width: 175px; height: 90px;
   filter: drop-shadow(0 3px 0 #160e2733);
 }
 .portal-banner-ninja .ninja-eyes { animation: portal-banner-blink 7s steps(1) infinite; }
@@ -162,6 +187,7 @@
 @keyframes portal-banner-bubbles { 0% { opacity: 0; transform: translateY(2px); } 30%, 60% { opacity: .6; } 100% { opacity: 0; transform: translateY(-6px); } }
 @keyframes portal-banner-hands { from { transform: translate(1px, -2px); } to { transform: translate(2px, -3px); } }
 .ktp-portal .portal-profile-identity h1 { min-width: 0; font-family: var(--font-sans); font-size: clamp(36px, 3vw, 44px); font-weight: 600; line-height: 1.2; letter-spacing: -.04em; text-shadow: none; }
+.ktp-portal .portal-tab-region .portal-profile-identity h1 { font-family: "KTP Portal Heading", sans-serif; }
 .ktp-portal .portal-profile-actions :is(button, a) { border-radius: 5px; }
 .ktp-portal .portal-profile-socials a { border-radius: 50%; }
 .ktp-portal .portal-member-profile .portal-profile-details {
@@ -181,9 +207,9 @@
 .ktp-portal .portal-member-profile .portal-profile-facts > .portal-profile-field:last-child { border-bottom: 0; }
 .portal-profile-field::before { content: none; }
 .portal-profile-field--wide { grid-column: 1 / -1; }
-.ktp-portal .portal-member-profile .portal-profile-field dt { color: #38204f !important; font-family: var(--font-mono); font-size: 12px; line-height: 1.6; letter-spacing: .01em; font-weight: 400; }
-.ktp-portal .portal-member-profile .portal-profile-field dd { font-size: 15px; margin-top: 6px; line-height: 1.6; }
-.ktp-portal .portal-member-profile .portal-profile-field .portal-academic-label { font-weight: 400; }
+.ktp-portal .portal-member-profile .portal-profile-field dt { color: #4e2a70 !important; font-family: var(--font-sans); font-size: 15px; line-height: 1.4; letter-spacing: .01em; font-weight: 700; }
+.ktp-portal .portal-member-profile .portal-profile-field dd { font-size: 17px; margin-top: 6px; line-height: 1.55; }
+.ktp-portal .portal-member-profile .portal-profile-field .portal-academic-label { font-weight: 700; }
 .portal-academic-label strong { font-weight: 700; }
 .portal-academic-majors { font-weight: 650; }
 .ktp-portal .portal-member-profile .portal-profile-about {
@@ -194,8 +220,8 @@
   content: ""; position: absolute; top: 0; left: 0; width: 56px; height: 2px;
   background: #cab0f3; pointer-events: none;
 }
-.ktp-portal .portal-member-profile .portal-profile-about h2 { color: #fff; font-family: var(--font-sans); font-size: 22px; line-height: 1.3; font-weight: 600; letter-spacing: -.02em; }
-.portal-profile-biography { color: #e8dff1; margin-top: 12px; font-size: 15px; line-height: 1.75; overflow-wrap: anywhere; }
+.ktp-portal .portal-member-profile .portal-profile-about h2 { color: #fff; font-family: var(--font-sans); font-size: 24px; line-height: 1.3; font-weight: 700; letter-spacing: -.02em; }
+.portal-profile-biography { color: #e8dff1; margin-top: 12px; font-size: 17px; line-height: 1.65; overflow-wrap: anywhere; }
 .portal-profile-biography > * + * { margin-top: 16px; }
 .ktp-portal .portal-member-profile .portal-profile-content--facts-only { grid-template-columns: minmax(0, 1fr); }
 .ktp-portal .portal-member-profile .portal-profile-content--facts-only .portal-profile-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -211,7 +237,7 @@
 }
 @container member-profile (max-width: 599px) {
   .ktp-portal .portal-profile-heading { grid-template-columns: 96px minmax(0, 1fr); gap: 16px 20px; }
-  .ktp-portal .portal-profile-actions { grid-column: 1 / -1; margin-top: 0; }
+  .ktp-portal .portal-profile-actions { grid-column: 1 / -1; justify-content: flex-start; justify-self: stretch; overflow-x: auto; margin-top: 0; }
 }
 .ktp-portal .member-globe {
   border-radius: 5px; border-color: #a18aba80;
@@ -232,11 +258,11 @@
   .ktp-portal .portal-page-heading { padding: 20px; }
   .ktp-portal .portal-profile-heading { gap: 20px; padding: 0 20px 24px; }
   .ktp-portal .portal-profile-heading { grid-template-columns: 80px minmax(0, 1fr); }
-  .ktp-portal .portal-profile-avatar { width: 80px; height: 80px; margin-top: -8px; }
-  .ktp-portal .portal-profile-identity { padding-top: 18px; }
+  .ktp-portal .portal-profile-avatar { width: 80px; height: 80px; margin-top: 0; }
+  .ktp-portal .portal-profile-identity { padding-top: 0; }
   .ktp-portal .portal-profile-hero > div:first-child > img,
   .ktp-portal .portal-default-cover { height: 120px; }
-  .ktp-portal .portal-default-cover > .portal-banner-ninja { right: 16px; bottom: 4px; width: 220px; height: 110px; }
+  .ktp-portal .portal-default-cover > .portal-banner-ninja { right: 16px; bottom: 4px; width: 150px; height: 77px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ktp-portal *, .ktp-portal *::before, .ktp-portal *::after { animation: none !important; transition: none !important; }

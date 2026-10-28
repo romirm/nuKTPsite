@@ -28,8 +28,8 @@ html[data-style="blocks"] .scene { background: radial-gradient(ellipse at 50% 35
 .opening-actions a { display:flex; align-items:center; justify-content:center; gap:8px; width:180px; min-height:42px; color:#e2d0f5; text-decoration:none; padding:10px 14px; border:1px solid #a483c877; transition:background .2s, border-color .2s; }
 .opening-actions a:hover { color:#fff; border-color:#d8baf9; background:#65409566; }
 .opening-actions a:focus-visible { outline:2px solid #d8baf9; outline-offset:3px; }
-.chapter-label, .countdown-numbers div span, .countdown time, .opening-actions { font-family: "KTP Space Mono", monospace; font-weight: 400; }
+.chapter-label, .countdown-numbers div span, .countdown time, .opening-actions { font-family: "KTP Heading", sans-serif; font-weight: 500; }
 .chapter-label, .countdown-numbers div span, .countdown time, .opening-actions { font-size: 12px; }
 .countdown h2 { font-family: "KTP Heading", sans-serif; font-weight: 700; }
-.countdown-numbers strong, .colon { font-family: "KTP Body", sans-serif; }
+.countdown-numbers strong, .colon { font-family: "KTP Heading", sans-serif; }
 @media (max-width: 600px) { .scene { padding: 86px 12px 20px; } .art-field canvas { transform: scale(1.05); } .countdown { margin-top: -15px; } .countdown-numbers { padding: 16px 0 18px; gap: 2px; } .countdown-numbers strong { font-size: clamp(22px, 7vw, 40px); } .countdown-numbers div span { font-size: clamp(8px, 2.4vw, 11px); letter-spacing: 0; } .colon { font-size: 16px; } .opening-actions { width:100%; margin-top:10px; gap:12px 16px; } .opening-actions a { width:min(180px, calc((100% - 16px) / 2)); padding-inline:6px; } }

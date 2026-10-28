@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import "./lc-leaderboard.css";
+import PortalAsciiSky from "../../Framework/PortalAsciiSky";
+import { isLocalPortalDemo } from "../../../../localPortal/config";
+import { localLeetcodeRefreshTime } from "../../../../localPortal/runtime";
 
 const places_to_20 = [
   "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th", "9th", "10th",
@@ -109,7 +112,8 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
       setError(null);
       const stats = processPubDir(fullPubDir);
       setLcStats(stats);
-      setLastUpdated(new Date());
+      const refreshedAt = isLocalPortalDemo ? localLeetcodeRefreshTime() : null;
+      setLastUpdated(refreshedAt ? new Date(refreshedAt) : null);
       setLoading(false);
     } catch (err) {
       console.error("Error processing leaderboard:", err);
@@ -160,7 +164,8 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
     <div className="portal-page-scroll lc-leaderboard h-full overflow-y-auto">
       <div className="lc-leaderboard-content mx-auto">
         <header className="lc-leaderboard-header">
-          <h2>Leetcode</h2>
+          <PortalAsciiSky />
+          <h2>Leetcode Leaderboard</h2>
           <p>Easy questions are 2 points, medium are 5 points, and hard are 8 points.</p>
           <div className="lc-leaderboard-toolbar">
             <div className="lc-leaderboard-filters" role="group" aria-label="Leaderboard type">
@@ -171,7 +176,7 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
                   onClick={() => setLeaderboardType(value)}>{label}</button>
               ))}
             </div>
-            {lastUpdated && <p className="lc-leaderboard-updated">Last updated: {lastUpdated.toLocaleTimeString()}</p>}
+            {lastUpdated && <p className="lc-leaderboard-updated">Local refresh: {lastUpdated.toLocaleString()} · Some entries may be unavailable or sample data</p>}
           </div>
         </header>
         {error && <p role="alert" className="lc-leaderboard-empty">{error}</p>}

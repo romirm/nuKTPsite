@@ -4,7 +4,7 @@ import { ActiveProfileContext } from "./ActiveProfileContext";
 export function PortalNavigation({ args }: { args: SideBarArgsType }) {
   function links(secondary: boolean) {
     return Object.entries(args.Navigation).map(([key, tab]) => {
-      if (tab.secondary !== secondary || (tab.adminonly && !args.Admin) || (tab.pledgeonly && !args.Pledge && !args.Admin)) return null;
+      if (key === "SocialGraph" || tab.secondary !== secondary || (tab.adminonly && !args.Admin) || (tab.pledgeonly && !args.Pledge && !args.Admin)) return null;
       const current = args.CurrTab === key;
       return (
         <button key={key} type="button" className="portal-nav-item" aria-current={current ? "page" : undefined} onClick={() => args.onTabClick(key)}>

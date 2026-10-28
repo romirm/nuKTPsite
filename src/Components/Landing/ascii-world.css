@@ -6,7 +6,7 @@
   font-display: swap;
 }
 .ktp-landing {
-  font-family: "KTP Site Body", sans-serif;
+  font-family: "KTP Reading", sans-serif;
 }
 @font-face {
   font-family: "KTP Site Body";
@@ -25,14 +25,14 @@
 .ktp-landing .studio-greeting .uppercase,
 .ktp-landing .studio-rush time,
 .ktp-landing .studio-network .overflow-hidden::before {
-  font-family: "KTP Site Mono", monospace;
+  font-family: "KTP Reading", sans-serif;
 }
 .ktp-landing .studio-greeting dd { font-family: "KTP Reading", sans-serif; }
-.ktp-landing :is(.studio-greeting dt, .studio-person p) { font-family: "KTP Site Body", sans-serif; }
+.ktp-landing :is(.studio-greeting dt, .studio-person p) { font-family: "KTP Reading", sans-serif; }
 .ktp-landing h2 { font-size: clamp(30px, 3.1vw, 42px); line-height: 1.2; font-weight: 700; letter-spacing: -.035em; text-transform: none; }
 .ktp-landing .studio-greeting h2 { font-size: clamp(30px, 3.1vw, 42px); }
 .ktp-landing h3 { letter-spacing: -.025em; }
-.ktp-landing .studio-nav { width: min(100% - 64px, 1440px); gap: clamp(20px, 2.4vw, 36px); font-family: "KTP Site Body", sans-serif; font-size: 15px; font-weight: 500; line-height: 1.4; }
+.ktp-landing .studio-nav { width: min(100% - 64px, 1440px); gap: clamp(20px, 2.4vw, 36px); font-family: "KTP Reading", sans-serif; font-size: 15px; font-weight: 500; line-height: 1.4; }
 .ktp-landing .studio-nav :is(.studio-links a, .studio-portal) { font-size: 15px; letter-spacing: -.01em; }
 .ktp-landing .studio-links { justify-content: center; gap: clamp(20px, 2.4vw, 36px); }
 .ktp-landing .studio-links a { transition: color .2s ease; }

@@ -108,9 +108,6 @@ function IndivProfile(props: {
     if (asString(currProfile.year)) {
       fields["Class Standing"] = asString(currProfile.year);
     }
-    if (asString(currProfile.role)) {
-      fields["Role"] = asString(currProfile.role);
-    }
     const academics = profileAcademics(currProfile);
     if (academics) fields["Major/Minor"] = academics;
     if (asString(currProfile.internships)) {
@@ -150,7 +147,7 @@ function IndivProfile(props: {
 
           <div className="portal-profile-hero">
             <div>
-              <ProfileCover major={currProfile.major} assigned={currProfile.banner_activity}/>
+              <ProfileCover major={currProfile.major} assigned={currProfile.banner_activity} name={profileName}/>
             </div>
             <div className="portal-profile-heading mx-auto max-w-5xl">
                 <div className="portal-profile-avatar">
@@ -166,6 +163,25 @@ function IndivProfile(props: {
                     </h1>
                 </div>
                   <div className="portal-profile-actions">
+                    <div className="portal-profile-socials flex items-center">
+                      {socials.map(
+                        (item: { name: string; href: string; icon: any; className: string }) => (
+                          <a
+                            key={item.name}
+                            href={item.href}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={classNames(
+                              "transition-colors",
+                              item.className || "text-slate-400 hover:text-blue-600"
+                            )}
+                          >
+                            <span className="sr-only">{item.name}</span>
+                            <item.icon className="h-6 w-6" aria-hidden="true" />
+                          </a>
+                        )
+                      )}
+                    </div>
                     {!props.alumni && <>
                     <button
                       onClick={() => {
@@ -199,31 +215,12 @@ function IndivProfile(props: {
                       <span>Resume</span>
                     </a>
                     </>}
-                    <div className="portal-profile-socials flex items-center">
-                      {socials.map(
-                        (item: { name: string; href: string; icon: any; className: string }) => (
-                          <a
-                            key={item.name}
-                            href={item.href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className={classNames(
-                              "transition-colors",
-                              item.className || "text-slate-400 hover:text-blue-600"
-                            )}
-                          >
-                            <span className="sr-only">{item.name}</span>
-                            <item.icon className="h-6 w-6" aria-hidden="true" />
-                          </a>
-                        )
-                      )}
-                    </div>
                   </div>
             </div>
           </div>
 
           <div className="portal-profile-details mx-auto mt-6 max-w-5xl px-4 sm:px-6 lg:px-8">
-            <PortalBackdrop profile />
+            <PortalBackdrop profile name={profileName} />
             <div className={classNames("portal-profile-content", !hasAbout ? "portal-profile-content--facts-only" : "", props.alumni ? "portal-alumni-content" : "")}>
               {hasAbout && <section className="portal-profile-about" aria-labelledby="member-about-heading">
                 <h2 id="member-about-heading">About</h2>
@@ -236,7 +233,7 @@ function IndivProfile(props: {
                 {Object.keys(fields).map((field) => (
                   <div key={field} className={classNames("portal-profile-field", ["Major/Minor", "Relevant Internships", "Workplace"].includes(field) ? "portal-profile-field--wide" : "")}>
                     <dt className={classNames("text-xs font-bold uppercase tracking-wider text-blue-600", field === "Major/Minor" ? "portal-academic-label" : "")}>
-                      {field === "Major/Minor" ? <><strong>Majors</strong><span>/Minors</span></> : field}
+                      {field === "Major/Minor" ? "Majors & Minors" : field}
                     </dt>
                     <dd className="mt-2 text-sm text-slate-900">
                       {field === "Major/Minor" ? <>{majorLabels && <strong className="portal-academic-majors">{majorLabels}</strong>}{majorLabels && minorLabels && ", "}{minorLabels}{!majorLabels && !minorLabels && "Not added"}</> : fields[field]}

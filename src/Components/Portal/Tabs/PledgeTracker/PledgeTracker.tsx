@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { CheckIcon, MagnifyingGlassIcon } from "@heroicons/react/20/solid";
 import Logo from "../../../../Assets/Images/Branding/Logo.png";
 import "./pledge-tracker.css";
+import PortalAsciiSky from "../../Framework/PortalAsciiSky";
 
 const PLACEHOLDER_IMAGE_URL = Logo;
 const DEFAULT_PLEDGE_POINTS = 100;
@@ -112,6 +113,7 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
     <div className="portal-page-scroll pledge-tracker">
       <div className="pledge-tracker-shell">
         <section className="pledge-tracker-panel" aria-labelledby="pledge-roster-heading">
+          <PortalAsciiSky />
           <div className="pledge-tracker-heading">
             <div>
               <h2 id="pledge-roster-heading">Pledge Tracker</h2>

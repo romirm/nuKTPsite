@@ -13,13 +13,25 @@ export function mergeMemberSnapshot(data: any, snapshot: any): number {
     }
     data.localMemberSnapshotRevision = revision;
   }
+  const leetcodeRefreshAt = typeof snapshot.leetcodeRefreshAt === "string" ? snapshot.leetcodeRefreshAt : "";
+  const shouldRefreshLeetcode = !!leetcodeRefreshAt && leetcodeRefreshAt !== data.localMemberLeetcodeRefreshAt;
+  const refreshedLeetcodeIds = new Set<string>(Array.isArray(snapshot.leetcodeRefreshedIds) ? snapshot.leetcodeRefreshedIds : []);
   let count = 0;
   for (const [sourceId, value] of Object.entries(snapshot.public_users)) {
     const source: any = value;
     if (!source || typeof source !== "object" || typeof source.name !== "string" || !source.name.trim()) continue;
     // Reimporting the same snapshot preserves any local edits to its profiles.
     const uid = `local-copy-${sourceId}`;
-    if (data.public_users[uid]) continue;
+    if (data.public_users[uid]) {
+      const current = data.public_users[uid];
+      const normalize = (value: unknown) => typeof value === "string" ? value.trim().replace(/\/+$/, "").toLowerCase() : "";
+      if (shouldRefreshLeetcode && refreshedLeetcodeIds.has(sourceId) && source.leetcode?.answers && normalize(current.leetcode?.username) && normalize(current.leetcode.username) === normalize(source.leetcode?.username)) {
+        current.leetcode.answers = JSON.parse(JSON.stringify(source.leetcode.answers));
+        if (data.users?.[uid]?.leetcode) data.users[uid].leetcode.answers = JSON.parse(JSON.stringify(source.leetcode.answers));
+        count++;
+      }
+      continue;
+    }
     const profile: any = {};
     for (const field of profileFields) if (source[field] !== undefined) profile[field] = JSON.parse(JSON.stringify(source[field]));
     profile.role = typeof profile.role === "string" ? profile.role : "Member";
@@ -34,5 +46,6 @@ export function mergeMemberSnapshot(data: any, snapshot: any): number {
     data.allowed_users[uid] = { role: profile.role };
     count++;
   }
+  if (shouldRefreshLeetcode) data.localMemberLeetcodeRefreshAt = leetcodeRefreshAt;
   return count;
 }

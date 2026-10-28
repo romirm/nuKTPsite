@@ -32,12 +32,25 @@
 .lc-stat-hard { color: #50276e; background: #8053a42a; }
 .lc-stat-score { color: #4e2a84; border-left: 1px solid #a18aba66; }
 .lc-leaderboard-empty { padding: 24px 0; color: #e8dff1; font-size: 14px; }
+.ktp-portal .lc-leaderboard-header { position: relative; isolation: isolate; overflow: hidden; padding: 22px 24px; margin-bottom: 18px; border: 1px solid #a18aba70; border-radius: 4px; background: radial-gradient(ellipse at 70% 10%, #3b2458, #1a1028 82%); }
+.ktp-portal .lc-leaderboard-header > :not(.portal-ascii-sky) { position: relative; z-index: 2; }
+.ktp-portal .lc-leaderboard-header h2 { font-size: 30px; font-weight: 700; }
+.ktp-portal .lc-leaderboard-header > p { font-size: 15px; }
+.ktp-portal .lc-leaderboard-toolbar { margin-top: 18px; }
+.ktp-portal .lc-leaderboard-filters button { font-size: 14px; }
+.ktp-portal .lc-leaderboard-updated { font-size: 12px; }
+.ktp-portal .lc-leaderboard-list { border-color: #a18aba70; }
+.ktp-portal .lc-leaderboard-row { padding: 12px 18px; }
+.ktp-portal .lc-leaderboard-stats dt { font-size: 12px; font-weight: 600; }
+.ktp-portal .lc-leaderboard-stats dd { font-size: 18px; font-weight: 600; }
 @media (max-width: 1000px) {
   .lc-leaderboard-row { grid-template-columns: 26px 48px minmax(0, 1fr); gap: 10px 14px; padding: 12px 16px; }
   .lc-leaderboard-avatar { width: 48px; height: 48px; }
   .lc-leaderboard-stats { grid-column: 3; }
 }
 @media (max-width: 539px) {
+  .ktp-portal .lc-leaderboard-header { padding: 18px; }
+  .ktp-portal .lc-leaderboard-header h2 { font-size: 25px; }
   .lc-leaderboard-row { grid-template-columns: 24px 44px minmax(0, 1fr); padding: 12px; gap: 10px; }
   .lc-leaderboard-avatar { width: 44px; height: 44px; }
   .lc-leaderboard-stats { grid-column: 2 / -1; }

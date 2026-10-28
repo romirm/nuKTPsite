@@ -40,6 +40,9 @@ export function localMemberCopyCount(): number {
   assertDemo();
   return Object.keys(readData().public_users).filter(uid => uid.startsWith("local-copy-")).length;
 }
+export function localLeetcodeRefreshTime(): string | null {
+  return isLocalPortalDemo && typeof readData().localMemberLeetcodeRefreshAt === "string" ? readData().localMemberLeetcodeRefreshAt : null;
+}
 export function demoRef(path = ""): any {
   assertDemo();
   return { localPortalDemo: true, path: path.split("/").filter(Boolean).join("/"), key: path.split("/").filter(Boolean).pop() || null };

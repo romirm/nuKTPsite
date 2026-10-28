@@ -40,3 +40,23 @@ test("a refreshed export replaces stale imported profiles and roles while preser
   mergeMemberSnapshot(data, { revision: "new", public_users: { first: { name: "Anjana", role: "VP of Programming" } } });
   expect(data.public_users["local-copy-first"].name).toBe("Preserved on reload");
 });
+
+test("a one-time LeetCode refresh updates only matched accounts while preserving local edits", () => {
+  const data = createSampleData();
+  const initial = { revision: "one", public_users: {
+    a: { name: "A", leetcode: { username: "alpha", answers: { easySolved: 1 } } },
+    b: { name: "B", leetcode: { username: "beta", answers: { easySolved: 2 } } },
+  } };
+  mergeMemberSnapshot(data, initial);
+  data.public_users["local-copy-a"].name = "Local name";
+  data.public_users["local-copy-b"].leetcode.username = "new-account";
+  const refresh = { revision: "one", leetcodeRefreshAt: "2026-10-28T18:00:00Z", leetcodeRefreshedIds: ["a", "b"], public_users: {
+    a: { name: "A", leetcode: { username: "alpha", answers: { easySolved: 42, mediumSolved: 5, hardSolved: 1 } } },
+    b: { name: "B", leetcode: { username: "beta", answers: { easySolved: 99 } } },
+  } };
+  expect(mergeMemberSnapshot(data, refresh)).toBe(1);
+  expect(data.public_users["local-copy-a"].name).toBe("Local name");
+  expect(data.public_users["local-copy-a"].leetcode.answers.easySolved).toBe(42);
+  expect(data.public_users["local-copy-b"].leetcode.answers.easySolved).toBe(2);
+  expect(mergeMemberSnapshot(data, refresh)).toBe(0);
+});

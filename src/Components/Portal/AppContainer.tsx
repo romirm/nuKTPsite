@@ -318,7 +318,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
             <button type="button" className="portal-menu-button lg:hidden" onClick={() => setSidebarOpen(true)}>
               <span className="sr-only">Open sidebar</span><Bars3Icon aria-hidden="true" />
             </button>
-            <h1>{currTab === "PledgeTracker" ? "Pledge Tracker" : navigation[currTab as keyof typeof navigation].name}</h1>
+            <h1>{currTab === "PledgeTracker" ? "Pledge Tracker" : currTab === "Leaderboard" ? "Leetcode Leaderboard" : navigation[currTab as keyof typeof navigation].name}</h1>
           </div>
           <button type="button" className="portal-topbar-profile" onClick={() => { onTabClick("MyProfile"); setActiveProfile(currUserUid); }}>
             <span>{user.name}</span><img src={user.imageUrl} alt="" />
