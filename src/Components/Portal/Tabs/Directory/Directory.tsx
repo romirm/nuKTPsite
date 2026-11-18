@@ -238,6 +238,8 @@ function Directory(props: any) {
                             className="h-10 w-10 rounded-full object-cover"
                             src={personImage}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                           />
                         </div>
                         <div className="portal-directory-person">

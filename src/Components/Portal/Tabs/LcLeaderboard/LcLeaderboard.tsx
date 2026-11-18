@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Logo from "@images/Branding/Logo.png";
 import "./lc-leaderboard.css";
-import PortalAsciiSky from "../../Framework/PortalAsciiSky";
 import { isLocalPortalDemo } from "../../../../localPortal/config";
 import { localLeetcodeRefreshTime } from "../../../../localPortal/runtime";
 
@@ -52,16 +51,14 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
       // Collect all users with LC data
       for (const user_uid in dir) {
         const user = dir[user_uid];
-        if (user.leetcode && user.leetcode.username) {
+        if (typeof user?.leetcode?.username === "string" && user.leetcode.username.trim()) {
           if (!user.leetcode.answers) {
             continue;
           }
-          const prof_pic = user.pfp_large_link
-            ? user.pfp_large_link
-            : user.profile_pic_link;
+          const prof_pic = user.pfp_thumb_link || user.pfp_large_link || user.profile_pic_link;
           lc_users[user.leetcode.username] = {
-            name: user.name,
-            role: user.role || "",
+            name: typeof user.name === "string" ? user.name : user.leetcode.username,
+            role: typeof user.role === "string" ? user.role : "",
             answers: user.leetcode.answers,
             pfp: prof_pic,
           };
@@ -165,7 +162,6 @@ const LcLeaderboard: React.FC<LcLeaderboardProps> = ({
     <div className="portal-page-scroll lc-leaderboard h-full overflow-y-auto">
       <div className="lc-leaderboard-content mx-auto">
         <header className="lc-leaderboard-header">
-          <PortalAsciiSky />
           <h2>Leetcode Leaderboard</h2>
           <p>Easy questions are 2 points, medium are 5 points, and hard are 8 points.</p>
           <div className="lc-leaderboard-toolbar">

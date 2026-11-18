@@ -71,7 +71,7 @@
 }
 .ktp-portal .portal-topbar {
   background: linear-gradient(100deg, #211235ed, #352052c9);
-  backdrop-filter: blur(12px); box-shadow: inset 0 -1px #d8c4ff0d;
+  box-shadow: inset 0 -1px #d8c4ff0d;
 }
 .ktp-portal .portal-topbar h1 { font-weight: 550; letter-spacing: -.025em; }
 .portal-tab-region { animation: portal-page-arrive .32s ease-out both; }
@@ -227,6 +227,7 @@
 .ktp-portal .portal-member-profile .portal-profile-content--facts-only .portal-profile-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .portal-alumni-content .portal-profile-field--wide { grid-column: auto; }
 .portal-directory-empty { color: #e8dff1; padding: 32px; }
+.portal-load-retry { margin-top: 12px; padding: 6px 12px; border: 1px solid #ad93c9; border-radius: 5px; }
 .ktp-portal .portal-profile-biography a { color: #d8c4ff; text-decoration: underline; text-underline-offset: 3px; }
 @container member-profile (min-width: 600px) {
   .portal-profile-content { grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr); align-items: stretch; }

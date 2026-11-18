@@ -113,6 +113,8 @@ export default function AppContainer(props: { firebase: any, database: any, stor
   /* Used by tabs */
   const [currUserUid, setCurrUserUid] = useState("");
   const [fullPubDir, setFullPubDir] = useState({});
+  const [directoryError, setDirectoryError] = useState("");
+  const [directoryAttempt, setDirectoryAttempt] = useState(0);
   const [activeProfile, setActiveProfile] = useState(currUserUid);
   const value: any = { activeProfile, setActiveProfile };
 
@@ -121,25 +123,25 @@ export default function AppContainer(props: { firebase: any, database: any, stor
       localStorage.setItem("justSetup", "false");
     }
     let stopDirectory = () => {};
+    let directoryTimeout: number | undefined;
     const stopAuth = props.firebase.auth().onAuthStateChanged((user: any) => {
       stopDirectory();
+      window.clearTimeout(directoryTimeout);
       if (user) {
         var newUser: any = {};
         const dbRef = ref(props.database);
         setCurrUserUid(user.uid);
+        setFullPubDir({});
+        setDirectoryError("");
 
         const handleDirectoryError = (error: Error) => {
+            window.clearTimeout(directoryTimeout);
             console.error("Error loading user profile:", error);
-
-            Swal.fire({
-              icon: "error",
-              title: "Error loading profile",
-              text: "There was an error loading your profile. Please try signing in again or contact support@ktpnu.com if the issue persists.",
-            }).then(() => {
-              props.firebase.auth().signOut();
-              window.location.href = "/signup";
-            });
+            setDirectoryError("Couldn’t load the member directory.");
         };
+        directoryTimeout = window.setTimeout(() => {
+          setDirectoryError("The member directory is taking longer than expected.");
+        }, 12000);
         let initialDirectory = true;
         stopDirectory = subscribeMemberDirectory(props.database, (dir) => {
             const currProfile = dir[user.uid];
@@ -158,6 +160,8 @@ export default function AppContainer(props: { firebase: any, database: any, stor
               defaultUser.imageUrl;
 
             setUser({ ...newUser });
+            window.clearTimeout(directoryTimeout);
+            setDirectoryError("");
             setFullPubDir(dir);
             setPledge(currProfile.role === "Pledge");
             if (initialDirectory && isAlumniProfile(currProfile)) setCurrTab("Alumni");
@@ -176,6 +180,7 @@ export default function AppContainer(props: { firebase: any, database: any, stor
             console.error("Error loading user permissions:", error);
           });
       } else {
+        setFullPubDir({});
         let timerInterval: any;
         Swal.fire({
           title: "You are signed out. Redirecting to login...",
@@ -190,8 +195,8 @@ export default function AppContainer(props: { firebase: any, database: any, stor
         });
       }
     });
-    return () => { stopAuth(); stopDirectory(); };
-  }, []);
+    return () => { stopAuth(); stopDirectory(); window.clearTimeout(directoryTimeout); };
+  }, [props.database, props.firebase, directoryAttempt]);
 
   //When sidebar tab is clicked, change the navigation state to reflect the new tab
   function onTabClick(nextButton: string) {
@@ -214,6 +219,17 @@ export default function AppContainer(props: { firebase: any, database: any, stor
   };
 
   function renderCurrentTab() {
+    if (["Members", "Alumni", "Leaderboard"].includes(currTab) && !Object.keys(fullPubDir).length) {
+      return (
+        <div className="portal-directory-empty">
+          <p role="status">{directoryError || (currTab === "Leaderboard" ? "Loading leaderboard…" : "Loading directory…")}</p>
+          {directoryError && <button type="button" className="portal-load-retry" onClick={() => {
+            setDirectoryError("");
+            setDirectoryAttempt(attempt => attempt + 1);
+          }}>Try again</button>}
+        </div>
+      );
+    }
     switch (currTab) {
       case "Members":
       case "Alumni":

@@ -1,7 +1,22 @@
 import { child, get, onValue, push, ref, remove, set, update } from "./database";
 import { demoDatabase, demoFirebase } from "./runtime";
+import { deleteApp, initializeApp } from "firebase/app";
+import { getDatabase } from "firebase/database";
 
 jest.mock("./config", () => ({ isLocalPortalDemo: true }));
+
+test("a real Firebase database can open its root and child references", async () => {
+  const url = "https://ktp-test-default-rtdb.firebaseio.com/";
+  const app = initializeApp({ databaseURL: url }, "root-reference-test");
+  try {
+    const database = getDatabase(app);
+    expect(ref(database).toString()).toBe(url);
+    expect(child(ref(database, ""), "public_users").toString()).toBe(`${url}public_users`);
+    expect(ref(database, "allowed_users").toString()).toBe(`${url}allowed_users`);
+  } finally {
+    await deleteApp(app);
+  }
+});
 
 test("sample auth and profiles use the same account", async () => {
   const user = demoFirebase.auth().currentUser;
