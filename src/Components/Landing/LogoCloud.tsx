@@ -15,7 +15,7 @@ const groups = [
   {
     id: "Technology",
     rows: [
-      ["meta", "apple", "amazon", "netflix", "google"],
+      ["meta", "apple", "amazon", "netflix", "google", "databricks", "spacex"],
       ["microsoft", "palantir", "roblox", "uber", "stripe"],
     ],
   },
@@ -41,6 +41,8 @@ const companies: Record<string, { name: string; website: string }> = {
   amazon: { name: "Amazon", website: "https://www.amazon.com" },
   netflix: { name: "Netflix", website: "https://www.netflix.com" },
   google: { name: "Google", website: "https://www.google.com" },
+  databricks: { name: "Databricks", website: "https://www.databricks.com/" },
+  spacex: { name: "SpaceX", website: "https://www.spacex.com/" },
   microsoft: { name: "Microsoft", website: "https://www.microsoft.com" },
   palantir: { name: "Palantir", website: "https://www.palantir.com" },
   roblox: { name: "Roblox", website: "https://www.roblox.com" },

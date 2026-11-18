@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import PixelWorld from "./PixelWorld";
-import PortalPic from "@images/Misc/Portal.jpeg";
+import PortalPic from "@images/Misc/Portal-current.png";
 
 function PortalAdvertisement() {
   const naturalSpring = {
@@ -53,6 +53,8 @@ function PortalAdvertisement() {
                 className="w-full object-cover"
                 src={PortalPic}
                 alt="KTP Member Portal Interface"
+                width={1912}
+                height={982}
                 loading="lazy"
                 decoding="async"
               />
