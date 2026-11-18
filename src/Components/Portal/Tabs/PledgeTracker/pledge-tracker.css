@@ -39,6 +39,26 @@
 .ktp-portal .pledge-tracker-empty h3 { font-size: 20px; color: #291a3c; font-weight: 600; }
 .pledge-tracker-empty p { margin-top: 8px; color: #594269; font-size: 14px; }
 .pledge-tracker-empty button { margin-top: 18px; padding: 9px 16px; border: 1px solid #6a4893; border-radius: 4px; background: #4e2a84; color: #fff; font-size: 14px; }
+.pledge-tracker-sign {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  min-height: clamp(320px, 56svh, 580px);
+  margin-top: 18px;
+  padding: clamp(28px, 6vw, 72px) 18px;
+  border: 1px solid #ad93c980;
+  border-radius: 4px;
+  background: radial-gradient(ellipse at 50% 35%, #4d2b71, #231433 72%);
+  box-shadow: inset 0 0 0 6px #140a2355, 4px 4px 0 #160e2740;
+  text-align: center;
+}
+.ktp-portal .pledge-tracker-sign h3 {
+  color: #fbf5ff;
+  font-size: clamp(30px, 5vw, 64px);
+  font-weight: 750;
+  line-height: 1.05;
+  text-wrap: balance;
+}
 /* Match the profile's quiet sky and clear type hierarchy. */
 .ktp-portal .pledge-tracker-panel { position: relative; isolation: isolate; background: radial-gradient(ellipse at 70% 10%, #3b2458, #1a1028 82%); border: 1px solid #a18aba70; box-shadow: none; }
 .ktp-portal .pledge-tracker-panel > :not(.portal-ascii-sky) { position: relative; z-index: 2; }

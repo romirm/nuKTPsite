@@ -117,11 +117,11 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
           <div className="pledge-tracker-heading">
             <div>
               <h2 id="pledge-roster-heading">Pledge Tracker</h2>
-              <p>{pledgeUsers.length} {pledgeUsers.length === 1 ? "pledge" : "pledges"}</p>
+              {pledgeUsers.length > 0 && <p>{pledgeUsers.length} {pledgeUsers.length === 1 ? "pledge" : "pledges"}</p>}
             </div>
             <span className="pledge-tracker-emblem" aria-hidden="true">&#10022;</span>
           </div>
-          <div className="pledge-tracker-toolbar">
+          {pledgeUsers.length > 0 && <div className="pledge-tracker-toolbar">
             <div className="pledge-tracker-search">
               <MagnifyingGlassIcon aria-hidden="true" />
               <label className="sr-only" htmlFor="pledge-search">Search pledges</label>
@@ -134,12 +134,16 @@ const PledgeTracker: React.FC<PledgeTrackerProps> = ({ fullPubDir }) => {
                 <option value="pledgePoints">Pledge points</option>
                               </select>
             </div>
-          </div>
+          </div>}
         </section>
-        {visiblePledges.length === 0 ? (
+        {pledgeUsers.length === 0 ? (
+          <div className="pledge-tracker-sign" role="status">
+            <h3>Awaiting Winter 2027 Pledge Class</h3>
+          </div>
+        ) : visiblePledges.length === 0 ? (
           <div className="pledge-tracker-empty" role="status">
-            <h3>{pledgeUsers.length ? "No matching pledges" : "No pledges yet"}</h3>
-            <p>{pledgeUsers.length ? "Try a different name." : "Members with the Pledge role will appear here."}</p>
+            <h3>No matching pledges</h3>
+            <p>Try a different name.</p>
             {search && <button type="button" onClick={() => setSearch("")}>Clear search</button>}
           </div>
         ) : (

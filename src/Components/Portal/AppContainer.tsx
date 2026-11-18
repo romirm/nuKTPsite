@@ -219,7 +219,8 @@ export default function AppContainer(props: { firebase: any, database: any, stor
   };
 
   function renderCurrentTab() {
-    if (["Members", "Alumni", "Leaderboard"].includes(currTab) && !Object.keys(fullPubDir).length) {
+    const needsDirectory = ["Members", "Alumni", "Leaderboard", "PledgeTracker"].includes(currTab);
+    if (needsDirectory && !Object.keys(fullPubDir).length) {
       return (
         <div className="portal-directory-empty">
           <p role="status">{directoryError || (currTab === "Leaderboard" ? "Loading leaderboard…" : "Loading directory…")}</p>
