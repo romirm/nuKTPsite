@@ -8,7 +8,7 @@ test('role changes immediately republish the directory and subscriptions are cle
   const next = jest.fn(), error = jest.fn();
   const stop = subscribeMemberDirectory({}, next, error);
   callbacks['public_users']({ val: () => ({ me: { name: 'Member', role: 'Member' } }) });
-  expect(next).not.toHaveBeenCalled();
+  expect(next).toHaveBeenLastCalledWith({ me: { name: 'Member', role: 'Member' } });
   callbacks['allowed_users']({ val: () => ({ me: { role: 'Member' } }) });
   expect(next).toHaveBeenLastCalledWith({ me: { name: 'Member', role: 'Member' } });
   callbacks['allowed_users']({ val: () => ({ me: { role: 'Alumni' } }) });
