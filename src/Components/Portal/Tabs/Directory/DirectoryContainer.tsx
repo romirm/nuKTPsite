@@ -33,7 +33,7 @@ export default function DirectoryContainer(props: {
   }, [profiles, fallback, activeProfile, setActiveProfile]);
   if (!Object.keys(props.fullPubDir || {}).length) return <div role="status" className="portal-directory-empty">Loading directory…</div>;
   if (!ids.length) return <div role="status" className="portal-directory-empty">No {population} to display.</div>;
-  return <div className="portal-directory relative z-0 flex flex-1">
+  return <div className={`portal-directory relative z-0 flex flex-1${population === "members" ? " portal-directory--members" : ""}`}>
     <IndivProfile directory={profiles} activeProfile={selected} alumni={population === "alumni"} dir_vis={directoryVisible} handler={() => setDirectoryVisible(v => !v)} loading={false} />
     <Directory directory={grouped} population={population} activeProfile={selected} onSelectProfile={(uid: string) => { setActiveProfile(uid); setDirectoryVisible(false); }} dir_vis={directoryVisible} handler={() => setDirectoryVisible(v => !v)} loading={false} />
   </div>;

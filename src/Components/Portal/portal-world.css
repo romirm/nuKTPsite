@@ -248,6 +248,9 @@
 .ktp-portal :is(.globe-floating-panel, .globe-pin-tooltip) { border-radius: 5px; }
 
 @media (min-width: 1500px) { .ktp-portal .portal-directory { grid-template-columns: 300px minmax(0, 1fr); } }
+@media (min-width: 1024px) {
+  .ktp-portal .portal-directory--members { grid-template-columns: clamp(264px, 30%, 324px) minmax(0, 1fr); }
+}
 @media (max-width: 639px) {
   .ktp-portal .portal-member-profile .portal-profile-details { padding: 20px 16px 32px; }
   .portal-profile-content { gap: 20px; }

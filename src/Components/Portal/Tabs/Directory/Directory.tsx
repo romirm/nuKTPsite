@@ -208,9 +208,6 @@ function Directory(props: any) {
       >
         {Object.keys(shownDirectory[0]).map((letter) => ( // For each letter in the directory of visible profiles
           <div key={letter} className={"relative"}>
-            <div className="sticky top-0 z-10 border-t border-b border-gray-200 bg-gray-50 px-6 py-1 text-sm font-medium text-gray-500">
-              <h3>{letter}</h3>
-            </div>
             <ul role="list" className="relative z-0 divide-y divide-gray-200">
               {Object.keys(shownDirectory[0][letter]) //for each profile under the letter
                 .sort((uidA: string, uidB: string) => {
